@@ -1,11 +1,16 @@
 # Snakefile
+import os
 
 # Define input and output files/directories
-video_file = "input/video.mp4"
-downsampled_video = "output/downsampled_video.mp4"
+video_file = "*.avi" #use path like ulises
+downsampled_video = "output/downsampled_video.avi"
 deeplabcut_csv = "output/deeplabcut_output.csv"
-cropped_video = "output/cropped_video.mp4"
-dlc_tracking_output = "output/dlc_tracking_output"
+cropped_video = "output/cropped_video.avi"
+track_pharynx_csv = "output/track_pharynx.csv"
+
+# Define paths for DLC_networks
+track_nose_DLC = ""
+track_pumping_DLC =""
 
 # Define rules for each step in the pipeline
 rule all:
@@ -23,10 +28,11 @@ rule downsample_video:
 rule deeplabcut_tracking:
     input:
         video=downsampled_video
+        use_DLC = track_nose_DLC
     output:
         csv=deeplabcut_csv
     shell:
-        "python deeplabcut_script.py {input.video} {output.csv}"
+        "python DLC_track_video.py {input.video} {input.use_DLC} {output.csv}"
 
 rule crop_video:
     input:
@@ -37,13 +43,13 @@ rule crop_video:
     shell:
         "python crop_video_script.py {input.video} {input.csv} {output.cropped}"
 
-rule dlc_tracking:
+rule pharynx_egg_tracking:
     input:
         video=cropped_video,
-        csv=deeplabcut_csv
+        use_DLC=deeplabcut_csv
     output:
-        dlc=dlc_tracking_output
+        csv=track_pharynx_csv
     shell:
-        "python dlc_script.py {input.video} {input.csv} {output.dlc}"
+        "python DLC_track_video.py {input.video} {input.use_DLC} {output.csv}"
 
-# Add additional rules as needed
+
