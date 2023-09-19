@@ -3,6 +3,7 @@ import pandas as pd
 import snakemake
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
+import argparse
 
 def read_csv(csv_path):
     # reads DLC csv in and puts the resulting df in a reasonable format to plot data from!
@@ -119,9 +120,15 @@ def export_video(cropped_video_stack, output):
 
 if __name__ == "__main__":
 
-    video_path = snakemake.params.video
-    csv_path = snakemake.params.csv
-    output = snakemake.params.cropped_video
+    parser = argparse.ArgumentParser(description="track with DLC")
+    parser.add_argument("--video", required=True)
+    parser.add_argument("--csv", required=True)
+    parser.add_argument("--output", required=True)
+    args = parser.parse_args()
+
+    video_path = args.video
+    csv_path = args.csv
+    output = args.output
 
     global frame_rate
 

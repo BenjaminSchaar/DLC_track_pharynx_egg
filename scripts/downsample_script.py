@@ -1,6 +1,5 @@
 import cv2
-import snakemake
-import os
+import argparse
 
 def compress_avi(path, cfactor, downsampled_video):
 
@@ -46,9 +45,14 @@ def compress_avi(path, cfactor, downsampled_video):
 
 if __name__ == "__main__":
 
+    parser = argparse.ArgumentParser(description="downsample video for DLC")
+    parser.add_argument("--video", required=True)
+    parser.add_argument("--output", required=True)
+    args = parser.parse_args()
+
     cfactor = 3 # compress from
-    path = snakemake.params.video
-    output = snakemake.params.downsampled_video
+    path = args.video
+    output = args.output
 
     print("Videopath:", path)
     print("Outputfile:", output)
@@ -56,10 +60,5 @@ if __name__ == "__main__":
     output_folder =  output.split('/')
 
     print("output_folder:",  output_folder[0])
-
-    if not os.path.exists(output_folder[0]):
-        os.makedirs(output_folder[0])
-        print("directory created")
-
 
     compress_avi(path, cfactor, output)
