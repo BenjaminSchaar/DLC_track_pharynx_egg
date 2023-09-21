@@ -1,7 +1,7 @@
 import cv2
 import argparse
 
-def compress_avi(path, cfactor, downsampled_video):
+def compress_avi(path, cfactor, downsampled_video, frame_rate):
 
     print("avi being compressed")
 
@@ -12,9 +12,7 @@ def compress_avi(path, cfactor, downsampled_video):
     width = int(video.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
-    original_fps = video.get(cv2.CAP_PROP_FPS)
-
-    print("Original FPS:", original_fps)
+    print("Set FPS:", frame_rate)
 
     # Calculate target resolution
     target_width = int(width/int(cfactor))
@@ -22,7 +20,7 @@ def compress_avi(path, cfactor, downsampled_video):
 
     # Create video writer object to save compressed video
     fourcc = cv2.VideoWriter_fourcc(*"XVID")
-    out = cv2.VideoWriter(downsampled_video, fourcc, original_fps, (target_width, target_height))
+    out = cv2.VideoWriter(downsampled_video, fourcc, frame_rate, (target_width, target_height))
 
     # Loop through all video frames
     while True:
@@ -48,11 +46,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="downsample video for DLC")
     parser.add_argument("--video", required=True)
     parser.add_argument("--output", required=True)
+    parser.add_argument("--fps", required=True)
     args = parser.parse_args()
 
     cfactor = 3 # compress from
     path = args.video
     output = args.output
+    frame_rate = int(args.fps)
 
     print("Videopath:", path)
     print("Outputfile:", output)
@@ -61,4 +61,4 @@ if __name__ == "__main__":
 
     print("output_folder:",  output_folder[0])
 
-    compress_avi(path, cfactor, output)
+    compress_avi(path, cfactor, output, frame_rate)

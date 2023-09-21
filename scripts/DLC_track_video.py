@@ -5,29 +5,10 @@ import argparse
 
 def start_tracking(video_file, config_path):
 
-    deeplabcut.analyze(
-        video_file,
-        config_path=config_path,
-        Shuffles=1,
-        save_as_csv=true,
-        cropping=True,
-        Tframe_start=0,
-        Tframe_end=0,
-        trail_crop=False,
-        update=False,
-        rois=None,
-        net_type=None,
-        task="2d",
-        net_avg=False,
-        opts=None,
-        start=0,
-        stop=1,
-        indices=None,
-        videotype=".avi",
-    )
+    print("Videofile:", video_file)
+    print("Configpath:", config_path)
 
-    # After analysis, create labeled videos
-    deeplabcut.create_labeled_video(config_path, video_file)
+    deeplabcut.analyze_videos(config_path, video_file, save_as_csv=True, videotype=".avi",)
 
     print(f"Analyzed and labeled {video_file}")
 
@@ -36,11 +17,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="track with DLC")
     parser.add_argument("--video", required=True)
     parser.add_argument("--use_DLC", required=True)
-    parser.add_argument("--output", required=True)
     args = parser.parse_args()
-
-    path = args.video
-    output = args.output
 
     video_file = args.video
     config_path = args.use_DLC

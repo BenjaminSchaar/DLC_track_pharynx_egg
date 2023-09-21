@@ -1,9 +1,11 @@
 import cv2
 import pandas as pd
+import numpy as np
 import snakemake
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 import argparse
+import glob
 
 def read_csv(csv_path):
     # reads DLC csv in and puts the resulting df in a reasonable format to plot data from!
@@ -55,11 +57,12 @@ def read_csv(csv_path):
     return processed_df
 
 
-def crop_video(processed_df, video_path):
+def crop_video(processed_df, video_path, roi_width, roi_height, frame_rate):
 
     # Open the video file
     cap = cv2.VideoCapture(video_path)
 
+    # Create an empty NumPy array to store grayscale values
     grayscale_values = []
 
     # Conversion factor from LQ coordinates to HQ coordinates: similar to  the factor of downsampled video
@@ -69,8 +72,6 @@ def crop_video(processed_df, video_path):
         frame_number = int(cap.get(cv2.CAP_PROP_POS_FRAMES))  # Get the current frame number
         ret, frame = cap.read()  # Read the next frame
 
-        frame_rate = int(cap.get(cv2.CAP_PROP_FPS))
-
         if not ret:
             break  # Break the loop when there are no more frames
 
@@ -78,14 +79,11 @@ def crop_video(processed_df, video_path):
         nose_x = value = processed_df['x'].iloc[frame_number] * conversion_hq
         nose_y = processed_df['y'].iloc[frame_number] * conversion_hq
 
-        # Define the ROI coordinates (x, y, width, height)
-        roi_width, roi_height = 256, 256
         roi_x = int(nose_x - roi_width // 2)
         roi_y = int(nose_y - roi_width // 2)
 
         # Extract the grayscale ROI from the original frame
         gray_roi = cv2.cvtColor(frame[roi_y:roi_y + roi_height, roi_x:roi_x + roi_width], cv2.COLOR_BGR2GRAY)
-
         # Append the grayscale values of the ROI to the list
         grayscale_values.append(gray_roi)
 
@@ -95,27 +93,22 @@ def crop_video(processed_df, video_path):
 
     return grayscale_values
 
-def export_video(cropped_video_stack, output):
+def export_video(cropped_video_stack, output, frame_rate, roi_width, roi_height):
+    # Get the shape of the input frames
 
-    # Create the figure and subplots outside the update function
-    fig = plt.figure(figsize=(12, 5))
 
-    # Define the update function
-    def update(frame):
-        # Clear the previous data on the subplots
-        plt.clf()
+    # Define the codec and create VideoWriter object
+    fourcc = cv2.VideoWriter_fourcc(*'XVID')  # Use the XVID codec for AVI
+    out = cv2.VideoWriter(output, fourcc, frame_rate, (roi_width, roi_height))
 
-        # Plot for array 1
-        plt.imshow(cropped_video_stack[frame], cmap='gray')
+    for frame in cropped_video_stack:
 
-        plt.axis('off')  # Turn off axis
+        frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
+        # Write the frame to the video file
+        out.write(frame)
 
-    # Create the FuncAnimation object with 10 fps (100 ms delay)
-    num_frames = len(cropped_video_stack)  # Assuming both arrays have the same number of frames
-    ani = FuncAnimation(fig, update, frames=num_frames, repeat=False, blit=False, interval=(1000 / frame_rate))
-
-    # To save the animation as an MP4 file
-    ani.save(output, writer='ffmpeg')
+    # Release the VideoWriter object
+    out.release()
 
 
 if __name__ == "__main__":
@@ -124,13 +117,16 @@ if __name__ == "__main__":
     parser.add_argument("--video", required=True)
     parser.add_argument("--csv", required=True)
     parser.add_argument("--output", required=True)
+    parser.add_argument("--fps", required=True)
     args = parser.parse_args()
 
     video_path = args.video
     csv_path = args.csv
     output = args.output
+    frame_rate = int(args.fps)
 
-    global frame_rate
+    # Define the ROI coordinates (x, y, width, height) from the cropp
+    roi_width, roi_height = 256, 256
 
     print("cropping video...")
     print("Video path:", video_path)
@@ -140,5 +136,5 @@ if __name__ == "__main__":
     #call functions that process data----------------------------
 
     processed_df = read_csv(csv_path)
-    cropped_video_stack = crop_video(processed_df, video_path)
-    export_video(cropped_video_stack, output)
+    cropped_video_stack = crop_video(processed_df, video_path, roi_width, roi_height, frame_rate)
+    export_video(cropped_video_stack, output, frame_rate, roi_width, roi_height)
