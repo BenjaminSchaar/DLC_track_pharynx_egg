@@ -6,7 +6,11 @@ current_folder = os.getcwd()
 avi_files = [file for file in os.listdir(current_folder) if file.endswith(".avi")]
 
 # Define input and output files/directories
-video_file = avi_files[0]
+#video_file = avi_files[0]
+for file in avi_files:
+    if "._" not in file:
+        video_file = file
+        break
 
 if not os.path.exists("output"):
     os.makedirs("output")
@@ -48,7 +52,7 @@ rule downsample_video:
     params:
         fps=frame_rate
     shell:
-        "python scripts/downsample_script.py --video {input.video} --output {output.downsampled_video} --fps {params.fps}"
+        "python /scratch/neurobiology/zimmer/schaar/code/DLC_track_pharynx_egg/scripts/downsample_script.py --video {input.video} --output {output.downsampled_video} --fps {params.fps}"
 
 rule nose_tracking:
     input:
@@ -58,7 +62,7 @@ rule nose_tracking:
     params:
         use_DLC=track_nose_DLC
     shell:
-        "python scripts/DLC_track_video.py --video {input.downsampled_video} --use_DLC {params.use_DLC} --output {output.track_nose_csv}"
+        "python /scratch/neurobiology/zimmer/schaar/code/DLC_track_pharynx_egg/scripts/DLC_track_video.py --video {input.downsampled_video} --use_DLC {params.use_DLC} --output {output.track_nose_csv}"
 
 
 rule crop_video:
@@ -70,7 +74,7 @@ rule crop_video:
         video=video_file,
         fps=frame_rate
     shell:
-        "python scripts/crop_video_script.py --video {params.video} --csv {input.track_nose_csv} --output {output.cropped} --fps {params.fps}"
+        "python /scratch/neurobiology/zimmer/schaar/code/DLC_track_pharynx_egg/scripts/crop_video_script.py --video {params.video} --csv {input.track_nose_csv} --output {output.cropped} --fps {params.fps}"
 
 
 rule pharynx_egg_tracking:
@@ -81,7 +85,7 @@ rule pharynx_egg_tracking:
     params:
         use_DLC=track_pumping_DLC
     shell:
-        "python scripts/DLC_track_video.py --video {input.video} --use_DLC {params.use_DLC} --output {output.track_pharynx_csv}"
+        "python /scratch/neurobiology/zimmer/schaar/code/DLC_track_pharynx_egg/scripts/DLC_track_video.py --video {input.video} --use_DLC {params.use_DLC} --output {output.track_pharynx_csv}"
 
 '''
 rule create_labeled_video_nose:
@@ -92,7 +96,7 @@ rule create_labeled_video_nose:
     params:
         use_DLC=track_nose_DLC
     shell:
-        "python scripts/create_labeled_videos.py --video {input.video} --use_DLC {params.use_DLC}"
+        "python /scratch/neurobiology/zimmer/schaar/code/DLC_track_pharynx_egg/scripts/create_labeled_videos.py --video {input.video} --use_DLC {params.use_DLC}"
 
 rule create_labeled_video_pharynx:
     input:
@@ -102,6 +106,6 @@ rule create_labeled_video_pharynx:
     params:
         use_DLC=track_pumping_DLC
     shell:
-       "python scripts/create_labeled_videos.py --video {input.video} --use_DLC {params.use_DLC}"
+       "python /scratch/neurobiology/zimmer/schaar/code/DLC_track_pharynx_egg/scripts/create_labeled_videos.py --video {input.video} --use_DLC {params.use_DLC}"
 
 '''
