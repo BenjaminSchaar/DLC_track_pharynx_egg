@@ -58,7 +58,7 @@ rule nose_tracking:
     params:
         use_DLC=track_nose_DLC
     shell:
-        "python scripts/DLC_track_video.py --video {input.downsampled_video} --use_DLC {params.use_DLC} "
+        "python scripts/DLC_track_video.py --video {input.downsampled_video} --use_DLC {params.use_DLC} --output {output.track_nose_csv}"
 
 
 rule crop_video:
@@ -81,7 +81,7 @@ rule pharynx_egg_tracking:
     params:
         use_DLC=track_pumping_DLC
     shell:
-        "python scripts/DLC_track_video.py --video {input.video} --use_DLC {params.use_DLC} "
+        "python scripts/DLC_track_video.py --video {input.video} --use_DLC {params.use_DLC} --output {output.track_pharynx_csv}"
 
 '''
 rule create_labeled_video_nose:
