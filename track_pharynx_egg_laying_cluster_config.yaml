@@ -1,0 +1,53 @@
+# Example from: https://hackmd.io/@bluegenes/BJPrrj7WB
+# cluster_config.yml - cluster configuration
+__default__:
+    time: 0-08:00:00
+    partition: basic
+    nodes: 1
+    cpus_per_task: 8
+    mem: 64G
+    disk_mb: 8000
+    mem_mb: 8000
+    output: log/log_%x_%A_%a_%j.out
+
+subtract_background:
+    time: 0-08:00:00
+    partition: basic
+    mem: 4G
+    cpus_per_task: 8
+    output: log/log_%x_%A_%a_%j.out
+
+dlc_analyze_videos:
+    time: 0-08:00:00
+    partition: gpu
+    gpus_per_node: 1
+    mem: 0
+    cpus_per_task: 24
+    output: log/log_%x_%A_%a_%j.out
+
+normalize_img:
+    time: 0-08:00:00
+    partition: basic
+    mem: 4G
+    cpus_per_task: 8
+    output: log/log_%x_%A_%a_%j.out
+
+coil_unet:
+    time: 0-08:00:00
+    partition: gpu
+    gpus_per_node: 1
+    mem: 0
+    cpus_per_task: 24
+    output: log/log_%x_%A_%a_%j.out
+
+binarize:
+    time: 0-08:00:00
+    partition: basic
+    cpus_per_task: 8
+    output: log/log_%x_%A_%a_%j.out
+
+create_centerline:
+    time: 0-08:00:00
+    partition: basic
+    cpus_per_task: 24
+    output: log/log_%x_%A_%a_%j.out

@@ -51,8 +51,8 @@ if __name__ == "__main__":
     start_tracking(video_file, config_path)
 
     # Wait for 10 seconds for filesystem
-    print("waiting up to 20 seconds for filesystem to generate files")
-    time.sleep(20)
+    print("waiting up to 60 seconds for filesystem to generate files")
+    time.sleep(60)
 
     rename_csv_for_snakemake(video_file, output)
 
