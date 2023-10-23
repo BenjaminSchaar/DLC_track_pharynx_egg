@@ -20,29 +20,46 @@ if not os.path.exists("output/downsampled"):
     os.makedirs("output/downsampled")
     print("directory created")
 
-if not os.path.exists("output/cropped"):
-    os.makedirs("output/cropped")
+if not os.path.exists("output/cropped_pharynx"):
+    os.makedirs("output/cropped_pharynx")
     print("directory created")
+
+if not os.path.exists("output/cropped_vulva"):
+    os.makedirs("output/cropped_vulva")
+    print("directory created")
+
 
 #inputs/outputs---------------------------
 downsampled_video = "output/downsampled/downsampled_video.avi"
-track_nose_csv = "output/downsampled/downsampled.csv"
-cropped_video = "output/cropped/cropped_video.avi"
-track_pharynx_csv = "output/cropped/cropped.csv"
+
+track_vulva_csv = "output/downsampled/downsampled_vulva.csv"
+track_pharynx_csv = "output/downsampled/downsampled_pharynx.csv"
+
+cropped_pharynx_video = "output/cropped_pharynx/cropped_pharynx_video.avi"
+track_pumping_csv = "output/cropped_pharynx/track_pumping.csv"
+
+cropped_vulva_video = "output/cropped_vulva/cropped_vulva_video.avi"
+cropped_vulva_csv = "output/cropped_vulva/cropped_vulva.csv"
+
 labeled_video_pharynx = "output/downsampled/pharynx_labeled.mp4"
 labeled_video_nose = "output/cropped/nose_labeled.mp4"
 
 # Params----------------------------------
-track_nose_DLC = "/scratch/neurobiology/zimmer/schaar/code/DLC/track_nose_pharynx-Ben-2023-09-05/config.yaml"
-track_pumping_DLC = "/scratch/neurobiology/zimmer/schaar/code/DLC/track_pharynx_pumping_HQ-Ben-2023-09-07/config.yaml"
+track_pharynx_DLC = "/scratch/neurobiology/zimmer/schaar/code/DLC/track_nose_pharynx_final-Ben-2023-10-03/config.yaml"
+track_pumping_DLC = "/scratch/neurobiology/zimmer/schaar/code/DLC/track_pharynx_flow_final_2-Ben-2023-10-05_old/config.yaml"
+track_vulva_DLC = "/scratch/neurobiology/zimmer/schaar/code/DLC/nose_tail_vulva-Ben-2023-10-11/config.yaml"
 
 frame_rate = int(30)
-print(track_nose_csv)
+crop_size_pharynx = 256
+crop_size_vulva = 100
+
+print(track_pharynx_csv)
 
 # Define the rule all to specify all rules as the default target(s)
 rule targets:
     input:
-        final_csv=track_pharynx_csv
+        final_csv=track_pumping_csv,
+        cropped=cropped_vulva_video
 
 rule downsample_video:
     input:
@@ -54,38 +71,60 @@ rule downsample_video:
     shell:
         "python /scratch/neurobiology/zimmer/schaar/code/DLC_track_pharynx_egg/scripts/downsample_script.py --video {input.video} --output {output.downsampled_video} --fps {params.fps}"
 
-rule nose_tracking:
+rule pharynx_tracking:
     input:
         downsampled_video=downsampled_video
     output:
-        track_nose_csv=track_nose_csv
+        track_pharynx_csv=track_pharynx_csv
     params:
-        use_DLC=track_nose_DLC
+        use_DLC=track_pharynx_DLC
     shell:
-        "python /scratch/neurobiology/zimmer/schaar/code/DLC_track_pharynx_egg/scripts/DLC_track_video.py --video {input.downsampled_video} --use_DLC {params.use_DLC} --output {output.track_nose_csv}"
+        "python /scratch/neurobiology/zimmer/schaar/code/DLC_track_pharynx_egg/scripts/DLC_track_video.py --video {input.downsampled_video} --use_DLC {params.use_DLC} --output {output.track_pharynx_csv}"
 
-
-rule crop_video:
+rule vulva_tracking:
     input:
-        track_nose_csv=track_nose_csv
+        downsampled_video=downsampled_video
     output:
-        cropped=cropped_video
+        track_vulva_csv=track_vulva_csv
+    params:
+        use_DLC=track_vulva_DLC
+    shell:
+        "python /scratch/neurobiology/zimmer/schaar/code/DLC_track_pharynx_egg/scripts/DLC_track_video.py --video {input.downsampled_video} --use_DLC {params.use_DLC} --output {output.track_vulva_csv}"
+
+rule crop_pharynx_video:
+    input:
+        track_pharynx_csv=track_pharynx_csv
+    output:
+        cropped=cropped_pharynx_video
     params:
         video=video_file,
-        fps=frame_rate
+        fps=frame_rate,
+        crop_size=crop_size_pharynx
     shell:
-        "python /scratch/neurobiology/zimmer/schaar/code/DLC_track_pharynx_egg/scripts/crop_video_script.py --video {params.video} --csv {input.track_nose_csv} --output {output.cropped} --fps {params.fps}"
+        "python /scratch/neurobiology/zimmer/schaar/code/DLC_track_pharynx_egg/scripts/crop_pharynx_video_script.py --video {params.video} --csv {input.track_pharynx_csv} --output {output.cropped} --fps {params.fps} --crop {params.crop_size}"
 
-
-rule pharynx_egg_tracking:
+rule crop_vulva_video:
     input:
-        video=cropped_video
+        track_vulva_csv=track_vulva_csv
     output:
-        track_pharynx_csv=track_pharynx_csv
+        cropped=cropped_vulva_video
+    params:
+        video=downsampled_video,
+        fps=frame_rate,
+        crop_size=crop_size_vulva
+    shell:
+        "python /scratch/neurobiology/zimmer/schaar/code/DLC_track_pharynx_egg/scripts/crop_vulva_video_script.py --video {params.video} --csv {input.track_vulva_csv} --output {output.cropped} --fps {params.fps} --crop {params.crop_size}"
+
+
+rule track_pumping:
+    input:
+        video=cropped_pharynx_video
+    output:
+        track_pumping_csv=track_pumping_csv
     params:
         use_DLC=track_pumping_DLC
     shell:
-        "python /scratch/neurobiology/zimmer/schaar/code/DLC_track_pharynx_egg/scripts/DLC_track_video.py --video {input.video} --use_DLC {params.use_DLC} --output {output.track_pharynx_csv}"
+        "python /scratch/neurobiology/zimmer/schaar/code/DLC_track_pharynx_egg/scripts/DLC_track_video.py --video {input.video} --use_DLC {params.use_DLC} --output {output.track_pumping_csv}"
 
 '''
 rule create_labeled_video_nose:

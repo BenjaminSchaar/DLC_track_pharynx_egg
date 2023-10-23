@@ -36,25 +36,15 @@ def read_csv(csv_path):
     df = df.drop(df.columns[0], axis=1)
     df = df.reset_index(drop=True)
 
-    nose_df = df.xs(key='nose', level=0, axis=1)
-    pharynx_df = df.xs(key='pharynx', level=0, axis=1)
+    vulva_df = df.xs(key='vulva', level=0, axis=1)
 
-    # Make copies of the DataFrames
-    nose_df_copy = nose_df.copy()
-    pharynx_df_copy = pharynx_df.copy()
+    vulva_df_copy = vulva_df.copy()
 
     # Convert columns to numeric in the copies
-    nose_df_copy['x'] = pd.to_numeric(nose_df_copy['x'])
-    nose_df_copy['y'] = pd.to_numeric(nose_df_copy['y'])
-    pharynx_df_copy['x'] = pd.to_numeric(pharynx_df_copy['x'])
-    pharynx_df_copy['y'] = pd.to_numeric(pharynx_df_copy['y'])
+    vulva_df_copy['x'] = pd.to_numeric(vulva_df_copy['x'])
+    vulva_df_copy['y'] = pd.to_numeric(vulva_df_copy['y'])
 
-    # Calculate the average of x and y columns in the copies to fond center pos of nose and pharynx - grinder
-    processed_df = pd.DataFrame()
-    processed_df['x'] = (nose_df_copy['x'] + pharynx_df_copy['x']) / 2
-    processed_df['y'] = (nose_df_copy['y'] + pharynx_df_copy['y']) / 2
-
-    return processed_df
+    return vulva_df_copy
 
 
 def crop_video(processed_df, video_path, roi_width, roi_height, frame_rate):
@@ -76,11 +66,11 @@ def crop_video(processed_df, video_path, roi_width, roi_height, frame_rate):
             break  # Break the loop when there are no more frames
 
         # Define the ROI coordinates (x, y, width, height)
-        nose_pahrynx_center_x = processed_df['x'].iloc[frame_number] * conversion_hq
-        nose_pharynx_center_y = processed_df['y'].iloc[frame_number] * conversion_hq
+        vulva_x = processed_df['x'].iloc[frame_number]
+        vulva_y = processed_df['y'].iloc[frame_number]
 
-        roi_x = int(nose_pahrynx_center_x - roi_width // 2)
-        roi_y = int(nose_pharynx_center_y - roi_width // 2)
+        roi_x = int(vulva_x - (roi_width / 2))
+        roi_y = int(vulva_y - (roi_width / 2))
 
         # Ensure ROI coordinates are within frame boundaries, else skip
         if (
@@ -133,15 +123,17 @@ if __name__ == "__main__":
     parser.add_argument("--csv", required=True)
     parser.add_argument("--output", required=True)
     parser.add_argument("--fps", required=True)
+    parser.add_argument("--crop_size", required=True)
     args = parser.parse_args()
 
     video_path = args.video
     csv_path = args.csv
     output = args.output
     frame_rate = int(args.fps)
+    crop_size = int(args.crop_size)
 
-    # Define the ROI coordinates (x, y, width, height) from the cropp
-    roi_width, roi_height = 256, 256
+    # Define the ROI coordinates (x, y, width, height) from the crop
+    roi_width, roi_height = crop_size, crop_size
 
     print("cropping video...")
     print("Video path:", video_path)

@@ -9,8 +9,8 @@ def rename_csv_for_snakemake(video_file, output):
 
     folder_path = video_file.rsplit("/", 1)[0]
     print("Folderpath: ", folder_path)
-    csv_file_path = glob.glob(os.path.join(folder_path, '*.csv'))
-    print(type(csv_file_path[0]))
+    csv_file_path = glob.glob(os.path.join(folder_path, '*DLC*.csv'))
+    print(csv_file_path[0])
 
     if csv_file_path:
         csv_file = csv_file_path[0]
