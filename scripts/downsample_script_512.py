@@ -1,5 +1,23 @@
 import cv2
 import argparse
+import pickle
+import os
+
+def save_var_to_pickle(cfactor, path):
+    # Remove the file extension from the path
+    directory_path = os.path.dirname(path)
+    # Construct the pickle file path by joining the root folder with the variable name and '.pickle'
+    pickle_filename = "cfactor.pickle"
+    pickle_path = os.path.join(directory_path, pickle_filename)
+
+    try:
+        # Open the file in binary mode
+        with open(pickle_path, 'wb') as file:
+            # Serialize and write the variable to the file
+            pickle.dump(cfactor, file)
+        print(f"The variable 'cfactor' has been saved successfully to {pickle_path}")
+    except Exception as e:
+        print("An error occurred while saving the variable: ", e)
 
 def compress_avi(path, downsampled_video, frame_rate):
 
@@ -14,6 +32,9 @@ def compress_avi(path, downsampled_video, frame_rate):
 
     cfactor = width/512
 
+    save_var_to_pickle(cfactor, path)
+
+    print("Compression-factor to 512x512:", cfactor)
 
 
     print("Set FPS:", frame_rate)
