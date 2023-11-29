@@ -73,7 +73,7 @@ def plot_ethogram(beh_annotation):
 
         # Save the plot to a file
         plt.tight_layout()
-        plot_name = 'kymogram.png'
+        plot_name = 'ehtogram.png'
         full_file_path = os.path.join(output_path, plot_name)
         plt.savefig(full_file_path)
 
