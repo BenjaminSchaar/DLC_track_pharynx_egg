@@ -49,6 +49,8 @@ def plot_skeleton_spline(skeleton_spline, output_path):
         full_file_path = os.path.join(output_path, plot_name)
         plt.savefig(full_file_path)
 
+        plt.clf()  # Clear the current figure after displaying the plot
+
     except Exception as e:
         print(f'Problem plotting the data: {e}')
 
@@ -77,6 +79,7 @@ def plot_ethogram(beh_annotation, output_path):
         full_file_path = os.path.join(output_path, plot_name)
         plt.savefig(full_file_path)
 
+        plt.clf()  # Clear the current figure after displaying the plot
 
     except Exception as e:
         print(f'Problem plotting the ethogram: {e}')
@@ -85,7 +88,7 @@ def plot_worm_tracks(worm_pos, output_path, x_odor, y_odor):
 
     # Set arena boundaries
     arena_min_x = 0
-    arena_max_x = 38
+    arena_max_x = -38
     arena_min_y = 0
     arena_max_y = 45
     # Set the figure size
@@ -114,6 +117,8 @@ def plot_worm_tracks(worm_pos, output_path, x_odor, y_odor):
     # Save the plot to a file (e.g., a PNG image)
     plt.savefig(full_file_path)
 
+    plt.clf()  # Clear the current figure after displaying the plot
+
 
 def plot_ED(worm_pos, output_path):
 
@@ -132,6 +137,8 @@ def plot_ED(worm_pos, output_path):
     full_file_path = os.path.join(output_path, plot_name)
     # Save the plot to a file (e.g., a PNG image)
     plt.savefig(full_file_path)
+
+    plt.clf()  # Clear the current figure after displaying the plot
 
 # Define a function to extract the x and y values from the yaml file
 def extract_coords(coord_string):
