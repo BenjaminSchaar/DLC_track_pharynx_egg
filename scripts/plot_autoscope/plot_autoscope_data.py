@@ -74,7 +74,6 @@ def plot_ethogram(beh_annotation, output_path):
             ax.set_ylabel('Behavioral State')
 
         # Save the plot to a file
-        plt.tight_layout()
         plot_name = 'ehtogram.png'
         full_file_path = os.path.join(output_path, plot_name)
         plt.savefig(full_file_path)
