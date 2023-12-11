@@ -16,8 +16,8 @@ def read_csv_files(beh_annotation_path, skeleton_spline_path, worm_pos_path):
         raise FileNotFoundError(f"The file '{worm_pos_path}' does not exist.")
 
     # Read CSV files into separate dataframes
-    beh_annotation_df = pd.read_csv(beh_annotation_path)
-    skeleton_spline_df = pd.read_csv(skeleton_spline_path)
+    beh_annotation_df = pd.read_csv(beh_annotation_path, index_col=False, index_col=1)
+    skeleton_spline_df = pd.read_csv(skeleton_spline_path, index_col=False)
     worm_pos_df = pd.read_csv(worm_pos_path)
 
     return beh_annotation_df, skeleton_spline_df, worm_pos_df
@@ -81,18 +81,39 @@ def plot_ethogram(beh_annotation, output_path):
     except Exception as e:
         print(f'Problem plotting the ethogram: {e}')
 
-# Define a function to extract the x and y values from the yaml file
-def extract_coords(coord_string):
-    x, y = coord_string.split(',')
-    x = float(x.strip().split('=')[1])
-    y = float(y.strip().split('=')[1])
-    return x, y
+def plot_worm_tracks(worm_pos, output_path, x_odor, y_odor):
 
-# Define a function to convert X and Y values to the absolute grid
-def convert_coordinates(row, x_zero, y_zero):
-    row["X_rel"] = row["X"] - x_zero
-    row["Y_rel"] = row["Y"] - y_zero
-    return row
+    # Set arena boundaries
+    arena_min_x = 0
+    arena_max_x = 38
+    arena_min_y = 0
+    arena_max_y = 45
+    # Set the figure size
+    plt.figure(figsize=(12, 12))
+
+    # Create a scatter plot for the tracks
+    plt.scatter(worm_pos['X_rel'], worm_pos['Y_rel'], label='Tracks')
+
+    # Plot the "odor" point
+    plt.scatter(x_odor, y_odor, color='red', label='Odor Point')
+
+    plt.xlim(arena_min_x, arena_max_x)
+    plt.ylim(arena_min_y, arena_max_y)
+
+    # Add grid lines
+    plt.grid(True)
+
+    # Add labels and legend
+    plt.xlabel('X Relative')
+    plt.ylabel('Y Relative')
+    plt.title('Tracks and Odor Point')
+    plt.legend()
+
+    plot_name = 'worm_track_overview.png'
+    full_file_path = os.path.join(output_path, plot_name)
+    # Save the plot to a file (e.g., a PNG image)
+    plt.savefig(full_file_path)
+
 
 def plot_ED(worm_pos, output_path):
 
@@ -111,6 +132,19 @@ def plot_ED(worm_pos, output_path):
     full_file_path = os.path.join(output_path, plot_name)
     # Save the plot to a file (e.g., a PNG image)
     plt.savefig(full_file_path)
+
+# Define a function to extract the x and y values from the yaml file
+def extract_coords(coord_string):
+    x, y = coord_string.split(',')
+    x = float(x.strip().split('=')[1])
+    y = float(y.strip().split('=')[1])
+    return x, y
+
+# Define a function to convert X and Y values to the absolute grid
+def convert_coordinates(row, x_zero, y_zero):
+    row["X_rel"] = row["X"] - x_zero
+    row["Y_rel"] = row["Y"] - y_zero
+    return row
 
 
 if __name__ == "__main__":
@@ -165,4 +199,5 @@ if __name__ == "__main__":
 
     plot_skeleton_spline(skeleton_spline, output_path)
     plot_ethogram(beh_annotation, output_path)
+    plot_worm_tracks(worm_pos, output_path, x_odor, y_odor)
     plot_ED(worm_pos, output_path)
