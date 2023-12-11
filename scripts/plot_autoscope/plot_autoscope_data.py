@@ -53,7 +53,7 @@ def plot_skeleton_spline(skeleton_spline, output_path):
         print(f'Problem plotting the data: {e}')
 
 
-def plot_ethogram(beh_annotation):
+def plot_ethogram(beh_annotation, output_path):
     try:
         num_frames = len(beh_annotation)
         num_lines = 4
