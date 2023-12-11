@@ -98,7 +98,7 @@ def plot_ED(worm_pos, output_path):
 
     # Plotting code
     plt.figure(figsize=(20, 6))
-    plt.plot(worm_pos.index, worm_pos[column_name])
+    plt.plot(worm_pos.index, worm_pos['distance'])
 
     # Set the y-axis limits
     plt.ylim(0, 40.5)
@@ -139,7 +139,7 @@ if __name__ == "__main__":
     print("\nSkeleton Spline DataFrame:")
     print(skeleton_spline.head())
 
-    print("\nSkeleton Spline DataFrame:")
+    print("\nWorm Pos DataFrame:")
     print(worm_pos.head())
 
     #load config file for odor and arena positions
@@ -160,6 +160,8 @@ if __name__ == "__main__":
     worm_pos = worm_pos.apply(lambda row: convert_coordinates(row, x_zero, y_zero), axis=1)
     worm_pos['distance'] = worm_pos.apply(lambda row: distance.euclidean((row['X_rel'], row['Y_rel']), (x_odor, y_odor)),axis=1)
 
+    print("\nWorm Pos DataFrame wit Distance:")
+    print(worm_pos.head())
 
     plot_skeleton_spline(skeleton_spline, output_path)
     plot_ethogram(beh_annotation, output_path)
