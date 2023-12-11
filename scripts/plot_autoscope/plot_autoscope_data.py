@@ -16,7 +16,7 @@ def read_csv_files(beh_annotation_path, skeleton_spline_path, worm_pos_path):
         raise FileNotFoundError(f"The file '{worm_pos_path}' does not exist.")
 
     # Read CSV files into separate dataframes
-    beh_annotation_df = pd.read_csv(beh_annotation_path, header=None, index_col=1)
+    beh_annotation_df = pd.read_csv(beh_annotation_path, header=None)
     skeleton_spline_df = pd.read_csv(skeleton_spline_path, header=None)
     worm_pos_df = pd.read_csv(worm_pos_path)
 
