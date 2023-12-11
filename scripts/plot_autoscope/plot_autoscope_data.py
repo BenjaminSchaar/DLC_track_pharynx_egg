@@ -98,7 +98,7 @@ def plot_worm_tracks(worm_pos, output_path, x_odor, y_odor):
     plt.scatter(worm_pos['X_rel'], worm_pos['Y_rel'], label='Tracks')
 
     # Plot the "odor" point
-    plt.scatter(x_odor, y_odor, color='red', label='Odor Point')
+    plt.scatter(x_odor, y_odor, color='red', label='Odor Point', s=50)
 
     plt.xlim(arena_min_x, arena_max_x)
     plt.ylim(arena_min_y, arena_max_y)
@@ -196,6 +196,11 @@ if __name__ == "__main__":
     # adjust to relative grid via reference point
     x_odor = x_odor - x_zero
     y_odor = y_odor - y_zero
+
+    print("Adjusted x_odor:")
+    print(x_odor)
+    print("Adjusted y_odor:")
+    print(y_odor)
 
     # Apply the conversion function to each row
     worm_pos = worm_pos.apply(lambda row: convert_coordinates(row, x_zero, y_zero), axis=1)
