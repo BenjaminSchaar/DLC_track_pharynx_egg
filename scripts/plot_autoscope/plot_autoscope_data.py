@@ -89,7 +89,7 @@ def plot_worm_tracks(worm_pos, output_path, x_odor, y_odor):
     arena_min_x = 0
     arena_max_x = -38
     arena_min_y = 0
-    arena_max_y = -45
+    arena_max_y = 40.5
     # Set the figure size
     plt.figure(figsize=(12, 12))
 
