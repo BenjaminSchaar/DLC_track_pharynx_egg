@@ -1,0 +1,223 @@
+import pandas as pd
+import argparse
+import os
+import matplotlib.pyplot as plt
+import numpy as np
+import yaml
+from scipy.spatial import distance
+
+from chemotaxis_analysis_high_resolution.calculations import (
+    interpolate_df,
+    correct_stage_pos_with_skeleton,
+    calculate_distance,
+    calculate_time_in_seconds,
+    calculate_preceived_conc
+)
+
+def read_csv_files(beh_annotation_path:str, skeleton_spline_path:str, worm_pos_path:str, spline_X_path:str, spline_Y_path:str):
+    # Check if the file paths exist
+    if not os.path.exists(beh_annotation_path):
+        raise FileNotFoundError(f"The file '{beh_annotation_path}' does not exist.")
+    if not os.path.exists(skeleton_spline_path):
+        raise FileNotFoundError(f"The file '{skeleton_spline_path}' does not exist.")
+    if not os.path.exists(worm_pos_path):
+        raise FileNotFoundError(f"The file '{worm_pos_path}' does not exist.")
+    if not os.path.exists(spline_X_path):
+        raise FileNotFoundError(f"The file '{spline_X_path}' does not exist.")
+    if not os.path.exists(spline_Y_path):
+        raise FileNotFoundError(f"The file '{spline_Y_path}' does not exist.")
+
+    # Read CSV files into separate dataframes
+    beh_annotation_df = pd.read_csv(beh_annotation_path, header=None)
+    skeleton_spline_df = pd.read_csv(skeleton_spline_path, header=None)
+    worm_pos_df = pd.read_csv(worm_pos_path)
+    spline_X_df = pd.read_csv(spline_X_path, header=None)
+    spline_Y_df = pd.read_csv(spline_Y_path, header=None)
+
+    print("Number of rows in beh_annotation_df:", len(beh_annotation_df))
+    print("Number of rows in skeleton_spline_df:", len(skeleton_spline_df))
+    print("Number of rows in worm_pos_df:", len(worm_pos_df))
+    print("Number of rows in spline_X_df:", len(spline_X_df))
+    print("Number of rows in spline_Y_df:", len(spline_Y_df))
+
+    #check if worm_pos has same lenght as frame dependend data -> stage pos is tracked seperate and can have different FPS
+    #-> interpolate
+    print("Stage Position Dataframe lenght before interpolation:", len(worm_pos_df))
+
+    if(len(worm_pos_df) is not len(spline_X_df)):
+
+        worm_pos_df = worm_pos_df.iloc[0+len(worm_pos_df)].apply(lambda x: interpolate_df(x, np.linspace(0, 1, len(spline_X_df)), len(worm_pos_df)), axis=0)
+
+        print("Stage Position Dataframe lenght after interpolation:", len(worm_pos_df))
+        print("Frame lenght of recorded video:", len(spline_X_df))
+
+    return beh_annotation_df, skeleton_spline_df, worm_pos_df, spline_X_df, spline_Y_df
+
+# Define a function to extract the x and y values from the yaml file
+def extract_coords(coord_string:str):
+    x, y = coord_string.split(',')
+    x = float(x.strip().split('=')[1])
+    y = float(y.strip().split('=')[1])
+    return x, y
+
+# Define a function to convert X and Y values to the absolute grid
+def convert_coordinates(row: pd.Series, x_zero: float, y_zero: float) -> pd.Series:
+    row["X_rel"] = row["X"] - x_zero
+    row["Y_rel"] = row["Y"] - y_zero
+    return row
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Read CSV files and plot data')
+    parser.add_argument('--beh_annotation', help='Full path to the behavior annotation CSV file', required=True)
+    parser.add_argument('--skeleton_spline', help='Full path to the skeleton spline CSV file', required=True)
+    parser.add_argument('--worm_pos', help='Full path to the worm pos text file', required=True)
+    parser.add_argument('--stage_pos', help='Full path to the odor pos file', required=True)
+    parser.add_argument('--skeleton_spline_X_coords', help='Full path to the skeleton_spline_X_coords CSV file', required=True)
+    parser.add_argument('--skeleton_spline_Y_coords', help='Full path to the skeleton_spline_Y_coords CSV file', required=True)
+    parser.add_argument('--factor_px_to_mm', help='conversion_facor px to mm',required=True)
+    parser.add_argument('--video_resolution_x', help='video_resolution_x', required=True)
+    parser.add_argument('--video_resolution_y', help='video_resolution_y', required=True)
+    parser.add_argument('--fps', help='fps', required=True)
+    parser.add_argument('--conc_gradient_array', help='exportet concentration_gradient.npy file for the odor used', required=True)
+    parser.add_argument('--distance_array', help='exportet distance_array.npy file for the odor used', required=True)
+
+    args = parser.parse_args()
+
+    beh_annotation_path = args.beh_annotation
+    skeleton_spline_path = args.skeleton_spline
+    worm_pos_path = args.worm_pos
+    stage_pos_path = args.stage_pos
+    spline_X_path = args.skeleton_spline_X_coords
+    spline_Y_path = args.skeleton_spline_Y_coords
+    factor_px_to_mm = args.factor_px_to_mm
+    video_resolution_x = args.video_resolution_x
+    video_resolution_y = args.video_resolution_y
+    fps = args.fps
+    conc_gradient_array = args.conc_gradient_array
+    distance_array = args.distance_array
+
+    # Set arena boundaries
+    arena_min_x = 0
+    arena_max_x = 38
+    arena_min_y = 0
+    arena_max_y = 40.5
+
+    # Extracting the directory path and saving it to a new variable
+    output_path = os.path.dirname(beh_annotation_path)
+
+    #-------------loading necessary files
+    beh_annotation, skeleton_spline, worm_pos, spline_X, spline_Y = read_csv_files(beh_annotation_path, skeleton_spline_path, worm_pos_path, spline_X_path, spline_Y_path)
+
+    #-----------------load config file for odor and arena positions
+    with open(stage_pos_path, 'r') as config_file:
+        stage_pos = yaml.safe_load(config_file)
+
+    # Access the odor coordinates
+    x_odor, y_odor = extract_coords(stage_pos['odor_pos'])
+    x_zero, y_zero = extract_coords(stage_pos['top_left'])
+
+
+    # -------------shifts every value of x and y in the positive range, by addition of the lowest value to all values
+    # Finding the lowest negative value among X_rel and Y_rel columns
+
+    lowest_neg_x = worm_pos['X'][worm_pos['X'] < 0].min()
+    lowest_neg_y = worm_pos['Y'][worm_pos['Y'] < 0].min()
+
+    # Saving the lowest negative value as move_grid_factor
+    move_grid_factor = min(lowest_neg_x, lowest_neg_y, x_odor, y_odor, x_zero, y_zero)
+
+    # Adding the lowest negative value to every value in x_rel, y_rel, and additional values
+    worm_pos['X'] += abs(move_grid_factor)
+    worm_pos['Y'] += abs(move_grid_factor)
+    x_odor += abs(move_grid_factor)
+    y_odor += abs(move_grid_factor)
+    x_zero += abs(move_grid_factor)
+    y_zero += abs(move_grid_factor)
+
+    # Display the loaded dataframes
+    print("Behavior Annotation DataFrame:")
+    print(beh_annotation.head())
+
+    print("\nSkeleton Spline DataFrame:")
+    print(skeleton_spline.head())
+
+    print("\nWorm Pos DataFrame:")
+    print(worm_pos.head())
+
+    # adjust odor point to relative grid via reference point
+    x_odor = x_odor - x_zero
+    y_odor = y_odor - y_zero
+
+    print("Adjusted x_odor:")
+    print(x_odor)
+    print("Adjusted y_odor:")
+    print(y_odor)
+
+    # Apply the conversion function to relative coordinates to each row, add x_rel and y_rel columns
+    worm_pos = worm_pos.apply(lambda row: convert_coordinates(row, x_zero, y_zero), axis=1)
+
+    worm_pos['X_rel'] = worm_pos['X_rel'].abs()  # shift relative stage position to positive values
+
+    # Drop the 'time' column because it is not needed
+    worm_pos.drop(columns='time', inplace=True)
+
+    # calculate corrected center position of the worm
+    skel_pos_49 = 49
+    worm_pos = correct_stage_pos_with_skeleton(
+        worm_pos,
+        spline_X,
+        spline_Y,
+        skel_pos_49, #49 reflects the center position
+        video_resolution_x,
+        video_resolution_y,
+        factor_px_to_mm
+    )
+
+    skel_pos_0 = 0
+
+    worm_pos = correct_stage_pos_with_skeleton(
+        worm_pos,
+        spline_X,
+        spline_Y,
+        skel_pos_0, # 0 reflects nose position
+        video_resolution_x,
+        video_resolution_y,
+        factor_px_to_mm
+    )
+
+    print("added corrected worm positions:", worm_pos)
+
+    # calculate distances for stage, skeletton position 0 (nose) and 49 (center)
+    worm_pos['distance_stage'] = worm_pos.apply(lambda row: calculate_distance(row, 'X_rel', 'Y_rel', x_odor, y_odor), axis=1)
+    worm_pos[f'distance_{skel_pos_49}'] = worm_pos.apply(lambda row: calculate_distance(row, f'X_rel_skel_pos_{skel_pos_49}', f'Y_rel_skel_pos_{skel_pos_49}', x_odor, y_odor), axis=1)
+    worm_pos[f'distance_{skel_pos_0}'] = worm_pos.apply(lambda row: calculate_distance(row, f'X_rel_skel_pos_{skel_pos_0}', f'Y_rel_skel_pos_{skel_pos_0}', x_odor, y_odor), axis=1)
+
+    #add column that shows time passed in seconds
+    calculate_time_in_seconds(worm_pos, fps)
+
+    print("added column for time:", worm_pos)
+
+    #calculate perceived concentration at position
+
+    # Apply the function to create the 'Conc' column
+    worm_pos[f'conc_at_{skel_pos_49}'] = worm_pos.apply(
+        lambda row: calculate_preceived_conc(row[f'distance_{skel_pos_49}'], row['time_seconds'], conc_gradient_array, distance_array),
+        axis=1)
+
+    worm_pos[f'conc_at_{skel_pos_0}'] = worm_pos.apply(
+        lambda row: calculate_preceived_conc(row[f'distance_{skel_pos_0}'], row['time_seconds'], conc_gradient_array,
+                                             distance_array),
+        axis=1)
+
+    # Calculate delta concentration across the time interval
+    time_interval_dC_dT = 1
+
+    worm_pos['dC'] = worm_pos['Conc'].diff(periods=time_interval_dC_dT)
+
+
+    print("\nWorm Pos DataFrame wit Distance:")
+    print(worm_pos.head())
+
+
+

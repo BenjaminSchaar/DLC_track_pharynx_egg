@@ -6,7 +6,7 @@ import numpy as np
 import yaml
 from scipy.spatial import distance
 
-def read_csv_files(beh_annotation_path, skeleton_spline_path, worm_pos_path):
+def read_csv_files(beh_annotation_path:str, skeleton_spline_path:str, worm_pos_path:str):
     # Check if the file paths exist
     if not os.path.exists(beh_annotation_path):
         raise FileNotFoundError(f"The file '{beh_annotation_path}' does not exist.")
