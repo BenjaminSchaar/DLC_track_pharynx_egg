@@ -211,10 +211,10 @@ if __name__ == "__main__":
         axis=1)
 
     # Calculate delta concentration across the time interval
-    time_interval_dC_dT = 1
+    time_interval_dC_dT = 30  #need to figure out how far back in the past to compare it to
 
-    worm_pos['dC'] = worm_pos['Conc'].diff(periods=time_interval_dC_dT)
-
+    worm_pos[f'dC_{skel_pos_49}'] = worm_pos[f'conc_at_{skel_pos_49}'].diff(periods=time_interval_dC_dT)
+    worm_pos[f'dC_{skel_pos_0}'] = worm_pos[f'conc_at_{skel_pos_0}'].diff(periods=time_interval_dC_dT)
 
     print("\nWorm Pos DataFrame wit Distance:")
     print(worm_pos.head())
