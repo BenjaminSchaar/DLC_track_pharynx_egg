@@ -69,7 +69,17 @@ def correct_stage_pos_with_skeleton(
 
 
 # Define a function to calculate distance while handling NaN
-def calculate_distance(row: pd.series, x_col: str, y_col: str, x_odor: int, y_odor: int) -> float:
+def calculate_distance(row: pd.series, x_col: str, y_col: str, x_odor: float, y_odor: float) -> float:
+    '''
+    calculates distance to odot from x and y coordinates row by row from df.apply function
+
+    :param row: df row as pd.series
+    :param x_col: x column name as string
+    :param y_col: y column name as string
+    :param x_odor: relative x position of odor as float
+    :param y_odor: relative y position of odor as float
+    :return: new column wit euclidian distance to odor
+    '''
     x_rel, y_rel = row[x_col], row[y_col]
     if np.isnan(x_rel) or np.isnan(y_rel):
         return np.nan  # or you can return a default value, like -1 or 0
@@ -77,6 +87,13 @@ def calculate_distance(row: pd.series, x_col: str, y_col: str, x_odor: int, y_od
 
 
 def calculate_time_in_seconds(df: pd.DataFrame, fps: int):
+    '''
+    calculates new column with time in seconds passed from column index (1 frame) and fps
+    :param df:
+    :param fps: fps of recording
+    :return:
+    '''
+
     df['time_seconds'] = df.index / fps
     return df
 
