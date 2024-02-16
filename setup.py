@@ -1,22 +1,17 @@
-import setuptools
+from setuptools import setup, find_packages
 
-with open("README.md", "r", encoding="utf-8") as fh:
-    long_description = fh.read()
-
-setuptools.setup(
-    name="chemotaxis_high_res_autoscope",
-    version="0.0.1",
-    author="Benjamin Schaar",
-    author_email="",
-    description="",
-    long_description=long_description,
-    long_description_content_type="text/markdown",
-    url="https://bitbucket.vbc.ac.at/users/ulises.rey/repos/centerline/",
-    packages=setuptools.find_namespace_packages(),
-    classifiers=[
-        "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: MIT License",
-        "Operating System :: OS Independent",
+setup(
+    name="chemotaxis_high_res_autoscope",  # Replace "YourPackageName" with the name of your package
+    version="0.1",  # Replace "0.1" with the current version of your package
+    packages=find_packages(),
+    install_requires=[
+        # Add your package dependencies here
+        # Example: 'numpy', 'pandas>=1.0',
     ],
-    python_requires='',
+    # Optional fields:
+    author="Your Name",
+    author_email="your.email@example.com",
+    description="A short description of the package",
+    url="https://github.com/yourusername/yourpackagename",  # Replace with the URL of your project
+    # More fields can be added as per your package's requirements
 )
