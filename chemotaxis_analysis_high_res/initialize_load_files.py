@@ -1,12 +1,10 @@
 import pandas as pd
 import argparse
 import os
-import matplotlib.pyplot as plt
 import numpy as np
 import yaml
-from scipy.spatial import distance
 
-from chemotaxis_analysis_high_resolution.calculations import (
+from chemotaxis_analysis_high_res.calculations import (
     interpolate_df,
     correct_stage_pos_with_skeleton,
     calculate_distance,
@@ -15,7 +13,7 @@ from chemotaxis_analysis_high_resolution.calculations import (
     calculate_angle,
 )
 
-from chemotaxis_analysis_high_resolution.plotting_visualisation import (
+from chemotaxis_analysis_high_res.plotting_visualisation import (
     plot_chemotaxis_overview,
     create_angle_animation,
 )
