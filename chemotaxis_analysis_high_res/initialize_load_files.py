@@ -107,7 +107,7 @@ def main(arg_list=None):
     parser.add_argument('--conc_gradient_array', help='exportet concentration_gradient.npy file for the odor used', required=True)
     parser.add_argument('--distance_array', help='exportet distance_array.npy file for the odor used', required=True)
 
-    args = parser.parse_args()
+    args = parser.parse_args(arg_list)
 
     beh_annotation_path = args.beh_annotation
     skeleton_spline_path = args.skeleton_spline
