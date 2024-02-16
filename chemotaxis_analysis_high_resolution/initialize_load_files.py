@@ -17,6 +17,7 @@ from chemotaxis_analysis_high_resolution.calculations import (
 
 from chemotaxis_analysis_high_resolution.plotting_visualisation import (
     plot_chemotaxis_overview,
+    create_angle_animation,
 )
 
 def read_csv_files(beh_annotation_path:str, skeleton_spline_path:str, worm_pos_path:str, spline_X_path:str, spline_Y_path:str):
@@ -309,4 +310,5 @@ if __name__ == "__main__":
 
     plot_chemotaxis_overview(df_worm_parameter, output_path, x_odor, y_odor, arena_min_x, arena_max_x, arena_min_y, arena_max_y, file_name="chemotaxis_overview.png")
 
+    create_angle_animation(df, output_path, x_odor, y_odor, fps, filename ='angle_animation.avi')
 
