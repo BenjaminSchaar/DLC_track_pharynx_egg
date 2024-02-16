@@ -69,7 +69,7 @@ def correct_stage_pos_with_skeleton(
 
 
 # Define a function to calculate distance while handling NaN
-def calculate_distance(row: pd.series, x_col: str, y_col: str, x_odor: float, y_odor: float) -> float:
+def calculate_distance(row: pd.Series, x_col: str, y_col: str, x_odor: float, y_odor: float) -> float:
     '''
     calculates distance to odot from x and y coordinates row by row from df.apply function
 

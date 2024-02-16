@@ -3,6 +3,7 @@ import argparse
 import os
 import numpy as np
 import yaml
+import sys
 
 from chemotaxis_analysis_high_res.calculations import (
     interpolate_df,
@@ -91,7 +92,7 @@ def export_dataframe_to_csv(df: pd.DataFrame, output_path: str, file_name: str):
     df.to_csv(full_path, index=False)  # Change 'index=False' to 'index=True' if you want to include the index.
 
 
-if __name__ == "__main__":
+def main(arg_list=None):
     parser = argparse.ArgumentParser(description='Read CSV files and plot data')
     parser.add_argument('--beh_annotation', help='Full path to the behavior annotation CSV file', required=True)
     parser.add_argument('--skeleton_spline', help='Full path to the skeleton spline CSV file', required=True)
@@ -310,3 +311,7 @@ if __name__ == "__main__":
 
     create_angle_animation(df, output_path, x_odor, y_odor, fps, filename ='angle_animation.avi')
 
+if __name__ == "__main__":
+
+        print("Shell commands passed:", sys.argv)
+        main(sys.argv[1:])  # exclude the script name from the args when called from shell
