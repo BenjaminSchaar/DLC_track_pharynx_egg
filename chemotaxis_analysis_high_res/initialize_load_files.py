@@ -39,12 +39,44 @@ def read_csv_files(beh_annotation_path:str, skeleton_spline_path:str, worm_pos_p
     spline_X_df = pd.read_csv(spline_X_path, header=None)
     spline_Y_df = pd.read_csv(spline_Y_path, header=None)
 
+    # Print the head of each dataframe
+    print("Behavior Annotation DataFrame:")
+    print(beh_annotation_df.head())
+
+    print("\nSkeleton Spline DataFrame:")
+    print(skeleton_spline_df.head())
+
+    print("\nWorm Position DataFrame:")
+    print(worm_pos_df.head())
+
+    print("\nSpline X DataFrame:")
+    print(spline_X_df.head())
+
+    print("\nSpline Y DataFrame:")
+    print(spline_Y_df.head())
+
     # Convert all columns to numeric, if possible
     beh_annotation_df = beh_annotation_df.apply(pd.to_numeric, errors='coerce')
     skeleton_spline_df = skeleton_spline_df.apply(pd.to_numeric, errors='coerce')
     worm_pos_df = worm_pos_df.apply(pd.to_numeric, errors='coerce', axis=0)
     spline_X_df = spline_X_df.apply(pd.to_numeric, errors='coerce')
     spline_Y_df = spline_Y_df.apply(pd.to_numeric, errors='coerce')
+
+    # Print the head of each dataframe
+    print("_Behavior Annotation DataFrame:")
+    print(beh_annotation_df.head())
+
+    print("\nSkeleton Spline DataFrame:")
+    print(skeleton_spline_df.head())
+
+    print("\nWorm Position DataFrame:")
+    print(worm_pos_df.head())
+
+    print("\nSpline X DataFrame:")
+    print(spline_X_df.head())
+
+    print("\nSpline Y DataFrame:")
+    print(spline_Y_df.head())
 
     print("Number of rows in beh_annotation_df:", len(beh_annotation_df))
     print("Number of rows in skeleton_spline_df:", len(skeleton_spline_df))
