@@ -4,12 +4,10 @@ from scipy.spatial import distance
 import math
 
 
-def interpolate_df(vector, indices, length):
+def interpolate_df(vector, length):
     #vector = np.interp(indices, np.linspace(0, 1, length), vector)
     # Interpolates the vector to the new length
     return np.interp(np.linspace(0, length - 1, length), np.arange(len(vector)), vector)
-
-
 
 def correct_stage_pos_with_skeleton(
         worm_pos: pd.DataFrame,
