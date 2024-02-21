@@ -151,6 +151,9 @@ def main(arg_list=None):
     x_odor, y_odor = extract_coords(stage_pos['odor_pos'])
     x_zero, y_zero = extract_coords(stage_pos['top_left'])
 
+    # Print the variables together
+    print("Odor position: x =", x_odor, ", y =", y_odor)
+    print("Top left position: x =", x_zero, ", y =", y_zero)
 
     # -------------shifts every value of x and y in the positive range, by addition of the lowest value to all values
     # Finding the lowest negative value among X_rel and Y_rel columns
