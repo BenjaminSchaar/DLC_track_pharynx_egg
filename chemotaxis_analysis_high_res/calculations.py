@@ -41,12 +41,12 @@ def correct_stage_pos_with_skeleton(
     print(f'center_y: {center_y}, DataType: {type(center_y)}')
 
     if skel_pos == 100:  # calculate centroid
-        column_skel_pos_x = spline_X.iloc[:, 0:100].mean(axis=1).to_numpy()
-        column_skel_pos_y = spline_Y.iloc[:, 0:100].mean(axis=1).to_numpy()
+        column_skel_pos_x = spline_X.iloc[:, 0:100].mean(axis=1).to_numpy().astype(float)
+        column_skel_pos_y = spline_Y.iloc[:, 0:100].mean(axis=1).to_numpy().astype(float)
         print('Calculated centroid positions.')
     else:
-        column_skel_pos_x = spline_X.iloc[:, skel_pos].to_numpy()
-        column_skel_pos_y = spline_Y.iloc[:, skel_pos].to_numpy()
+        column_skel_pos_x = spline_X.iloc[:, skel_pos].to_numpy().astype(float)
+        column_skel_pos_y = spline_Y.iloc[:, skel_pos].to_numpy().astype(float)
         print(f'Using skeleton position {skel_pos} for calculations.')
 
     print(f'column_skel_pos_x: {column_skel_pos_x[0:5]}, DataType: {type(column_skel_pos_x)}')  # Print only the first 5 for brevity
