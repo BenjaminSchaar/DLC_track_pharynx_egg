@@ -192,19 +192,17 @@ def main(arg_list=None):
     print("Top left position: x =", x_zero, ", y =", y_zero)
 
     # -------------shifts every value of x and y in the positive range, by addition of the lowest value to all values
-    # Finding the lowest negative value among X_rel and Y_rel columns
+    # Finding the lowest negative value among X_rel and Y_rel columns 
+    if float(np.nanmin(df_worm_parameter['X'][df_worm_parameter['X'] < 0])) > 0:
+        lowest_neg_x = float(np.nanmin(df_worm_parameter['X'][df_worm_parameter['X'] < 0]))
+    else:
+        lowest_neg_x = 0.0
 
-    lowest_neg_x = float(np.nanmin(df_worm_parameter['X'][df_worm_parameter['X'] < 0]))
-    print(f"Lowest negative X: {lowest_neg_x}")  # Print statement for lowest_neg_x
-
-    # Convert 'inf' to 0 (this happens if all 'X' < 0 are NaN)
-    lowest_neg_x = np.nan_to_num(lowest_neg_x, nan=0.0)
-
-    lowest_neg_y = float(np.nanmin(df_worm_parameter['Y'][df_worm_parameter['Y'] < 0]))
-    print(f"Lowest negative Y: {lowest_neg_y}")  # Print statement for lowest_neg_y
-
-    # Convert 'inf' to 0 (this happens if all 'X' < 0 are NaN)
-    lowest_neg_y = np.nan_to_num(lowest_neg_y, nan=0.0)
+    if float(np.nanmin(df_worm_parameter['Y'][df_worm_parameter['Y'] < 0])) > 0:
+        lowest_neg_y = float(np.nanmin(df_worm_parameter['Y'][df_worm_parameter['Y'] < 0]))
+        print(f"Lowest negative Y: {lowest_neg_y}")  # Print statement for lowest_neg_y
+    else:
+        lowest_neg_y = 0.0
 
     # Saving the lowest negative value as move_grid_factor
     move_grid_factor = min(float(lowest_neg_x), float(lowest_neg_y), float(x_odor), float(y_odor), float(x_zero), float(y_zero))
