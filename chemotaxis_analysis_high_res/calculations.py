@@ -6,6 +6,8 @@ import math
 def interpolate_df(vector, length) -> np.ndarray:
     return np.interp(np.linspace(0, len(vector) - 1, length), np.arange(len(vector)), vector)
 
+import pandas as pd
+
 def correct_stage_pos_with_skeleton(
         worm_pos: pd.DataFrame,
         spline_X: pd.DataFrame,
@@ -16,7 +18,7 @@ def correct_stage_pos_with_skeleton(
         factor_px_to_mm: float
 ) -> pd.DataFrame:
     '''
-    This function uses the relative stage position and the skeletton to calculate the real relative
+    This function uses the relative stage position and the skeleton to calculate the real relative
     worm position inside the arena!
 
     Parameters:
@@ -24,7 +26,7 @@ def correct_stage_pos_with_skeleton(
     spline_X (pd.DataFrame): DataFrame with X coordinates of the worm's spline.
     spline_Y (pd.DataFrame): DataFrame with Y coordinates of the worm's spline.
     skel_pos (int): Index of the skeleton position (0-99) to use for correction.
-                    -> if position = 100 , centroid is calculate as average of all positions (1-99
+                    -> if position = 100 , centroid is calculated as average of all positions (1-99)
     video_resolution_x (int): Width of the video in pixels.
     video_resolution_y (int): Height of the video in pixels.
     factor_px_to_mm (float): Conversion factor from pixels to millimeters.
@@ -35,34 +37,42 @@ def correct_stage_pos_with_skeleton(
 
     center_x = video_resolution_x / 2
     center_y = video_resolution_y / 2
+    print(f'center_x: {center_x}, DataType: {type(center_x)}')
+    print(f'center_y: {center_y}, DataType: {type(center_y)}')
 
-    if skel_pos == 100: #calculate centroid
-        # Convert all columns to NumPy arrays for centroid calculation
+    if skel_pos == 100:  # calculate centroid
         column_skel_pos_x = spline_X.iloc[:, 0:100].mean(axis=1).to_numpy()
         column_skel_pos_y = spline_Y.iloc[:, 0:100].mean(axis=1).to_numpy()
-
+        print('Calculated centroid positions.')
     else:
-        # Convert relevant columns to NumPy arrays for efficient computation
         column_skel_pos_x = spline_X.iloc[:, skel_pos].to_numpy()
         column_skel_pos_y = spline_Y.iloc[:, skel_pos].to_numpy()
+        print(f'Using skeleton position {skel_pos} for calculations.')
 
-    # Calculate the differences in px and mm using NumPy operations
+    print(f'column_skel_pos_x: {column_skel_pos_x[0:5]}, DataType: {type(column_skel_pos_x)}')  # Print only the first 5 for brevity
+    print(f'column_skel_pos_y: {column_skel_pos_y[0:5]}, DataType: {type(column_skel_pos_y)}')
+
     difference_x_px = column_skel_pos_x - center_x
     difference_y_px = column_skel_pos_y - center_y
+    print(f'difference_x_px: {difference_x_px[0:5]}, DataType: {type(difference_x_px)}')
+    print(f'difference_y_px: {difference_y_px[0:5]}, DataType: {type(difference_y_px)}')
+
     difference_center_x_mm = difference_x_px * factor_px_to_mm
     difference_center_y_mm = difference_y_px * factor_px_to_mm
+    print(f'difference_center_x_mm: {difference_center_x_mm[0:5]}, DataType: {type(difference_center_x_mm)}')
+    print(f'difference_center_y_mm: {difference_center_y_mm[0:5]}, DataType: {type(difference_center_y_mm)}')
 
     if skel_pos == 100:
-        # Update worm_pos DataFrame with calculated values and name df column centroid
         worm_pos['X_rel_skel_pos_centroid'] = worm_pos['X_rel'] - difference_center_y_mm
         worm_pos['Y_rel_skel_pos_centroid'] = worm_pos['Y_rel'] - difference_center_x_mm
-
+        print('Updated worm_pos DataFrame with centroid positions.')
     else:
-        # Update worm_pos DataFrame with calculated values
         worm_pos[f'X_rel_skel_pos_{skel_pos}'] = worm_pos['X_rel'] - difference_center_y_mm
         worm_pos[f'Y_rel_skel_pos_{skel_pos}'] = worm_pos['Y_rel'] - difference_center_x_mm
+        print(f'Updated worm_pos DataFrame with positions for skeleton {skel_pos}.')
 
     return worm_pos
+
 
 
 # Define a function to calculate distance while handling NaN
