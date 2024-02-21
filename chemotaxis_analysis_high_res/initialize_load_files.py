@@ -61,7 +61,7 @@ def read_csv_files(beh_annotation_path:str, skeleton_spline_path:str, worm_pos_p
     # Convert all columns to numeric, if possible
     beh_annotation_df = beh_annotation_df.apply(pd.to_numeric, errors='coerce')
     skeleton_spline_df = skeleton_spline_df.apply(pd.to_numeric, errors='coerce')
-    worm_pos_df = worm_pos_df.apply(pd.to_numeric, errors='coerce') 
+    worm_pos_df = worm_pos_df.apply(pd.to_numeric, errors='coerce')
     spline_X_df = spline_X_df.apply(pd.to_numeric, errors='coerce')
     spline_Y_df = spline_Y_df.apply(pd.to_numeric, errors='coerce')
 
@@ -193,11 +193,11 @@ def main(arg_list=None):
     # -------------shifts every value of x and y in the positive range, by addition of the lowest value to all values
     # Finding the lowest negative value among X_rel and Y_rel columns
 
-    lowest_neg_x = df_worm_parameter['X'][df_worm_parameter['X'] < 0].min()
-    lowest_neg_y = df_worm_parameter['Y'][df_worm_parameter['Y'] < 0].min()
+    lowest_neg_x = float(df_worm_parameter['X'][df_worm_parameter['X'] < 0].min())
+    lowest_neg_y = float(df_worm_parameter['Y'][df_worm_parameter['Y'] < 0].min())
 
     # Saving the lowest negative value as move_grid_factor
-    move_grid_factor = min(lowest_neg_x, lowest_neg_y, x_odor, y_odor, x_zero, y_zero)
+    move_grid_factor = min(float(lowest_neg_x), float(lowest_neg_y), float(x_odor), float(y_odor), float(x_zero), float(y_zero))
 
     # Adding the lowest negative value to every value in x_rel, y_rel, and additional values
     df_worm_parameter['X'] += abs(move_grid_factor)
