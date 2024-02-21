@@ -49,9 +49,11 @@ def read_csv_files(beh_annotation_path:str, skeleton_spline_path:str, worm_pos_p
     #-> interpolate
     print("Stage Position Dataframe lenght before interpolation:", len(worm_pos_df))
 
-    if(len(worm_pos_df) < len(spline_X_df)): #add extrapolation step!
+    if(len(worm_pos_df) != len(spline_X_df)):
 
-        worm_pos_df = worm_pos_df.iloc[0+len(worm_pos_df)].apply(lambda x: interpolate_df(x, np.linspace(0, 1, len(spline_X_df)), len(worm_pos_df)), axis=0)
+        #worm_pos_df = worm_pos_df.iloc[0+len(worm_pos_df)].apply(lambda x: interpolate_df(x, np.linspace(0, 1, len(spline_X_df)), len(worm_pos_df)), axis=0)
+        # Apply the interpolation for each column
+        worm_pos_df = worm_pos_df.apply(lambda x: interpolate_df(x, len(spline_X_df)), axis=0)
 
         print("Stage Position Dataframe lenght after interpolation:", len(worm_pos_df))
         print("Frame lenght of recorded video:", len(spline_X_df))
