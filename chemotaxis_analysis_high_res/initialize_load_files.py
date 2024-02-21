@@ -19,7 +19,7 @@ from chemotaxis_analysis_high_res.plotting_visualisation import (
     create_angle_animation,
 )
 
-def read_csv_files(beh_annotation_path:str, skeleton_spline_path:str, worm_pos_path:str, spline_X_path:str, spline_Y_path:str):
+def read_csv_files(beh_annotation_path:str, skeleton_spline_path:str, worm_pos_path:str, spline_X_path:str, spline_Y_path:str, fps):
     # Check if the file paths exist
     if not os.path.exists(beh_annotation_path):
         raise FileNotFoundError(f"The file '{beh_annotation_path}' does not exist.")
@@ -54,6 +54,13 @@ def read_csv_files(beh_annotation_path:str, skeleton_spline_path:str, worm_pos_p
 
     print("\nSpline Y DataFrame:")
     print(spline_Y_df.head())
+
+    # add column that shows time passed in seconds
+    calculate_time_in_seconds(worm_pos_df, fps)
+    worm_pos_df = worm_pos_df.drop(columns=['time'], errors='ignore') #deletes old time column before interplation step
+
+    print("\nWorm Position DataFrame with converted Time Column:")
+    print(worm_pos_df.head())
 
     # Convert all columns to numeric, if possible
     beh_annotation_df = beh_annotation_df.apply(pd.to_numeric, errors='coerce')
@@ -173,7 +180,7 @@ def main(arg_list=None):
     output_path = os.path.dirname(beh_annotation_path)
 
     #-------------loading necessary files
-    beh_annotation, skeleton_spline, df_worm_parameter, spline_X, spline_Y = read_csv_files(beh_annotation_path, skeleton_spline_path, worm_pos_path, spline_X_path, spline_Y_path)
+    beh_annotation, skeleton_spline, df_worm_parameter, spline_X, spline_Y = read_csv_files(beh_annotation_path, skeleton_spline_path, worm_pos_path, spline_X_path, spline_Y_path, fps)
 
     #-----------------load config file for odor and arena positions
     with open(stage_pos_path, 'r') as config_file:
@@ -269,9 +276,6 @@ def main(arg_list=None):
     df_worm_parameter['distance_to_odor_stage'] = df_worm_parameter.apply(lambda row: calculate_distance(row, 'X_rel', 'Y_rel', x_odor, y_odor), axis=1)
     df_worm_parameter[f'distance_to_odor_centroid'] = df_worm_parameter.apply(lambda row: calculate_distance(row, 'X_rel_skel_pos_centroid', 'Y_rel_skel_pos_centroid', x_odor, y_odor), axis=1)
     df_worm_parameter[f'distance_to_odor_{skel_pos_0}'] = df_worm_parameter.apply(lambda row: calculate_distance(row, f'X_rel_skel_pos_{skel_pos_0}', f'Y_rel_skel_pos_{skel_pos_0}', x_odor, y_odor), axis=1)
-
-    #add column that shows time passed in seconds
-    calculate_time_in_seconds(df_worm_parameter, fps)
 
     print("added column for time:", df_worm_parameter)
 
