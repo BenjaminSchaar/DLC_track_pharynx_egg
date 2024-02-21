@@ -116,8 +116,8 @@ def main(arg_list=None):
     spline_X_path = args.skeleton_spline_X_coords
     spline_Y_path = args.skeleton_spline_Y_coords
     factor_px_to_mm = args.factor_px_to_mm
-    video_resolution_x = args.video_resolution_x
-    video_resolution_y = args.video_resolution_y
+    video_resolution_x = int(args.video_resolution_x)
+    video_resolution_y = int(args.video_resolution_y)
     fps = args.fps
     conc_gradient_array = args.conc_gradient_array
     distance_array = args.distance_array
@@ -309,7 +309,7 @@ def main(arg_list=None):
 
     plot_chemotaxis_overview(df_worm_parameter, output_path, x_odor, y_odor, arena_min_x, arena_max_x, arena_min_y, arena_max_y, file_name="chemotaxis_overview.png")
 
-    create_angle_animation(df, output_path, x_odor, y_odor, fps, filename ='angle_animation.avi')
+    create_angle_animation(df_worm_parameter, output_path, x_odor, y_odor, fps, filename ='angle_animation.avi')
 
 if __name__ == "__main__":
 
