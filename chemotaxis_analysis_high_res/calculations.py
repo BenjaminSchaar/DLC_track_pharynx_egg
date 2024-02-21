@@ -4,7 +4,7 @@ from scipy.spatial import distance
 import math
 
 
-def interpolate_df(vector, length):
+def interpolate_df(vector, length) -> np.ndarray:
     return np.interp(np.linspace(0, len(vector) - 1, length), np.arange(len(vector)), vector)
 
 def correct_stage_pos_with_skeleton(
