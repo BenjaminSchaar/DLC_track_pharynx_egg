@@ -98,6 +98,7 @@ def read_csv_files(beh_annotation_path:str, skeleton_spline_path:str, worm_pos_p
         worm_pos_df = worm_pos_df.apply(lambda x: interpolate_df(x, len(spline_X_df)), axis=0)
 
         print("Stage Position Dataframe lenght after interpolation:", len(worm_pos_df))
+        print("Stage Position Dataframe head after interpolation:", worm_pos_df.head())
         print("Frame lenght of recorded video:", len(spline_X_df))
 
     return beh_annotation_df, skeleton_spline_df, worm_pos_df, spline_X_df, spline_Y_df
@@ -207,14 +208,7 @@ def main(arg_list=None):
     x_zero += abs(move_grid_factor)
     y_zero += abs(move_grid_factor)
 
-    # Display the loaded dataframes
-    print("Behavior Annotation DataFrame:")
-    print(beh_annotation.head())
-
-    print("\nSkeleton Spline DataFrame:")
-    print(skeleton_spline.head())
-
-    print("\nWorm Pos DataFrame:")
+    print("\nWorm Pos DataFrame shifted:")
     print(df_worm_parameter.head())
 
     # adjust odor point to relative grid via reference point
@@ -230,9 +224,6 @@ def main(arg_list=None):
     df_worm_parameter = df_worm_parameter.apply(lambda row: convert_coordinates(row, x_zero, y_zero), axis=1)
 
     df_worm_parameter['X_rel'] = df_worm_parameter['X_rel'].abs()  # shift relative stage position to positive values
-
-    # Drop the 'time' column because it is not needed
-    df_worm_parameter.drop(columns='time', inplace=True)
 
     # calculate corrected center position of the worm
     skel_pos_centroid = 100
