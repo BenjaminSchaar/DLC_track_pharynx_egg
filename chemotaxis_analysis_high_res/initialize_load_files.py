@@ -194,10 +194,10 @@ def main(arg_list=None):
     # -------------shifts every value of x and y in the positive range, by addition of the lowest value to all values
     # Finding the lowest negative value among X_rel and Y_rel columns
 
-    lowest_neg_x = float(df_worm_parameter['X'][df_worm_parameter['X'] < 0].min())
+    lowest_neg_x = float(df_worm_parameter['X'][df_worm_parameter['X'] < 0].fillna(0).min())
     print(f"Lowest negative X: {lowest_neg_x}")  # Print statement for lowest_neg_x
 
-    lowest_neg_y = float(df_worm_parameter['Y'][df_worm_parameter['Y'] < 0].min())
+    lowest_neg_y = float(df_worm_parameter['Y'][df_worm_parameter['Y'] < 0].fillna(0).min())
     print(f"Lowest negative Y: {lowest_neg_y}")  # Print statement for lowest_neg_y
 
     # Saving the lowest negative value as move_grid_factor
