@@ -58,7 +58,7 @@ def read_csv_files(beh_annotation_path:str, skeleton_spline_path:str, worm_pos_p
     # Convert all columns to numeric, if possible
     beh_annotation_df = beh_annotation_df.apply(pd.to_numeric, errors='coerce')
     skeleton_spline_df = skeleton_spline_df.apply(pd.to_numeric, errors='coerce')
-    worm_pos_df = worm_pos_df.apply(pd.to_numeric, errors='coerce', axis=0)
+    worm_pos_df.iloc[:, 1:] = worm_pos_df.iloc[:, 1:].apply(pd.to_numeric, errors='coerce') #don't change 1. column time to numeric
     spline_X_df = spline_X_df.apply(pd.to_numeric, errors='coerce')
     spline_Y_df = spline_Y_df.apply(pd.to_numeric, errors='coerce')
 
