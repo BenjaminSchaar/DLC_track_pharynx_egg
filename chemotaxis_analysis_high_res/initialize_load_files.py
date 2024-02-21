@@ -193,12 +193,12 @@ def main(arg_list=None):
 
     # -------------shifts every value of x and y in the positive range, by addition of the lowest value to all values
     # Finding the lowest negative value among X_rel and Y_rel columns
-    if df_worm_parameter['X'][df_worm_parameter['X'] < 0] > 0:
+    if len(df_worm_parameter['X'][df_worm_parameter['X'] < 0]) > 0:
         lowest_neg_x = float(np.nanmin(df_worm_parameter['X'][df_worm_parameter['X'] < 0]))
     else:
         lowest_neg_x = 0.0
 
-    if df_worm_parameter['Y'][df_worm_parameter['Y'] < 0] > 0:
+    if len(df_worm_parameter['Y'][df_worm_parameter['Y'] < 0]) > 0:
         lowest_neg_y = float(np.nanmin(df_worm_parameter['Y'][df_worm_parameter['Y'] < 0]))
         print(f"Lowest negative Y: {lowest_neg_y}")  # Print statement for lowest_neg_y
     else:
