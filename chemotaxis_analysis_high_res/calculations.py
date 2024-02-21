@@ -38,8 +38,8 @@ def correct_stage_pos_with_skeleton(
 
     if skel_pos == 100: #calculate centroid
         # Convert all columns to NumPy arrays for centroid calculation
-        column_skel_pos_x = spline_X.iloc[:, skel_pos].mean(axis=1).to_numpy()
-        column_skel_pos_y = spline_Y.iloc[:, skel_pos].mean(axis=1).to_numpy()
+        column_skel_pos_x = spline_X.iloc[:, 0:100].mean(axis=1).to_numpy()
+        column_skel_pos_y = spline_Y.iloc[:, 0:100].mean(axis=1).to_numpy()
 
     else:
         # Convert relevant columns to NumPy arrays for efficient computation
