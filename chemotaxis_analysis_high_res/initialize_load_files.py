@@ -195,10 +195,14 @@ def main(arg_list=None):
     # Finding the lowest negative value among X_rel and Y_rel columns
 
     lowest_neg_x = float(df_worm_parameter['X'][df_worm_parameter['X'] < 0].min())
+    print(f"Lowest negative X: {lowest_neg_x}")  # Print statement for lowest_neg_x
+
     lowest_neg_y = float(df_worm_parameter['Y'][df_worm_parameter['Y'] < 0].min())
+    print(f"Lowest negative Y: {lowest_neg_y}")  # Print statement for lowest_neg_y
 
     # Saving the lowest negative value as move_grid_factor
     move_grid_factor = min(float(lowest_neg_x), float(lowest_neg_y), float(x_odor), float(y_odor), float(x_zero), float(y_zero))
+    print(f"Move grid factor: {move_grid_factor}")  # Print statement for move_grid_factor
 
     # Adding the lowest negative value to every value in x_rel, y_rel, and additional values
     df_worm_parameter['X'] += abs(move_grid_factor)
