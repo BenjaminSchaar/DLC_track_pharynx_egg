@@ -357,6 +357,9 @@ def main(arg_list=None):
     # Merge/join based on index
     df_worm_parameter = pd.merge(df_worm_parameter, beh_annotation, left_index=True, right_index=True, how='inner')
 
+    # Show the head of the merged DataFrame
+    print(df_worm_parameter.head())
+
     # create column reversal onset and reversal end
     # Shift the 'behaviour_state' column by one to check the prior value
     prior_state = df_worm_parameter['behaviour_state'].shift(periods=-1, fill_value=0)
