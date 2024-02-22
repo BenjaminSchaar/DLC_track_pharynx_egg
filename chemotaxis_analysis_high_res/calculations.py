@@ -191,8 +191,8 @@ def calculate_angle(x:float, y:float, n_x:float, n_y:float, o_x:float, o_y:float
     magnitude_to_odor = math.sqrt(vector_future[0] ** 2 + vector_future[1] ** 2)
 
     # Check for division by zero before calculating the angle
-    if magnitude_movement * magnitude_to_odor == 0:
-        return np.nan  # or any other value to indicate an undefined angle
+    if magnitude_movement == 0 or magnitude_to_odor == 0:
+        return np.nan  # Avoid division by zero
 
     # Calculate the angle in radians
     angle = math.acos(dot_product / (magnitude_movement * magnitude_to_odor))
