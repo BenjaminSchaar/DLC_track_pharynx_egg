@@ -50,7 +50,7 @@ def plot_chemotaxis_overview(df, output_path, x_odor, y_odor, arena_min_x, arena
     plt.savefig(file_name)
     plt.close()  # Close the plot to free memory
 
-def create_angle_animation_cv2(df, output_path, x_odor, y_odor, fps, file_name):
+def create_angle_animation(df, output_path, x_odor, y_odor, fps, file_name):
     '''
     Create and save an animation showing angles from a DataFrame using OpenCV.
 
