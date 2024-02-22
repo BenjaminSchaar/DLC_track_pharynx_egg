@@ -35,6 +35,12 @@ def correct_stage_pos_with_skeleton(
     pd.DataFrame: Updated DataFrame with the worm's corrected position.
     '''
 
+    print(f'factor_px_to_mm: {factor_px_to_mm}, DataType: {type(factor_px_to_mm)}')
+
+    video_resolution_x = int(video_resolution_x)
+    video_resolution_y = int(video_resolution_y)
+    factor_px_to_mm = float(factor_px_to_mm)
+
     center_x = video_resolution_x / 2
     center_y = video_resolution_y / 2
     print(f'center_x: {center_x}, DataType: {type(center_x)}')
