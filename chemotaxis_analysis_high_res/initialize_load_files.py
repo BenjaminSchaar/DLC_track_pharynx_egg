@@ -384,7 +384,8 @@ def main(arg_list=None):
 
     create_angle_animation(df_worm_parameter, output_path, x_odor, y_odor, fps, file_name ='angle_animation.avi')
 
-
+    # Saving param df to a CSV file
+    df_worm_parameter.to_csv(os.path.join(output_path, 'chemotaxis_params.csv'), index=False)
 
 if __name__ == "__main__":
 
