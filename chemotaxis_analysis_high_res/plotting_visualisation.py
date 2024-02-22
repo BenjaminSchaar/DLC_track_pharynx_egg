@@ -21,6 +21,7 @@ def plot_chemotaxis_overview(df, output_path, x_odor, y_odor, arena_min_x, arena
 
     # Combine the output path and file name
     full_path = os.path.join(output_path, file_name)
+    print("The full file path is:", full_path)
 
     plt.figure(figsize=(160, 160))
 
@@ -47,7 +48,7 @@ def plot_chemotaxis_overview(df, output_path, x_odor, y_odor, arena_min_x, arena
     plt.legend()
 
     # Save the plot
-    plt.savefig(file_name)
+    plt.savefig(full_path)
     plt.close()  # Close the plot to free memory
 
 def create_angle_animation(df, output_path, x_odor, y_odor, fps, file_name):
@@ -63,6 +64,7 @@ def create_angle_animation(df, output_path, x_odor, y_odor, fps, file_name):
     '''
     # Combine the output path and file name
     full_path = os.path.join(output_path, file_name)
+    print("The full file path is:", full_path)
 
     # Define the video's width, height, and codec
     width, height = 600, 600

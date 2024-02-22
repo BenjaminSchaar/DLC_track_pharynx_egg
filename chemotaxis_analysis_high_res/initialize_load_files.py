@@ -384,6 +384,8 @@ def main(arg_list=None):
 
     create_angle_animation(df_worm_parameter, output_path, x_odor, y_odor, fps, file_name ='angle_animation.avi')
 
+
+
 if __name__ == "__main__":
 
         print("Shell commands passed:", sys.argv)
