@@ -172,38 +172,31 @@ def calculate_angle(x:float, y:float, n_x:float, n_y:float, o_x:float, o_y:float
     Note: The cosine inverse function, cos⁻¹, also known as arc cosine (acos), returns the principal value of the angle in radians, which lies in the range [0, π] for all possible dot product values.
 
     """
-    # Convert all input values to float to ensure correct data types
     x, y, n_x, n_y, o_x, o_y = map(float, [x, y, n_x, n_y, o_x, o_y])
 
     point_n_minus = (n_x, n_y)  # Past position of the object
     point_n = (x, y)  # Current position of the object
     point_n_plus = (o_x, o_y)  # Future position of the object
 
-    # Calculate the movement vector
+    # Calculate the vectors
     vector_past = (point_n_minus[0] - point_n[0], point_n_minus[1] - point_n[1])
-
-    # Calculate the vector pointing to the future position from the current position
     vector_future = (point_n_plus[0] - point_n[0], point_n_plus[1] - point_n[1])
 
     # Calculate dot product and magnitudes
     dot_product = vector_past[0] * vector_future[0] + vector_past[1] * vector_future[1]
-
     magnitude_movement = math.sqrt(vector_past[0] ** 2 + vector_past[1] ** 2)
-
     magnitude_to_future = math.sqrt(vector_future[0] ** 2 + vector_future[1] ** 2)
 
-    # Check for division by zero before calculating the angle
+    # Prevent division by zero
     if magnitude_movement == 0 or magnitude_to_future == 0:
         return np.nan  # Avoid division by zero
 
-    # Calculate the angle in radians
-    angle = math.acos(dot_product / (magnitude_movement * magnitude_to_future))
+    # Ensure the dot product is within the valid range for acos
+    dot_product_normalized = dot_product / (magnitude_movement * magnitude_to_future)
+    dot_product_normalized = max(min(dot_product_normalized, 1.0), -1.0)  # Clip to [-1,1]
 
-    # Convert the angle to degrees
+    # Calculate the angle in radians and then convert to degrees
+    angle = math.acos(dot_product_normalized)
     angle_degrees = math.degrees(angle)
-
-    # Ensure the angle is within the range [0, 180]
-    if angle_degrees > 180:
-        angle_degrees = 360 - angle_degrees
 
     return angle_degrees
