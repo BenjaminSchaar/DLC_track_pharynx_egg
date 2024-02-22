@@ -93,7 +93,8 @@ def calculate_time_in_seconds(df: pd.DataFrame, fps: int):
     :param fps: fps of recording
     :return:
     '''
-
+    print('calc time in seconds for:', df.head())
+    
     df['time_seconds'] = df.index / fps
     return df
 
