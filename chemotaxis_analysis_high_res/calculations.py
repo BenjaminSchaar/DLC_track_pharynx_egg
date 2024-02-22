@@ -174,34 +174,47 @@ def calculate_angle(x:float, y:float, n_x:float, n_y:float, o_x:float, o_y:float
     """
     # Convert all input values to float to ensure correct data types
     x, y, n_x, n_y, o_x, o_y = map(float, [x, y, n_x, n_y, o_x, o_y])
+    print(f"Converted coordinates: x={x}, y={y}, n_x={n_x}, n_y={n_y}, o_x={o_x}, o_y={o_y}")
 
     point_n_minus = (n_x, n_y)  # Past position of the object
     point_n = (x, y)  # Current position of the object
-    point_n_plus = (o_x, o_y) #future position of the object
+    point_n_plus = (o_x, o_y)  # Future position of the object
+    print(f"Points: point_n_minus={point_n_minus}, point_n={point_n}, point_n_plus={point_n_plus}")
 
     # Calculate the movement vector
     vector_past = (point_n_minus[0] - point_n[0], point_n_minus[1] - point_n[1])
+    print(f"vector_past={vector_past}")
 
-    # Calculate the vector pointing to the odor source from the current position
+    # Calculate the vector pointing to the future position from the current position
     vector_future = (point_n_plus[0] - point_n[0], point_n_plus[1] - point_n[1])
+    print(f"vector_future={vector_future}")
 
     # Calculate dot product and magnitudes
     dot_product = vector_past[0] * vector_future[0] + vector_past[1] * vector_future[1]
+    print(f"dot_product={dot_product}")
+
     magnitude_movement = math.sqrt(vector_past[0] ** 2 + vector_past[1] ** 2)
-    magnitude_to_odor = math.sqrt(vector_future[0] ** 2 + vector_future[1] ** 2)
+    print(f"magnitude_movement={magnitude_movement}")
+
+    magnitude_to_future = math.sqrt(vector_future[0] ** 2 + vector_future[1] ** 2)
+    print(f"magnitude_to_future={magnitude_to_future}")
 
     # Check for division by zero before calculating the angle
-    if magnitude_movement == 0 or magnitude_to_odor == 0:
+    if magnitude_movement == 0 or magnitude_to_future == 0:
+        print("Division by zero encountered.")
         return np.nan  # Avoid division by zero
 
     # Calculate the angle in radians
-    angle = math.acos(dot_product / (magnitude_movement * magnitude_to_odor))
+    angle = math.acos(dot_product / (magnitude_movement * magnitude_to_future))
+    print(f"angle (radians)={angle}")
 
     # Convert the angle to degrees
     angle_degrees = math.degrees(angle)
+    print(f"angle (degrees)={angle_degrees}")
 
     # Ensure the angle is within the range [0, 180]
     if angle_degrees > 180:
         angle_degrees = 360 - angle_degrees
+        print(f"Adjusted angle (degrees)={angle_degrees}")
 
     return angle_degrees
