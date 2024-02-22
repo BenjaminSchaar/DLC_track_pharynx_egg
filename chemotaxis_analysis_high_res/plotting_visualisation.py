@@ -105,7 +105,7 @@ def create_angle_animation(df, output_path, x_odor, y_odor, fps, file_name):
     animation = FuncAnimation(fig, update, frames=len(df), interval=100, repeat=False)
 
     # Save the animation as an AVI file
-    animation.save(full_path, writer='pillow', fps=fps)
+    animation.save(full_path, writer='ffmpeg', fps=fps)
 
     # Close the plot to prevent it from displaying in the notebook or Python script
     plt.close()
