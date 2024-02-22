@@ -172,6 +172,8 @@ def calculate_angle(x:float, y:float, n_x:float, n_y:float, o_x:float, o_y:float
     Note: The cosine inverse function, cos⁻¹, also known as arc cosine (acos), returns the principal value of the angle in radians, which lies in the range [0, π] for all possible dot product values.
 
     """
+    # Convert all input values to float to ensure correct data types
+    x, y, n_x, n_y, o_x, o_y = map(float, [x, y, n_x, n_y, o_x, o_y])
 
     point_n_minus = (n_x, n_y)  # Past position of the object
     point_n = (x, y)  # Current position of the object
