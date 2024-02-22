@@ -273,9 +273,9 @@ def main(arg_list=None):
     df_worm_parameter[f'distance_to_odor_{skel_pos_0}'] = df_worm_parameter.apply(lambda row: calculate_distance(row, f'X_rel_skel_pos_{skel_pos_0}', f'Y_rel_skel_pos_{skel_pos_0}', x_odor, y_odor), axis=1)
 
     # Convert to float
+    df_worm_parameter['distance_to_odor_stage'] =  df_worm_parameter['distance_to_odor_stage'].astype(float)
     df_worm_parameter['distance_to_odor_centroid'] = df_worm_parameter['distance_to_odor_centroid'].astype(float)
     df_worm_parameter[f'distance_to_odor_{skel_pos_0}'] = df_worm_parameter[f'distance_to_odor_{skel_pos_0}'].astype(float)
-    df_worm_parameter['time_seconds'] = df_worm_parameter['time_seconds'].astype(float)
 
     #add column that shows time passed in seconds
     calculate_time_in_seconds(df_worm_parameter, fps)
