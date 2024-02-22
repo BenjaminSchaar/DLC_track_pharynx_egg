@@ -94,8 +94,12 @@ def calculate_time_in_seconds(df: pd.DataFrame, fps: int):
     :return:
     '''
     print('calc time in seconds for:', df.head())
-    
-    df['time_seconds'] = df.index / fps
+    fps = float(fps)
+    # Convert index to numeric if necessary (this assumes index should be integer frame numbers)
+    if not pd.api.types.is_numeric_dtype(df.index):
+        df.index = pd.to_numeric(df.index, errors='coerce')  # 'coerce' turns invalid values into NaNs, adjust as needed
+
+    df['time_seconds'] = df.index.to_series().astype(float) / fps
     return df
 
 
