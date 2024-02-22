@@ -1,6 +1,8 @@
-import matplotlib.pyplot as plt
+import cv2
 import os
-from matplotlib.animation import FuncAnimation
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 
 def plot_chemotaxis_overview(df, output_path, x_odor, y_odor, arena_min_x, arena_max_x, arena_min_y, arena_max_y, file_name):
     """
