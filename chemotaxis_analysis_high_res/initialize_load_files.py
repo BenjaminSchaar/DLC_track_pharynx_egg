@@ -352,10 +352,10 @@ def main(arg_list=None):
     - calculates reversal frequency per minute
     '''
     # Renaming the second column from '0' to 'behaviour_state'
-    beh_annotation.rename(columns={'0': 'behaviour_state'}, inplace=True)
+    beh_annotation = beh_annotation.rename(columns={'1': 'behaviour_state'}, inplace=True)
 
     # Merge/join based on index
-    df_worm_parameter = pd.merge(df_worm_parameter, beh_annotation, left_index=True, right_index=True, how='inner')
+    df_worm_parameter = pd.merge(df_worm_parameter, beh_annotation, left_index=True, right_index=True, how='left')
 
     # Show the head of the merged DataFrame
     print(df_worm_parameter.head())
