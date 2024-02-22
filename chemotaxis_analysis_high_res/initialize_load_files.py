@@ -164,8 +164,16 @@ def main(arg_list=None):
     video_resolution_x = int(args.video_resolution_x)
     video_resolution_y = int(args.video_resolution_y)
     fps = float(args.fps)
-    conc_gradient_array = args.conc_gradient_array
-    distance_array = args.distance_array
+    conc_gradient_array = np.array(args.conc_gradient_array)
+    distance_array = np.array(args.distance_array)
+
+    print("conc_gradient_array content:", conc_gradient_array)
+    print("conc_gradient_array type:", type(conc_gradient_array))
+    print("conc_gradient_array shape:", conc_gradient_array.shape)
+
+    print("distance_array content:", distance_array)
+    print("distance_array type:", type(distance_array))
+    print("distance_array shape:", distance_array.shape)
 
     # Set arena boundaries
     arena_min_x = 0
