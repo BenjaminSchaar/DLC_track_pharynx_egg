@@ -50,8 +50,6 @@ def plot_chemotaxis_overview(df, output_path, x_odor, y_odor, arena_min_x, arena
 
 def create_angle_animation(df, output_path, x_odor, y_odor, fps, file_name):
     '''
-
-
     :param df:
     :param output_path:
     :param x_odor:

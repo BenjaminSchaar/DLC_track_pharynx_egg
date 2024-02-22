@@ -382,7 +382,7 @@ def main(arg_list=None):
 
     plot_chemotaxis_overview(df_worm_parameter, output_path, x_odor, y_odor, arena_min_x, arena_max_x, arena_min_y, arena_max_y, file_name="chemotaxis_overview.png")
 
-    create_angle_animation(df_worm_parameter, output_path, x_odor, y_odor, fps, filename ='angle_animation.avi')
+    create_angle_animation(df_worm_parameter, output_path, x_odor, y_odor, fps, file_name ='angle_animation.avi')
 
 if __name__ == "__main__":
 
