@@ -160,10 +160,10 @@ def main(arg_list=None):
     stage_pos_path = args.stage_pos
     spline_X_path = args.skeleton_spline_X_coords
     spline_Y_path = args.skeleton_spline_Y_coords
-    factor_px_to_mm = args.factor_px_to_mm
+    factor_px_to_mm = float(args.factor_px_to_mm)
     video_resolution_x = int(args.video_resolution_x)
     video_resolution_y = int(args.video_resolution_y)
-    fps = args.fps
+    fps = float(args.fps)
     conc_gradient_array = args.conc_gradient_array
     distance_array = args.distance_array
 

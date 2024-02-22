@@ -35,7 +35,7 @@ def correct_stage_pos_with_skeleton(
     pd.DataFrame: Updated DataFrame with the worm's corrected position.
     '''
 
-    print(f'factor_px_to_mm: {factor_px_to_mm}, DataType: {type(factor_px_to_mm)}')
+    print("running func correct_stage_pos_with_skeleton for skel_pos:", skel_pos)
 
     video_resolution_x = int(video_resolution_x)
     video_resolution_y = int(video_resolution_y)
@@ -43,39 +43,26 @@ def correct_stage_pos_with_skeleton(
 
     center_x = video_resolution_x / 2
     center_y = video_resolution_y / 2
-    print(f'center_x: {center_x}, DataType: {type(center_x)}')
-    print(f'center_y: {center_y}, DataType: {type(center_y)}')
 
     if skel_pos == 100:  # calculate centroid
         column_skel_pos_x = spline_X.iloc[:, 0:100].mean(axis=1).to_numpy().astype(float)
         column_skel_pos_y = spline_Y.iloc[:, 0:100].mean(axis=1).to_numpy().astype(float)
-        print('Calculated centroid positions.')
     else:
         column_skel_pos_x = spline_X.iloc[:, skel_pos].to_numpy().astype(float)
         column_skel_pos_y = spline_Y.iloc[:, skel_pos].to_numpy().astype(float)
-        print(f'Using skeleton position {skel_pos} for calculations.')
-
-    print(f'column_skel_pos_x: {column_skel_pos_x[0:5]}, DataType: {type(column_skel_pos_x)}')  # Print only the first 5 for brevity
-    print(f'column_skel_pos_y: {column_skel_pos_y[0:5]}, DataType: {type(column_skel_pos_y)}')
 
     difference_x_px = column_skel_pos_x - center_x
     difference_y_px = column_skel_pos_y - center_y
-    print(f'difference_x_px: {difference_x_px[0:5]}, DataType: {type(difference_x_px)}')
-    print(f'difference_y_px: {difference_y_px[0:5]}, DataType: {type(difference_y_px)}')
 
     difference_center_x_mm = difference_x_px * factor_px_to_mm
     difference_center_y_mm = difference_y_px * factor_px_to_mm
-    print(f'difference_center_x_mm: {difference_center_x_mm[0:5]}, DataType: {type(difference_center_x_mm)}')
-    print(f'difference_center_y_mm: {difference_center_y_mm[0:5]}, DataType: {type(difference_center_y_mm)}')
 
     if skel_pos == 100:
         worm_pos['X_rel_skel_pos_centroid'] = worm_pos['X_rel'] - difference_center_y_mm
         worm_pos['Y_rel_skel_pos_centroid'] = worm_pos['Y_rel'] - difference_center_x_mm
-        print('Updated worm_pos DataFrame with centroid positions.')
     else:
         worm_pos[f'X_rel_skel_pos_{skel_pos}'] = worm_pos['X_rel'] - difference_center_y_mm
         worm_pos[f'Y_rel_skel_pos_{skel_pos}'] = worm_pos['Y_rel'] - difference_center_x_mm
-        print(f'Updated worm_pos DataFrame with positions for skeleton {skel_pos}.')
 
     return worm_pos
 
