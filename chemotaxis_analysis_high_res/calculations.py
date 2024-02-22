@@ -105,6 +105,12 @@ def calculate_time_in_seconds(df: pd.DataFrame, fps: int):
 
 def calculate_preceived_conc(distance: float, time_seconds: float, conc_array: np.ndarray, distance_array: np.ndarray) -> float:
 
+    # Type enforcement
+    distance = float(distance)
+    time_seconds = float(time_seconds)
+    conc_array = np.asarray(conc_array)
+    distance_array = np.asarray(distance_array)
+
     # finds the proper frame of the sim, the sim runs in 10 second steps with 0.1 fps
     sim_time = int(0)
     sim_time = int(time_seconds // 10 * 10)  # finds the simulation time that is closest to the real time

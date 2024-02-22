@@ -281,13 +281,12 @@ def main(arg_list=None):
 
     # Apply the function to create the 'Conc' column
     df_worm_parameter[f'conc_at_centroid'] = df_worm_parameter.apply(
-        lambda row: calculate_preceived_conc(row[f'distance_to_odor_centroid'], row['time_seconds'], conc_gradient_array, distance_array),
-        axis=1)
+        lambda row: calculate_preceived_conc(
+            row[f'distance_to_odor_centroid'], row['time_seconds'], conc_gradient_array, distance_array),axis=1)
 
     df_worm_parameter[f'conc_at_{skel_pos_0}'] = df_worm_parameter.apply(
-        lambda row: calculate_preceived_conc(row[f'distance_to_odor_{skel_pos_0}'], row['time_seconds'], conc_gradient_array,
-                                             distance_array),
-        axis=1)
+        lambda row: calculate_preceived_conc(
+            row[f'distance_to_odor_{skel_pos_0}'], row['time_seconds'], conc_gradient_array,distance_array),axis=1)
 
     # Calculate delta concentration across the time interval
     time_interval_dC_dT = 30  #need to figure out how far back in the past to compare it to
