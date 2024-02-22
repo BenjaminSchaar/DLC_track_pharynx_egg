@@ -48,66 +48,72 @@ def plot_chemotaxis_overview(df, output_path, x_odor, y_odor, arena_min_x, arena
     plt.savefig(file_name)
     plt.close()  # Close the plot to free memory
 
-def create_angle_animation(df, output_path, x_odor, y_odor, fps, file_name):
+def create_angle_animation_cv2(df, output_path, x_odor, y_odor, fps, file_name):
     '''
-    :param df:
-    :param output_path:
-    :param x_odor:
-    :param y_odor:
-    :param fps:
-    :param output_filename:
-    :return:
-    '''
+    Create and save an animation showing angles from a DataFrame using OpenCV.
 
+    :param df: DataFrame containing the data points for the animation.
+    :param output_path: The directory to save the output file.
+    :param x_odor: X-coordinate for the odor/source location.
+    :param y_odor: Y-coordinate for the odor/source location.
+    :param fps: Frames per second for the output video.
+    :param file_name: Name of the output file.
+    '''
     # Combine the output path and file name
     full_path = os.path.join(output_path, file_name)
 
-    # Create a figure and axis for the plot
-    fig, ax = plt.subplots(figsize=(6, 6))
+    # Define the video's width, height, and codec
+    width, height = 600, 600
+    fourcc = cv2.VideoWriter_fourcc(*'DIVX')  # 'XVID' can also be used
 
-    # Function to update the plot for each frame
-    def update(frame):
+    # Create VideoWriter object
+    out = cv2.VideoWriter(full_path, fourcc, fps, (width, height))
+
+    # Create a figure for plotting
+    fig, ax = plt.subplots(figsize=(6, 6), dpi=100)  # Adjust figsize if needed
+    canvas = FigureCanvas(fig)
+
+    for frame in range(len(df)):
+        # Clear the previous frame
         ax.clear()
-        row_number = frame
 
-        # Extracting the central point coordinates
-        center_x_close = df.at[row_number, 'X_rel']
-        center_y_close = df.at[row_number, 'Y_rel']
+        # Extract data for current frame
+        center_x_close = df.at[frame, 'X_rel']
+        center_y_close = df.at[frame, 'Y_rel']
 
-        # Plotting the points for the angle
-        ax.scatter(df.at[row_number, 'X_rel'], df.at[row_number, 'Y_rel'], color='blue', s=5)
-        ax.scatter(df.at[row_number, 'X_shifted_negative'], df.at[row_number, 'Y_shifted_negative'], color='lightblue', s=5)
-        ax.scatter(df.at[row_number, 'X_shifted_positive'], df.at[row_number, 'Y_shifted_positive'], color='purple', s=5)
+        # Plot points and lines for the current frame
+        ax.scatter(df.at[frame, 'X_rel'], df.at[frame, 'Y_rel'], color='blue', s=5)
+        ax.scatter(df.at[frame, 'X_shifted_negative'], df.at[frame, 'Y_shifted_negative'], color='lightblue', s=5)
+        ax.scatter(df.at[frame, 'X_shifted_positive'], df.at[frame, 'Y_shifted_positive'], color='purple', s=5)
         ax.scatter(x_odor, y_odor, color='red', s=5)
+        ax.plot([x_odor, df.at[frame, 'X_rel']], [y_odor, df.at[frame, 'Y_rel']], color='red', linestyle='--', linewidth=0.8)
+        ax.plot([df.at[frame, 'X_shifted_negative'], df.at[frame, 'X_rel']], [df.at[frame, 'Y_shifted_negative'], df.at[frame, 'Y_rel']], color='green', linestyle='--', linewidth=0.8)
+        ax.plot([df.at[frame, 'X_shifted_positive'], df.at[frame, 'X_rel']], [df.at[frame, 'Y_shifted_positive'], df.at[frame, 'Y_rel']], color='blue', linestyle='--', linewidth=0.8)
 
-        # Drawing lines for the angle
-        ax.plot([x_odor, df.at[row_number, 'X_rel']], [y_odor, df.at[row_number, 'Y_rel']], color='red', linestyle='--', linewidth=0.8)
-        ax.plot([df.at[row_number, 'X_shifted_negative'], df.at[row_number, 'X_rel']], [df.at[row_number, 'Y_shifted_negative'], df.at[row_number, 'Y_rel']], color='green', linestyle='--', linewidth=0.8)
-        ax.plot([df.at[row_number, 'X_shifted_positive'], df.at[row_number, 'X_rel']], [df.at[row_number, 'Y_shifted_positive'], df.at[row_number, 'Y_rel']], color='blue', linestyle='--', linewidth=0.8)
-
-        # Setting the window limits around the point
+        # Setting plot limits and labels
         ax.set_xlim(center_x_close - 5, center_x_close + 5)
         ax.set_ylim(center_y_close - 5, center_y_close + 5)
-
-        # Set labels and title
         ax.set_xlabel('Distance (mm)')
         ax.set_ylabel('Distance (mm)')
-        ax.set_title(f'Bearing Angle Visualization for Row {row_number}')
+        ax.set_title(f'Bearing Angle Visualization for Frame {frame}')
         ax.grid(True)
 
-        # Display bearing and curving angles as text
-        bearing_angle_text = 'Bearing Angle: {:.2f}'.format(df.at[row_number, 'bearing_angle'])
-        curving_angle_text = 'Curving Angle: {:.2f}'.format(df.at[row_number, 'curving_angle'])
+        # Text for angles
+        bearing_angle_text = f'Bearing Angle: {df.at[frame, "bearing_angle"]:.2f}'
+        curving_angle_text = f'Curving Angle: {df.at[frame, "curving_angle"]:.2f}'
         ax.text(0.05, 0.95, bearing_angle_text, transform=ax.transAxes, fontsize=10, color='black')
         ax.text(0.05, 0.90, curving_angle_text, transform=ax.transAxes, fontsize=10, color='black')
 
-    # Create the animation
-    animation = FuncAnimation(fig, update, frames=len(df), interval=100, repeat=False)
+        # Convert the Matplotlib figure to an array
+        canvas.draw()  # Draw the canvas
+        frame_array = np.array(canvas.renderer.buffer_rgba())  # Get the RGBA buffer from the canvas
+        frame_array = cv2.cvtColor(frame_array, cv2.COLOR_RGBA2BGR)  # Convert RGBA to BGR
 
-    # Save the animation as an AVI file
-    animation.save(full_path, writer='ffmpeg', fps=fps)
+        # Write the frame to the video
+        out.write(frame_array)
 
-    # Close the plot to prevent it from displaying in the notebook or Python script
-    plt.close()
+    # Release everything when job is finished
+    out.release()
+    plt.close(fig)  # Close the figure to free memory
 
 
