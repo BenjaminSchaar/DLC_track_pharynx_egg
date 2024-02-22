@@ -351,8 +351,9 @@ def main(arg_list=None):
     - calculates reversal start and end
     - calculates reversal frequency per minute
     '''
-    # Renaming the second column from '0' to 'behaviour_state'
-    beh_annotation = beh_annotation.rename(columns={1: 'behaviour_state'})
+
+    # Renaming the second column (index 1) to 'behaviour_state'
+    beh_annotation.columns.values[1] = 'behaviour_state'
 
     # Merge/join based on index
     df_worm_parameter = pd.merge(df_worm_parameter, beh_annotation, left_index=True, right_index=True, how='left')
@@ -370,7 +371,7 @@ def main(arg_list=None):
     df_worm_parameter['reversal_end'] = ((prior_state == -1) & (df_worm_parameter['behaviour_state'] != -1)).astype(int)
 
     # Calculate the reversal frequenzy
-    window_size = fps * 60  # reversal frequenzy per minute
+    window_size = int(fps * 60)  # reversal frequenzy per minute
 
     df_worm_parameter['reversal_frequency'] = df_worm_parameter['reversal_onset'].rolling(window=window_size).sum()
 
