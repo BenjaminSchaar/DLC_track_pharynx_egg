@@ -219,7 +219,7 @@ def calculate_speed(df, fps):
     smoothing_window_size = fps
 
     # Smooth the 'speed' column using a rolling window and taking the mean
-    df['speed'] = df['speed'].rolling(window=window_size, min_periods=1).mean()
+    df['speed'] = df['speed'].rolling(window=smoothing_window_size, min_periods=1).mean()
 
     return df
 
