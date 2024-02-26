@@ -179,7 +179,10 @@ def calculate_angle(x:float, y:float, n_x:float, n_y:float, o_x:float, o_y:float
     point_n_plus = (o_x, o_y)  # Future position of the object
 
     # Calculate the vectors
-    vector_past = (point_n_minus[0] - point_n[0], point_n_minus[1] - point_n[1])
+    # Vector from point_n_minus to point_n
+    vector_past = (point_n[0] - point_n_minus[0], point_n[1] - point_n_minus[1])
+
+    # Vector from point_n to point_n_plus
     vector_future = (point_n_plus[0] - point_n[0], point_n_plus[1] - point_n[1])
 
     # Calculate dot product and magnitudes
@@ -200,3 +203,36 @@ def calculate_angle(x:float, y:float, n_x:float, n_y:float, o_x:float, o_y:float
     angle_degrees = math.degrees(angle)
 
     return angle_degrees
+
+
+def calculate_speed(df, fps):
+    '''
+    This function calculates speed per seconds of the centroid position and adds the column speed
+    :param df:
+    :param fps:
+    :return:
+    '''
+    # Assuming df is a pandas DataFrame with columns 'X_rel' and 'Y_rel'
+    df['speed'] = ((df['X_rel_skel_pos_centroid'].diff() ** 2 + df['Y_rel_skel_pos_centroid'].diff() ** 2) ** 0.5) * fps
+
+    # Assuming df is your DataFrame
+    smoothing_window_size = fps
+
+    # Smooth the 'speed' column using a rolling window and taking the mean
+    df['speed'] = df['speed'].rolling(window=window_size, min_periods=1).mean()
+
+    return df
+
+def calculate_radial_speed(df, fps):
+    '''
+    calculates raidal speed (speed towards the odor source) by using the change in distance to the odor over time
+    in mm/second and adda the column radial speed
+
+    :param df:
+    :param fps:
+    :return:
+    '''
+
+    df['radial_speed'] = df['distance_to_odor_centroid'].diff() * fps
+
+    return df

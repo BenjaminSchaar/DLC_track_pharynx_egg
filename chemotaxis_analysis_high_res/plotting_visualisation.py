@@ -26,14 +26,18 @@ def plot_chemotaxis_overview(df, output_path, x_odor, y_odor, arena_min_x, arena
     plt.figure(figsize=(160, 160))
 
     # Create a scatter plot for the corrected tracks
-    plt.scatter(df['X_rel_skel_pos_centroid_corrected'], df['Y_rel_skel_pos_centroid_corrected'], label='Tracks_centroid', s=0.1, c=(df['time_seconds'] / 60), cmap='plasma')
+    plt.scatter(df['X_rel_skel_pos_centroid_corrected'], df['Y_rel_skel_pos_centroid_corrected'], label='Tracks_centroid', s=10, c=(df['speed']), cmap='plasma')
+    plt.colorbar(label='Time(min)')
+
+    # Create a scatter plot for the corrected tracks
+    plt.scatter(df['X_rel_skel_pos_centroid_corrected'], df['Y_rel_skel_pos_centroid_corrected'], label='Tracks_centroid', s=50, c=(df['time_seconds'] / 60), cmap='plasma', alpha=0.3)
     plt.colorbar(label='Time(min)')
 
     # Create a scatter plot for the nose tracks
-    plt.scatter(df['X_rel_skel_pos_0'], df['Y_rel_skel_pos_0'], label='Tracks_nose', s=0.1, color='lightblue')
+    plt.scatter(df['X_rel_skel_pos_0'], df['Y_rel_skel_pos_0'], label='Tracks_nose', s=10, c=('dC_0'))
 
     # Plot the "odor" point
-    plt.scatter(x_odor, y_odor, color='red', label='Odor Point', s=100)
+    plt.scatter(x_odor, y_odor, color='red', label='Odor Point', s=1000)
 
     plt.xlim(arena_min_x, arena_max_x)
     plt.ylim(arena_min_y, arena_max_y)

@@ -12,6 +12,8 @@ from chemotaxis_analysis_high_res.calculations import (
     calculate_time_in_seconds,
     calculate_preceived_conc,
     calculate_angle,
+    calculate_speed,
+    calculate_radial_speed,
 )
 
 from chemotaxis_analysis_high_res.plotting_visualisation import (
@@ -226,6 +228,11 @@ def main(arg_list=None):
     x_zero += abs(move_grid_factor)
     y_zero += abs(move_grid_factor)
 
+    print(f"x_odor increased by {abs(move_grid_factor)}.")
+    print(f"y_odor increased by {abs(move_grid_factor)}.")
+    print(f"x_zero increased by {abs(move_grid_factor)}.")
+    print(f"y_zero increased by {abs(move_grid_factor)}.")
+
     print("\nWorm Pos DataFrame shifted:")
     print(df_worm_parameter.head())
 
@@ -233,9 +240,9 @@ def main(arg_list=None):
     x_odor = x_odor - x_zero
     y_odor = y_odor - y_zero
 
-    print("Adjusted x_odor:")
+    print("relative x_odor:")
     print(x_odor)
-    print("Adjusted y_odor:")
+    print("relative y_odor:")
     print(y_odor)
 
     # Apply the conversion function to relative coordinates to each row, add x_rel and y_rel columns
@@ -373,6 +380,10 @@ def main(arg_list=None):
     window_size = int(fps * 60)  # reversal frequenzy per minute
 
     df_worm_parameter['reversal_frequency'] = df_worm_parameter['reversal_onset'].rolling(window=window_size).sum()
+
+    df_worm_parameter = calculate_speed(df_worm_parameter) #adds column speed to df
+
+    df_worm_parameter = calculate_radial_speed(df_worm_parameter) # adds column radial speed to df
 
     '''
     Plotting part
