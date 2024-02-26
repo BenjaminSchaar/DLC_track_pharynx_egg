@@ -383,9 +383,9 @@ def main(arg_list=None):
 
     df_worm_parameter['reversal_frequency'] = df_worm_parameter['reversal_onset'].rolling(window=window_size).sum()
 
-    df_worm_parameter = calculate_speed(df_worm_parameter) #adds column speed to df
+    df_worm_parameter = calculate_speed(df_worm_parameter, fps) #adds column speed to df
 
-    df_worm_parameter = calculate_radial_speed(df_worm_parameter) # adds column radial speed to df
+    df_worm_parameter = calculate_radial_speed(df_worm_parameter, fps) # adds column radial speed to df
 
     '''
     Plotting part
