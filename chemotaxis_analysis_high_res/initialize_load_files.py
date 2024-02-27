@@ -332,7 +332,7 @@ def main(arg_list=None):
     
     The shift in time is determined by variable n_shift and each integer reflects one frame of the video back
     '''
-    time_shifted_for_angles = fps
+    time_shifted_for_angles = int(fps)
     # Replace NaN values with a placeholder value before applying the shift
     df_worm_parameter['X_shifted_negative'] = df_worm_parameter['X_rel_skel_pos_centroid_corrected'].shift(-time_shifted_for_angles).fillna(0)
     df_worm_parameter['Y_shifted_negative'] = df_worm_parameter['Y_rel_skel_pos_centroid_corrected'].shift(-time_shifted_for_angles).fillna(0)
