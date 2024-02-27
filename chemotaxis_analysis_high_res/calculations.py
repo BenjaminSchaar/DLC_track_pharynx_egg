@@ -131,7 +131,7 @@ def calculate_preceived_conc(distance: float, time_seconds: float, conc_array: n
     return conc_value
 
 
-def calculate_angle(x:float, y:float, n_x:float, n_y:float, o_x:float, o_y:float) -> float:
+def calculate_angle(x:float, y:float, n_x:float, n_y:float, o_x:float, o_y:float, angle_type) -> float:
     """
     Angle Calculation Between Two Vectors:
 
@@ -164,45 +164,24 @@ def calculate_angle(x:float, y:float, n_x:float, n_y:float, o_x:float, o_y:float
     4. Determine the angle θ:
        θ = cos⁻¹[(A·B) / (|A| |B|)]
 
-    The resulting angle θ is measured in radians and can be converted to degrees if required. The angle provides insight into the directional relationship between the two vectors: if θ = 0, the vectors are in the same direction; if θ = π/2 (or 90 degrees), they are perpendicular; and if θ = π (or 180 degrees), they are in opposite directions.
-
-    Usage:
-    Understanding the angle between vectors is crucial in many fields such as robotics, navigation, computer graphics, and more, as it helps in determining the orientation and turning requirements between different paths or orientations.
-
-    Note: The cosine inverse function, cos⁻¹, also known as arc cosine (acos), returns the principal value of the angle in radians, which lies in the range [0, π] for all possible dot product values.
-
     """
     x, y, n_x, n_y, o_x, o_y = map(float, [x, y, n_x, n_y, o_x, o_y])
 
-    point_n_minus = (n_x, n_y)  # Past position of the object
-    point_n = (x, y)  # Current position of the object
-    point_n_plus = (o_x, o_y)  # Future position of the object
+    a = (n_x, n_y)  # Past position of the object
+    b = (x, y)  # Current position of the object
+    c = (o_x, o_y) # future position
 
-    # Calculate the vectors
-    # Vector from point_n_minus to point_n
-    vector_past = (point_n[0] - point_n_minus[0], point_n[1] - point_n_minus[1])
+    ang = math.degrees(math.atan2(c[1] - b[1], c[0] - b[0]) - math.atan2(a[1] - b[1], a[0] - b[0]))
 
-    # Vector from point_n to point_n_plus
-    vector_future = (point_n_plus[0] - point_n[0], point_n_plus[1] - point_n[1])
+    ang = abs(ang)  # Take the absolute value of the angle
 
-    # Calculate dot product and magnitudes
-    dot_product = vector_past[0] * vector_future[0] + vector_past[1] * vector_future[1]
-    magnitude_movement = math.sqrt(vector_past[0] ** 2 + vector_past[1] ** 2)
-    magnitude_to_future = math.sqrt(vector_future[0] ** 2 + vector_future[1] ** 2)
+    ang = ang if ang <= 180 else 360 - ang  # Ensure the angle is within the range 0 to 180
 
-    # Prevent division by zero
-    if magnitude_movement == 0 or magnitude_to_future == 0:
-        return np.nan  # Avoid division by zero
+    if (angle_type == 'curving_angle'):
+        # Calculate the complementary angle
+        ang = 180 - ang
 
-    # Ensure the dot product is within the valid range for acos
-    dot_product_normalized = dot_product / (magnitude_movement * magnitude_to_future)
-    dot_product_normalized = max(min(dot_product_normalized, 1.0), -1.0)  # Clip to [-1,1]
-
-    # Calculate the angle in radians and then convert to degrees
-    angle = math.acos(dot_product_normalized)
-    angle_degrees = math.degrees(angle)
-
-    return angle_degrees
+    return ang
 
 
 def calculate_speed(df, fps):
