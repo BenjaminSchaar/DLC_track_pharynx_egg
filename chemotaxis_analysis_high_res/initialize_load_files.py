@@ -242,6 +242,8 @@ def main(arg_list=None):
     x_odor = x_odor - x_zero
     y_odor = y_odor - y_zero
 
+    x_odor = abs(x_odor)  # shift relative odor position to positive values
+
     print("relative x_odor:")
     print(x_odor)
     print("relative y_odor:")
@@ -330,7 +332,7 @@ def main(arg_list=None):
     
     The shift in time is determined by variable n_shift and each integer reflects one frame of the video back
     '''
-    time_shifted_for_angles=1000
+    time_shifted_for_angles = fps
     # Replace NaN values with a placeholder value before applying the shift
     df_worm_parameter['X_shifted_negative'] = df_worm_parameter['X_rel_skel_pos_centroid_corrected'].shift(-time_shifted_for_angles).fillna(0)
     df_worm_parameter['Y_shifted_negative'] = df_worm_parameter['Y_rel_skel_pos_centroid_corrected'].shift(-time_shifted_for_angles).fillna(0)

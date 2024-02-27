@@ -26,11 +26,11 @@ def plot_chemotaxis_overview(df, output_path, x_odor, y_odor, arena_min_x, arena
     plt.figure(figsize=(160, 160))
 
     # Create a scatter plot for the corrected tracks
-    plt.scatter(df['X_rel_skel_pos_centroid_corrected'], df['Y_rel_skel_pos_centroid_corrected'], label='Tracks_centroid', s=1, c=(df['speed']), cmap='plasma')
+    plt.scatter(df['X_rel_skel_pos_centroid_corrected'], df['Y_rel_skel_pos_centroid_corrected'], label='Tracks_centroid', s=100, c=(df['time_seconds'] / 60), cmap='plasma', alpha=0.01)
     plt.colorbar(label='Time(min)')
 
     # Create a scatter plot for the corrected tracks
-    plt.scatter(df['X_rel_skel_pos_centroid_corrected'], df['Y_rel_skel_pos_centroid_corrected'], label='Tracks_centroid', s=50, c=(df['time_seconds'] / 60), cmap='plasma', alpha=0.1)
+    plt.scatter(df['X_rel_skel_pos_centroid_corrected'], df['Y_rel_skel_pos_centroid_corrected'], label='Tracks_centroid', s=1, c=(df['speed']), cmap='plasma')
     plt.colorbar(label='Time(min)')
 
     # Create a scatter plot for the nose tracks
@@ -42,6 +42,7 @@ def plot_chemotaxis_overview(df, output_path, x_odor, y_odor, arena_min_x, arena
     plt.xlim(arena_min_x, arena_max_x)
     plt.ylim(arena_min_y, arena_max_y)
 
+    plt.legend()
     # Add grid lines
     plt.grid(True)
 
@@ -49,7 +50,7 @@ def plot_chemotaxis_overview(df, output_path, x_odor, y_odor, arena_min_x, arena
     plt.xlabel('X Relative')
     plt.ylabel('Y Relative')
     plt.title('Tracks and Odor Point')
-    plt.legend()
+
 
     # Save the plot
     plt.savefig(full_path)
@@ -98,6 +99,9 @@ def create_angle_animation(df, output_path, x_odor, y_odor, fps, file_name):
         ax.plot([df.at[frame, 'X_shifted_negative'], df.at[frame, 'X_rel']], [df.at[frame, 'Y_shifted_negative'], df.at[frame, 'Y_rel']], color='green', linestyle='--', linewidth=0.8)
         ax.plot([df.at[frame, 'X_shifted_positive'], df.at[frame, 'X_rel']], [df.at[frame, 'Y_shifted_positive'], df.at[frame, 'Y_rel']], color='blue', linestyle='--', linewidth=0.8)
 
+        # Adding a legend
+        plt.legend()
+
         # Setting plot limits and labels
         ax.set_xlim(center_x_close - 5, center_x_close + 5)
         ax.set_ylim(center_y_close - 5, center_y_close + 5)
@@ -105,6 +109,7 @@ def create_angle_animation(df, output_path, x_odor, y_odor, fps, file_name):
         ax.set_ylabel('Distance (mm)')
         ax.set_title(f'Bearing Angle Visualization for Frame {frame}')
         ax.grid(True)
+
 
         # Text for angles
         bearing_angle_text = f'Bearing Angle: {df.at[frame, "bearing_angle"]:.2f}'
