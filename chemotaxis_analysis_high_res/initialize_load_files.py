@@ -280,7 +280,7 @@ def main(arg_list=None):
 
     #perform rolling mean on centroid columns to get the proper trajectory of the worm, window size can be defined
 
-    centroid_rolling_mean_window_size = 10
+    centroid_rolling_mean_window_size = int(fps)
 
     # Calculate the rolling mean for the 'X_rel_skel_pos_centroid' column
     df_worm_parameter['X_rel_skel_pos_centroid_corrected'] = df_worm_parameter['X_rel_skel_pos_centroid'].rolling(window=centroid_rolling_mean_window_size).mean()
@@ -315,7 +315,7 @@ def main(arg_list=None):
             row[f'distance_to_odor_{skel_pos_0}'], row['time_seconds'], conc_gradient_array,distance_array),axis=1)
 
     # Calculate delta concentration across the time interval
-    time_interval_dC_dT = 30  #need to figure out how far back in the past to compare it to
+    time_interval_dC_dT = int(fps)  #need to figure out how far back in the past to compare it to
 
     df_worm_parameter[f'dC_centroid'] = df_worm_parameter[f'conc_at_centroid'].diff(periods=time_interval_dC_dT)
     df_worm_parameter[f'dC_{skel_pos_0}'] = df_worm_parameter[f'conc_at_{skel_pos_0}'].diff(periods=time_interval_dC_dT)
@@ -331,15 +331,26 @@ def main(arg_list=None):
     How the function calculates the angle is explained in the function description!
     
     The shift in time is determined by variable n_shift and each integer reflects one frame of the video back
+    
+    What is counterintuitive is that the shift operation when positive shifts the whole df into the future meaning bringin 
+    past datapoints to the present so to compare a value with a past value the shift needs to be positive and vice versa
+    
+    Here's a simple example to illustrate:
+
+    Original data: [1, 2, 3, 4, 5]
+
+    After applying a shift of +2: [NaN, NaN, 1, 2, 3]
+    
     '''
-    time_shifted_for_angles = int(fps)
-    # Replace NaN values with a placeholder value before applying the shift
-    df_worm_parameter['X_shifted_negative'] = df_worm_parameter['X_rel_skel_pos_centroid_corrected'].shift(-time_shifted_for_angles).fillna(0)
-    df_worm_parameter['Y_shifted_negative'] = df_worm_parameter['Y_rel_skel_pos_centroid_corrected'].shift(-time_shifted_for_angles).fillna(0)
+    time_shifted_for_angles = int(fps*10)
 
     # Replace NaN values with a placeholder value before applying the shift
-    df_worm_parameter['X_shifted_positive'] = df_worm_parameter['X_rel_skel_pos_centroid_corrected'].shift(+time_shifted_for_angles).fillna(0)
-    df_worm_parameter['Y_shifted_positive'] = df_worm_parameter['Y_rel_skel_pos_centroid_corrected'].shift(+time_shifted_for_angles).fillna(0)
+    df_worm_parameter['X_shifted_negative'] = df_worm_parameter['X_rel_skel_pos_centroid_corrected'].shift(+time_shifted_for_angles).fillna(0)
+    df_worm_parameter['Y_shifted_negative'] = df_worm_parameter['Y_rel_skel_pos_centroid_corrected'].shift(+time_shifted_for_angles).fillna(0)
+
+    # Replace NaN values with a placeholder value before applying the shift
+    df_worm_parameter['X_shifted_positive'] = df_worm_parameter['X_rel_skel_pos_centroid_corrected'].shift(-time_shifted_for_angles).fillna(0)
+    df_worm_parameter['Y_shifted_positive'] = df_worm_parameter['Y_rel_skel_pos_centroid_corrected'].shift(-time_shifted_for_angles).fillna(0)
 
     # Applying the function to each row and creating a new column 'bearing_angle'
     df_worm_parameter['bearing_angle'] = df_worm_parameter.apply(
