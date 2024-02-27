@@ -26,15 +26,15 @@ def plot_chemotaxis_overview(df, output_path, x_odor, y_odor, arena_min_x, arena
     plt.figure(figsize=(160, 160))
 
     # Create a scatter plot for the corrected tracks
-    plt.scatter(df['X_rel_skel_pos_centroid_corrected'], df['Y_rel_skel_pos_centroid_corrected'], label='Tracks_centroid', s=10, c=(df['speed']), cmap='plasma')
+    plt.scatter(df['X_rel_skel_pos_centroid_corrected'], df['Y_rel_skel_pos_centroid_corrected'], label='Tracks_centroid', s=1, c=(df['speed']), cmap='plasma')
     plt.colorbar(label='Time(min)')
 
     # Create a scatter plot for the corrected tracks
-    plt.scatter(df['X_rel_skel_pos_centroid_corrected'], df['Y_rel_skel_pos_centroid_corrected'], label='Tracks_centroid', s=50, c=(df['time_seconds'] / 60), cmap='plasma', alpha=0.3)
+    plt.scatter(df['X_rel_skel_pos_centroid_corrected'], df['Y_rel_skel_pos_centroid_corrected'], label='Tracks_centroid', s=50, c=(df['time_seconds'] / 60), cmap='plasma', alpha=0.1)
     plt.colorbar(label='Time(min)')
 
     # Create a scatter plot for the nose tracks
-    plt.scatter(df['X_rel_skel_pos_0'], df['Y_rel_skel_pos_0'], label='Tracks_nose', s=10, c=(df['dC_0']))
+    plt.scatter(df['X_rel_skel_pos_0'], df['Y_rel_skel_pos_0'], label='Tracks_nose', s=1, c=(df['dC_0']))
 
     # Plot the "odor" point
     plt.scatter(x_odor, y_odor, color='red', label='Odor Point', s=1000)
@@ -152,8 +152,9 @@ def plot_ethogram(beh_annotation, output_path):
 
         # Save the plot to a file
         plot_name = 'ehtogram.png'
-        full_file_path = os.path.join(output_path, plot_name)
-        plt.savefig(full_file_path)
+        full_path = os.path.join(output_path, plot_name)
+        print("The full file path is:", full_path)
+        plt.savefig(full_path)
 
         plt.clf()  # Clear the current figure after displaying the plot
 
@@ -190,8 +191,10 @@ def plot_skeleton_spline(skeleton_spline, output_path):
         # Save the plot to a file
         plt.tight_layout()
         plot_name = 'kymogram.png'
-        full_file_path = os.path.join(output_path, plot_name)
-        plt.savefig(full_file_path)
+        full_path = os.path.join(output_path, plot_name)
+        print("The full file path is:", full_path)
+
+        plt.savefig(full_path)
 
         plt.clf()  # Clear the current figure after displaying the plot
 
