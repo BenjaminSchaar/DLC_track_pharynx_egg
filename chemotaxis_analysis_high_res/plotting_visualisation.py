@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 
-def plot_chemotaxis_overview(df, output_path, x_odor, y_odor, arena_min_x, arena_max_x, arena_min_y, arena_max_y, file_name):
+def plot_chemotaxis_overview(df, output_path, x_odor, y_odor, arena_min_x, arena_max_x, arena_min_y, arena_max_y, fps, file_name):
     """
     Plot the tracks and odor point from a given DataFrame and save the plot as a PNG file.
 
@@ -26,12 +26,13 @@ def plot_chemotaxis_overview(df, output_path, x_odor, y_odor, arena_min_x, arena
     plt.figure(figsize=(160, 160))
 
     # Create a scatter plot for the corrected tracks
-    plt.scatter(df['X_rel_skel_pos_centroid_corrected'], df['Y_rel_skel_pos_centroid_corrected'], label='Tracks_centroid', s=100, c=(df['time_seconds'] / 60), cmap='plasma', alpha=0.01)
+    plt.scatter(df['X_rel_skel_pos_centroid_corrected'], df['Y_rel_skel_pos_centroid_corrected'], label='Tracks_centroid', s=1, c=(df['time_seconds'] / 60), cmap='plasma')
     plt.colorbar(label='Time(min)')
 
     # Create a scatter plot for the corrected tracks
-    plt.scatter(df['X_rel_skel_pos_centroid_corrected'], df['Y_rel_skel_pos_centroid_corrected'], label='Tracks_centroid', s=1, c=(df['speed']), cmap='plasma')
-    plt.colorbar(label='Time(min)')
+    df_plot_speed = df.iloc[::10 * fps]
+    plt.scatter(df_plot_speed['X_rel_skel_pos_centroid_corrected'], df_plot_speed['Y_rel_skel_pos_centroid_corrected'], label='centroid speed', s=100, c=df_plot_speed['speed'], cmap='plasma')
+
 
     # Create a scatter plot for the nose tracks
     plt.scatter(df['X_rel_skel_pos_0'], df['Y_rel_skel_pos_0'], label='Tracks_nose', s=1, c=(df['dC_0']))
@@ -130,7 +131,7 @@ def create_angle_animation(df, output_path, x_odor, y_odor, fps, file_name):
     plt.close(fig)  # Close the figure to free memory
 
 
-def plot_ethogram(beh_annotation, output_path):
+def plot_ethogram(beh_annotation, output_path, file_name):
     '''
     Inputs beh_annotation df and plots erhtogramm
 
@@ -156,8 +157,7 @@ def plot_ethogram(beh_annotation, output_path):
             ax.set_ylabel('Behavioral State')
 
         # Save the plot to a file
-        plot_name = 'ehtogram.png'
-        full_path = os.path.join(output_path, plot_name)
+        full_path = os.path.join(output_path, file_name)
         print("The full file path is:", full_path)
         plt.savefig(full_path)
 
@@ -167,7 +167,7 @@ def plot_ethogram(beh_annotation, output_path):
         print(f'Problem plotting the ethogram: {e}')
 
 
-def plot_skeleton_spline(skeleton_spline, output_path):
+def plot_skeleton_spline(skeleton_spline, output_path, file_name):
     '''
     Inputs skelleton_spline_df and plots kymogramm
 
@@ -195,8 +195,8 @@ def plot_skeleton_spline(skeleton_spline, output_path):
 
         # Save the plot to a file
         plt.tight_layout()
-        plot_name = 'kymogram.png'
-        full_path = os.path.join(output_path, plot_name)
+
+        full_path = os.path.join(output_path, file_name)
         print("The full file path is:", full_path)
 
         plt.savefig(full_path)
@@ -205,3 +205,129 @@ def plot_skeleton_spline(skeleton_spline, output_path):
 
     except Exception as e:
         print(f'Problem plotting the data: {e}')
+
+
+def plot_odor_concentration(df, output_path, file_name):
+    # Define the figure size
+    plt.figure(figsize=(16, 4))
+
+    # Convert time from seconds to minutes
+    times = df['time_seconds'] / 60
+
+    # Creating the scatter plot with color based on time
+    scatter = plt.scatter(times, df['Conc'], c=times, cmap='plasma')
+
+    # Plotting the line
+    plt.plot(times, df['Conc'], alpha=0.5)  # Set lower alpha to make line less prominent
+
+    # Adding a color bar to understand the mapping from time to color
+    plt.colorbar(scatter, label='Time (minutes)')
+
+    # Set the title and labels
+    plt.title('Experienced Odor Concentration')
+    plt.xlabel('Time (minutes)')
+    plt.ylabel('C (mol/l)')
+
+    # Enable grid
+    plt.grid(True)
+
+    full_path = os.path.join(output_path, file_name)
+    print("The full file path is:", full_path)
+
+    plt.savefig(full_path)
+
+    plt.clf()  # Clear the current figure after displaying the plot
+
+def plot_speed(df, output_path, file_name):
+    # Define the figure size
+    plt.figure(figsize=(16, 4))
+
+    # Convert time from seconds to minutes
+    times = df['time_seconds'] / 60
+
+    # Creating the scatter plot with color based on time
+    scatter = plt.scatter(times, df['speed'], c=times, cmap='plasma')
+
+    # Plotting the line
+    plt.plot(times, df['speed'], alpha=0.5)  # Set lower alpha to make line less prominent
+
+    # Adding a color bar to understand the mapping from time to color
+    plt.colorbar(scatter, label='Time (minutes)')
+
+    # Set the title and labels
+    plt.title('Centroid Speed')
+    plt.xlabel('Time (minutes)')
+    plt.ylabel('mm/sec')
+
+    # Enable grid
+    plt.grid(True)
+
+    full_path = os.path.join(output_path, file_name)
+    print("The full file path is:", full_path)
+
+    plt.savefig(full_path)
+
+    plt.clf()  # Clear the current figure after displaying the plot
+
+
+def plot_distance_to_odor(df, output_path, file_name):
+    # Define the figure size
+    plt.figure(figsize=(16, 4))
+
+    # Convert time from seconds to minutes
+    times = df['time_seconds'] / 60
+
+    # Creating the scatter plot with color based on time
+    scatter = plt.scatter(times, df['distance_to_odor_centroid'], c=times, cmap='plasma')
+
+    # Plotting the line
+    plt.plot(times, df['distance_to_odor_centroid'], alpha=0.5)  # Set lower alpha to make line less prominent
+
+    # Adding a color bar to understand the mapping from time to color
+    plt.colorbar(scatter, label='Time (minutes)')
+
+    # Set the title and labels
+    plt.title('Centroid Distance to Odor')
+    plt.xlabel('Time (minutes)')
+    plt.ylabel('mm')
+
+    # Enable grid
+    plt.grid(True)
+
+    full_path = os.path.join(output_path, file_name)
+    print("The full file path is:", full_path)
+
+    plt.savefig(full_path)
+
+    plt.clf()  # Clear the current figure after displaying the plot
+
+def plot_reversal_frequency(df, output_path, file_name):
+    # Define the figure size
+    plt.figure(figsize=(16, 4))
+
+    # Convert time from seconds to minutes
+    times = df['time_seconds'] / 60
+
+    # Creating the scatter plot with color based on time
+    scatter = plt.scatter(times, df['reversal_frequency'], c=times, cmap='plasma')
+
+    # Plotting the line
+    plt.plot(times, df['reversal_frequency'], alpha=0.5)  # Set lower alpha to make line less prominent
+
+    # Adding a color bar to understand the mapping from time to color
+    plt.colorbar(scatter, label='Time (minutes)')
+
+    # Set the title and labels
+    plt.title('Reversal Frequency')
+    plt.xlabel('Time (minutes)')
+    plt.ylabel('events/min')
+
+    # Enable grid
+    plt.grid(True)
+
+    full_path = os.path.join(output_path, file_name)
+    print("The full file path is:", full_path)
+
+    plt.savefig(full_path)
+
+    plt.clf()  # Clear the current figure after displaying the plot
