@@ -215,3 +215,5 @@ def calculate_radial_speed(df, fps):
     df['radial_speed'] = df['distance_to_odor_centroid'].diff() * fps
 
     return df
+
+#def clean_reversal():

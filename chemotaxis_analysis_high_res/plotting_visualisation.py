@@ -215,10 +215,10 @@ def plot_odor_concentration(df, output_path, file_name):
     times = df['time_seconds'] / 60
 
     # Creating the scatter plot with color based on time
-    scatter = plt.scatter(times, df['Conc'], c=times, cmap='plasma')
+    scatter = plt.scatter(times, df['conc_at_centroid'], c=times, cmap='plasma')
 
     # Plotting the line
-    plt.plot(times, df['Conc'], alpha=0.5)  # Set lower alpha to make line less prominent
+    plt.plot(times, df['conc_at_centroid'], alpha=0.5)  # Set lower alpha to make line less prominent
 
     # Adding a color bar to understand the mapping from time to color
     plt.colorbar(scatter, label='Time (minutes)')
