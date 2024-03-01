@@ -3,6 +3,9 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+import seaborn as sns
+import pandas as pd
+
 
 def plot_chemotaxis_overview(df, output_path, x_odor, y_odor, arena_min_x, arena_max_x, arena_min_y, arena_max_y, fps, file_name):
     """
@@ -30,13 +33,16 @@ def plot_chemotaxis_overview(df, output_path, x_odor, y_odor, arena_min_x, arena
     plt.scatter(df['X_rel_skel_pos_centroid_corrected'], df['Y_rel_skel_pos_centroid_corrected'], label='Tracks_centroid', s=1, c=(df['time_seconds'] / 60), cmap='plasma')
     plt.colorbar(label='Time(min)')
 
-    # Create a scatter plot for the corrected tracks
-    df_plot_speed = df.iloc[::10 * fps]
-    plt.scatter(df_plot_speed['X_rel_skel_pos_centroid_corrected'], df_plot_speed['Y_rel_skel_pos_centroid_corrected'], label='centroid speed', s=100, c=df_plot_speed['speed'], cmap='plasma')
-
-
     # Create a scatter plot for the nose tracks
     plt.scatter(df['X_rel_skel_pos_0'], df['Y_rel_skel_pos_0'], label='Tracks_nose', s=1, c=(df['dC_0']))
+
+    # Filter tracks where dC/cT is positive
+    positive_dC_cT = df[df['dC/dT'] > (0.0000000000001)]
+    plt.scatter(positive_dC_cT['X_rel_skel_pos_0'], positive_dC_cT['Y_rel_skel_pos_0'], color='yellow', label='dC/cT > 0', s=0.2, alpha=0.05)
+
+    # Filter tracks where dC/cT is negative
+    negative_dC_cT = df[df['dC/dT'] < (0.0000000000001)]
+    plt.scatter(negative_dC_cT['X_rel_skel_pos_0'], negative_dC_cT['Y_rel_skel_pos_0'], color='red', label='dC/cT < 0', s=0.2, alpha=0.05)
 
     # Plot the "odor" point
     plt.scatter(x_odor, y_odor, color='red', label='Odor Point', s=1000)
@@ -216,7 +222,7 @@ def plot_odor_concentration(df, output_path, file_name):
     times = df['time_seconds'] / 60
 
     # Creating the scatter plot with color based on time
-    scatter = plt.scatter(times, df['conc_at_centroid'], c=times, cmap='plasma')
+    scatter = plt.scatter(times, df['conc_at_centroid'], c=times, cmap='plasma', alpha=0.1)
 
     # Plotting the line
     plt.plot(times, df['conc_at_centroid'], alpha=0.5)  # Set lower alpha to make line less prominent
@@ -247,7 +253,7 @@ def plot_speed(df, output_path, file_name):
     times = df['time_seconds'] / 60
 
     # Creating the scatter plot with color based on time
-    scatter = plt.scatter(times, df['speed'], c=times, cmap='plasma')
+    scatter = plt.scatter(times, df['speed'], c=times, cmap='plasma', alpha=0.1)
 
     # Plotting the line
     plt.plot(times, df['speed'], alpha=0.5)  # Set lower alpha to make line less prominent
@@ -279,7 +285,7 @@ def plot_distance_to_odor(df, output_path, file_name):
     times = df['time_seconds'] / 60
 
     # Creating the scatter plot with color based on time
-    scatter = plt.scatter(times, df['distance_to_odor_centroid'], c=times, cmap='plasma')
+    scatter = plt.scatter(times, df['distance_to_odor_centroid'], c=times, cmap='plasma', alpha=0.1)
 
     # Plotting the line
     plt.plot(times, df['distance_to_odor_centroid'], alpha=0.5)  # Set lower alpha to make line less prominent
@@ -310,7 +316,7 @@ def plot_reversal_frequency(df, output_path, file_name):
     times = df['time_seconds'] / 60
 
     # Creating the scatter plot with color based on time
-    scatter = plt.scatter(times, df['reversal_frequency'], c=times, cmap='plasma')
+    scatter = plt.scatter(times, df['reversal_frequency'], c=times, cmap='plasma', alpha=0.1)
 
     # Plotting the line
     plt.plot(times, df['reversal_frequency'], alpha=0.5)  # Set lower alpha to make line less prominent
@@ -326,6 +332,8 @@ def plot_reversal_frequency(df, output_path, file_name):
     # Enable grid
     plt.grid(True)
 
+    #saving part
+
     full_path = os.path.join(output_path, file_name)
     print("The full file path is:", full_path)
 
@@ -333,5 +341,54 @@ def plot_reversal_frequency(df, output_path, file_name):
 
     plt.clf()  # Clear the current figure after displaying the plot
 
+def plot_curving_vs_bearing(df, output_path, file_name):
 
+    # Define the figure size
+    plt.figure(figsize=(16, 4))
 
+    # Creating the scatter plot with color based on time
+    scatter = plt.scatter(df['bearing_angle'], df['curving_angle'], c=times, cmap='plasma', alpha=0.1)
+
+    # Plotting the line
+    plt.plot(df['bearing_angle'], df['curving_angle'], alpha=0.5)  # Set lower alpha to make line less prominent
+
+    # Adding a color bar to understand the mapping from time to color
+    plt.colorbar(scatter, label='Time (minutes)')
+
+    # Set the title and labels
+    plt.title('Bearing Angle vs Curving Angle')
+    plt.xlabel('bearing angle')
+    plt.ylabel('curving angle')
+
+    # Enable grid
+    plt.grid(True)
+
+    # saving part
+    full_path = os.path.join(output_path, file_name)
+    print("The full file path is:", full_path)
+
+    plt.savefig(full_path)
+
+    plt.clf()  # Clear the current figure after displaying the plot
+
+def plot_curving_vs_rev(df, output_path, file_name):
+
+    df['angle_flag'] = (df['curving_angle'] > 180).astype(int)
+
+    # Creating a contingency table
+    contingency_table = pd.crosstab(df['angle_flag'], df['reversal_onset'])
+
+    # Plotting the heatmap
+    plt.figure(figsize=(10, 6))
+    sns.heatmap(contingency_table, annot=True, cmap="YlGnBu", fmt="d")
+    plt.title('Heatmap of Angle Flag vs. Reversal Onset')
+    plt.ylabel('Angle Flag')
+    plt.xlabel('Reversal Onset')
+
+    # saving part
+    full_path = os.path.join(output_path, file_name)
+    print("The full file path is:", full_path)
+
+    plt.savefig(full_path)
+
+    plt.clf()  # Clear the current figure after displaying the plot

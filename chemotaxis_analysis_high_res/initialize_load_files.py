@@ -24,6 +24,8 @@ from chemotaxis_analysis_high_res.plotting_visualisation import (
     plot_odor_concentration,
     plot_speed,
     plot_distance_to_odor,
+    plot_curving_vs_rev,
+    plot_curving_vs_bearing,
 )
 
 def read_csv_files(beh_annotation_path:str, skeleton_spline_path:str, worm_pos_path:str, spline_X_path:str, spline_Y_path:str):
@@ -422,6 +424,10 @@ def main(arg_list=None):
     plot_chemotaxis_overview(df_worm_parameter, output_path, x_odor, y_odor, arena_min_x, arena_max_x, arena_min_y, arena_max_y, fps, file_name="chemotaxis_overview.png")
 
     create_angle_animation(df_worm_parameter, output_path, x_odor, y_odor, fps, file_name ='angle_animation.avi')
+
+    plot_curving_vs_rev(df_worm_parameter, output_path, file_name ='curving_angle_vs_rev.png')
+
+    plot_curving_vs_bearing(df_worm_parameter, output_path, file_name ='curving_angle_vs_bearing_angle.png')
 
 
 
