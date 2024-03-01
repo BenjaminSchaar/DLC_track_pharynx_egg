@@ -18,6 +18,7 @@ def plot_chemotaxis_overview(df, output_path, x_odor, y_odor, arena_min_x, arena
     - arena_max_y: Maximum Y-coordinate of the arena.
     - file_name: Name of the file to save the plot. Default is 'tracks_and_odor_point.png'.
     """
+    fps = int(fps)
 
     # Combine the output path and file name
     full_path = os.path.join(output_path, file_name)
@@ -331,3 +332,6 @@ def plot_reversal_frequency(df, output_path, file_name):
     plt.savefig(full_path)
 
     plt.clf()  # Clear the current figure after displaying the plot
+
+
+
