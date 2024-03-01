@@ -37,11 +37,11 @@ def plot_chemotaxis_overview(df, output_path, x_odor, y_odor, arena_min_x, arena
     plt.scatter(df['X_rel_skel_pos_0'], df['Y_rel_skel_pos_0'], label='Tracks_nose', s=1, c=(df['dC_0']))
 
     # Filter tracks where dC/cT is positive
-    positive_dC_cT = df[df['dC/dT'] > (0.0000000000001)]
+    positive_dC_cT = df[df['dC_centroid'] > (0.0000000000001)]
     plt.scatter(positive_dC_cT['X_rel_skel_pos_0'], positive_dC_cT['Y_rel_skel_pos_0'], color='yellow', label='dC/cT > 0', s=0.2, alpha=0.05)
 
     # Filter tracks where dC/cT is negative
-    negative_dC_cT = df[df['dC/dT'] < (0.0000000000001)]
+    negative_dC_cT = df[df['dC_centroid'] < (0.0000000000001)]
     plt.scatter(negative_dC_cT['X_rel_skel_pos_0'], negative_dC_cT['Y_rel_skel_pos_0'], color='red', label='dC/cT < 0', s=0.2, alpha=0.05)
 
     # Plot the "odor" point
