@@ -59,7 +59,7 @@ def plot_chemotaxis_overview(df, output_path, x_odor, y_odor, arena_min_x, arena
     plt.ylabel('Y Relative')
     plt.title('Tracks and Odor Point')
 
-
+    print("The full file path is:", full_path)
     # Save the plot
     plt.savefig(full_path)
     plt.close()  # Close the plot to free memory
@@ -133,6 +133,7 @@ def create_angle_animation(df, output_path, x_odor, y_odor, fps, file_name):
         # Write the frame to the video
         out.write(frame_array)
 
+    print("The full file path is:", full_path)
     # Release everything when job is finished
     out.release()
     plt.close(fig)  # Close the figure to free memory
@@ -345,6 +346,9 @@ def plot_curving_vs_bearing(df, output_path, file_name):
 
     # Define the figure size
     plt.figure(figsize=(16, 4))
+
+    # Convert time from seconds to minutes
+    times = df['time_seconds'] / 60
 
     # Creating the scatter plot with color based on time
     scatter = plt.scatter(df['bearing_angle'], df['curving_angle'], c=times, cmap='plasma', alpha=0.1)
