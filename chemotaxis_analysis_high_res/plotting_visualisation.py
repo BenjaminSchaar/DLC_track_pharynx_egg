@@ -278,6 +278,38 @@ def plot_speed(df, output_path, file_name):
     plt.clf()  # Clear the current figure after displaying the plot
 
 
+def plot_NI(df, output_path, file_name):
+
+    # Define the figure size
+    plt.figure(figsize=(16, 4))
+
+    # Convert time from seconds to minutes
+    times = df['time_seconds'] / 60
+
+    # Creating the scatter plot with color based on time
+    scatter = plt.scatter(times, df['NI'], c=times, cmap='plasma', alpha=0.1)
+
+    # Plotting the line
+    plt.plot(times, df['NI'], alpha=0.5)  # Set lower alpha to make line less prominent
+
+    # Adding a color bar to understand the mapping from time to color
+    plt.colorbar(scatter, label='Time (minutes)')
+
+    # Set the title and labels
+    plt.title('Centroid NI')
+    plt.xlabel('Time (minutes)')
+    plt.ylabel('mm/sec')
+
+    # Enable grid
+    plt.grid(True)
+
+    full_path = os.path.join(output_path, file_name)
+    print("The full file path is:", full_path)
+
+    plt.savefig(full_path)
+
+    plt.clf()  # Clear the current figure after displaying the plot
+
 def plot_distance_to_odor(df, output_path, file_name):
     # Define the figure size
     plt.figure(figsize=(16, 4))
@@ -375,24 +407,5 @@ def plot_curving_vs_bearing(df, output_path, file_name):
 
     plt.clf()  # Clear the current figure after displaying the plot
 
-def plot_curving_vs_rev(df, output_path, file_name):
 
-    df['angle_flag'] = (df['curving_angle'] > 180).astype(int)
 
-    # Creating a contingency table
-    contingency_table = pd.crosstab(df['angle_flag'], df['reversal_onset'])
-
-    # Plotting the heatmap
-    plt.figure(figsize=(10, 6))
-    sns.heatmap(contingency_table, annot=True, cmap="YlGnBu", fmt="d")
-    plt.title('Heatmap of Angle Flag vs. Reversal Onset')
-    plt.ylabel('Angle Flag')
-    plt.xlabel('Reversal Onset')
-
-    # saving part
-    full_path = os.path.join(output_path, file_name)
-    print("The full file path is:", full_path)
-
-    plt.savefig(full_path)
-
-    plt.clf()  # Clear the current figure after displaying the plot

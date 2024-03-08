@@ -212,7 +212,12 @@ def calculate_radial_speed(df, fps):
     :return:
     '''
 
+    # Assuming df is your DataFrame
+    smoothing_window_size = int(fps)
+
     df['radial_speed'] = df['distance_to_odor_centroid'].diff() * fps
+    # Smooth the 'speed' column using a rolling window and taking the mean
+    df['radial_speed'] = df['radial_speed'].rolling(window=smoothing_window_size, min_periods=1).mean()
 
     return df
 
