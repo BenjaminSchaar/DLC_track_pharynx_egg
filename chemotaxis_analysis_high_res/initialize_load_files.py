@@ -429,7 +429,7 @@ def main(arg_list=None):
 
     plot_speed(df_worm_parameter, output_path, file_name = 'speed.png')
 
-    plot_NI(df_worm_parameter, output_path, file_name='speed.png')
+    plot_NI(df_worm_parameter, output_path, file_name='NI.png')
 
     plot_distance_to_odor(df_worm_parameter, output_path, file_name = 'distance_to_odor.png')
 

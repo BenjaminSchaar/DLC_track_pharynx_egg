@@ -179,7 +179,7 @@ def calculate_angle(x:float, y:float, n_x:float, n_y:float, o_x:float, o_y:float
 
     if (angle_type == 'curving_angle'):
         # Calculate the complementary angle
-        ang = 180 - ang
+            ang = 180 - ang
 
     return ang
 

@@ -387,7 +387,7 @@ def plot_curving_vs_bearing(df, output_path, file_name):
     scatter = plt.scatter(df['bearing_angle'], df['curving_angle'], c=times, cmap='plasma', alpha=0.1)
 
     # Plotting the line
-    plt.plot(df['bearing_angle'], df['curving_angle'], alpha=0.5)  # Set lower alpha to make line less prominent
+    plt.scatter(df['bearing_angle'], df['curving_angle'], alpha=0.5)  # Set lower alpha to make line less prominent
 
     # Adding a color bar to understand the mapping from time to color
     plt.colorbar(scatter, label='Time (minutes)')
