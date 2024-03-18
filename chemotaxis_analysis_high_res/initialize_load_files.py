@@ -199,9 +199,6 @@ def main(arg_list=None):
     #-------------loading necessary files
     beh_annotation, skeleton_spline, df_worm_parameter, spline_X, spline_Y = read_csv_files(beh_annotation_path, skeleton_spline_path, worm_pos_path, spline_X_path, spline_Y_path)
 
-    # Create a copy of df_worm_parameter
-    df_worm_movie = df_worm_parameter.copy() #create copy of df_worm_parameter fo wormmovie later
-
     #-----------------load config file for odor and arena positions
     with open(stage_pos_path, 'r') as config_file:
         stage_pos = yaml.safe_load(config_file)
@@ -262,6 +259,11 @@ def main(arg_list=None):
     df_worm_parameter = df_worm_parameter.apply(lambda row: convert_coordinates(row, x_zero, y_zero), axis=1)
 
     df_worm_parameter['X_rel'] = df_worm_parameter['X_rel'].abs()  # shift relative stage position to positive values
+
+    #finished initialisation and aligning
+
+    # Create a copy of df_worm_parameter
+    df_worm_movie = df_worm_parameter.copy()  # create copy of df_worm_parameter fo wormmovie later
 
     # calculate corrected center position of the worm
     skel_pos_centroid = 100
