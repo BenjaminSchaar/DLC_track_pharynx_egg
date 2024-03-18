@@ -139,6 +139,7 @@ def create_angle_animation(df, output_path, x_odor, y_odor, fps, file_name):
     plt.close(fig)  # Close the figure to free memory
 
 
+
 def plot_ethogram(beh_annotation, output_path, file_name):
     '''
     Inputs beh_annotation df and plots erhtogramm
@@ -408,4 +409,82 @@ def plot_curving_vs_bearing(df, output_path, file_name):
     plt.clf()  # Clear the current figure after displaying the plot
 
 
+def create_worm_animation(df1, df2, output_path, x_odor, y_odor, fps, arena_min_x, arena_max_x, arena_min_y, arena_max_y, file_name):
+    '''
+    Create and save an animation showing angles from a DataFrame using OpenCV.
+
+    :param df1: DataFrame containing the data points for the animation.
+    :param output_path: The directory to save the output file.
+    :param x_odor: X-coordinate for the odor/source location.
+    :param y_odor: Y-coordinate for the odor/source location.
+    :param fps: Frames per second for the output video.
+    :param file_name: Name of the output file.
+    '''
+    # Combine the output path and file name
+    full_path = os.path.join(output_path, file_name)
+    print("The full file path is:", full_path)
+
+    # Define the video's width, height, and codec
+    width, height = 600, 600
+    fourcc = cv2.VideoWriter_fourcc(*'DIVX')  # 'XVID' can also be used
+
+    # Create VideoWriter object
+    out = cv2.VideoWriter(full_path, fourcc, fps, (width, height))
+
+    # Create a figure for plotting
+    fig, ax = plt.subplots(figsize=(6, 6), dpi=100)  # Adjust figsize if needed
+    canvas = FigureCanvas(fig)
+
+    for frame in range(len(df1)):
+        row_index = frame
+        # Clear the previous frame
+        ax.clear()
+
+        for skel_pos in range(101):  # Iterate over all skeleton positions
+            if skel_pos == 0:
+                ax.scatter(df1[f'X_rel_skel_pos_{skel_pos}'].iloc[row_index],
+                           df1[f'Y_rel_skel_pos_{skel_pos}'].iloc[row_index], label=f'Tracks_skel_pos_{skel_pos}', s=60, c=(df2['dC_0']))
+            elif  skel_pos== 100:
+                ax.scatter(df1[f'X_rel_skel_pos_centroid_corrected'].iloc[row_index],
+                           df1[f'Y_rel_skel_pos_centroid_corrected'].iloc[row_index], label=f'Tracks_skel_pos_{skel_pos}', s=60, c=(df2['speed']))
+            else:
+                ax.scatter(df1[f'X_rel_skel_pos_{skel_pos}'].iloc[row_index],
+                       df1[f'Y_rel_skel_pos_{skel_pos}'].iloc[row_index], label=f'Tracks_skel_pos_{skel_pos}', s=30)
+
+
+
+        ax.scatter(x_odor, y_odor, color='red', label='Odor Point', s=100)
+
+        ax.scatter(x_odor, y_odor, color='red', s=5)
+
+        # Adding a legend
+        plt.legend()
+
+        # Setting plot limits and labels
+        ax.set_xlim(arena_min_x, arena_max_x)
+        ax.set_ylim(arena_min_y, arena_max_y)
+        ax.set_xlabel('Distance (mm)')
+        ax.set_ylabel('Distance (mm)')
+        ax.set_title(f'Simulated Worm at Frame: {frame}')
+        ax.grid(True)
+
+
+        # Text for angles
+        bearing_angle_text = f'Bearing Angle: {df1.at[frame, "bearing_angle"]:.2f}'
+        curving_angle_text = f'Curving Angle: {df1.at[frame, "curving_angle"]:.2f}'
+        ax.text(0.05, 0.95, bearing_angle_text, transform=ax.transAxes, fontsize=10, color='black')
+        ax.text(0.05, 0.90, curving_angle_text, transform=ax.transAxes, fontsize=10, color='black')
+
+        # Convert the Matplotlib figure to an array
+        canvas.draw()  # Draw the canvas
+        frame_array = np.array(canvas.renderer.buffer_rgba())  # Get the RGBA buffer from the canvas
+        frame_array = cv2.cvtColor(frame_array, cv2.COLOR_RGBA2BGR)  # Convert RGBA to BGR
+
+        # Write the frame to the video
+        out.write(frame_array)
+
+    print("The full file path is:", full_path)
+    # Release everything when job is finished
+    out.release()
+    plt.close(fig)  # Close the figure to free memory
 

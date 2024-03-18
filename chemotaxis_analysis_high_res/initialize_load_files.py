@@ -26,6 +26,7 @@ from chemotaxis_analysis_high_res.plotting_visualisation import (
     plot_distance_to_odor,
     plot_NI,
     plot_curving_vs_bearing,
+    create_worm_animation,
 )
 
 def read_csv_files(beh_annotation_path:str, skeleton_spline_path:str, worm_pos_path:str, spline_X_path:str, spline_Y_path:str):
@@ -461,8 +462,8 @@ def main(arg_list=None):
             factor_px_to_mm
         )
 
-
-
+    create_worm_animation(df_worm_movie, df_worm_pos, output_path, x_odor, y_odor, fps, arena_min_x, arena_max_x, arena_min_y,
+                          arena_max_y, file_name='worm_movie.avi')
 
 if __name__ == "__main__":
 
