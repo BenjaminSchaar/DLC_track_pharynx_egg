@@ -198,6 +198,9 @@ def main(arg_list=None):
     #-------------loading necessary files
     beh_annotation, skeleton_spline, df_worm_parameter, spline_X, spline_Y = read_csv_files(beh_annotation_path, skeleton_spline_path, worm_pos_path, spline_X_path, spline_Y_path)
 
+    # Create a copy of df_worm_parameter
+    df_worm_movie = df_worm_parameter.copy() #create copy of df_worm_parameter fo wormmovie later
+
     #-----------------load config file for odor and arena positions
     with open(stage_pos_path, 'r') as config_file:
         stage_pos = yaml.safe_load(config_file)
@@ -347,15 +350,15 @@ def main(arg_list=None):
     After applying a shift of +2: [NaN, NaN, 1, 2, 3]
     
     '''
-    time_shifted_for_angles = int(fps*10)
+    time_shifted_for_angles = int(fps*2) #2 seconds in the past
 
     # Replace NaN values with a placeholder value before applying the shift
-    df_worm_parameter['X_shifted_negative'] = df_worm_parameter['X_rel_skel_pos_centroid_corrected'].shift(+time_shifted_for_angles).fillna(0)
-    df_worm_parameter['Y_shifted_negative'] = df_worm_parameter['Y_rel_skel_pos_centroid_corrected'].shift(+time_shifted_for_angles).fillna(0)
+    df_worm_parameter['X_shifted_negative'] = df_worm_parameter['X_rel_skel_pos_centroid_corrected'].shift(-time_shifted_for_angles).fillna(np.nan)
+    df_worm_parameter['Y_shifted_negative'] = df_worm_parameter['Y_rel_skel_pos_centroid_corrected'].shift(-time_shifted_for_angles).fillna(np.nan)
 
     # Replace NaN values with a placeholder value before applying the shift
-    df_worm_parameter['X_shifted_positive'] = df_worm_parameter['X_rel_skel_pos_centroid_corrected'].shift(-time_shifted_for_angles).fillna(0)
-    df_worm_parameter['Y_shifted_positive'] = df_worm_parameter['Y_rel_skel_pos_centroid_corrected'].shift(-time_shifted_for_angles).fillna(0)
+    df_worm_parameter['X_shifted_positive'] = df_worm_parameter['X_rel_skel_pos_centroid_corrected'].shift(+time_shifted_for_angles).fillna(np.nan)
+    df_worm_parameter['Y_shifted_positive'] = df_worm_parameter['Y_rel_skel_pos_centroid_corrected'].shift(+time_shifted_for_angles).fillna(np.nan)
 
     # Applying the function to each row and creating a new column 'bearing_angle'
     df_worm_parameter['bearing_angle'] = df_worm_parameter.apply(
@@ -439,6 +442,27 @@ def main(arg_list=None):
 
     # Saving param df to a CSV file
     df_worm_parameter.to_csv(os.path.join(output_path, 'chemotaxis_params.csv'), index=False)
+
+    #create animation of whole worm skelleton in arena
+    # Assuming df_worm_parameter, spline_X, spline_Y, video_resolution_x, video_resolution_y, factor_px_to_mm are defined
+
+    # Define skel_pos_0
+    skel_pos_movie = 0
+
+    # Iterate over skeleton positions from 0 to 100 inclusive
+    for skel_pos in range(101):
+        df_worm_parameter = correct_stage_pos_with_skeleton(
+            df_worm_movie,
+            spline_X,
+            spline_Y,
+            skel_pos_movie,
+            video_resolution_x,
+            video_resolution_y,
+            factor_px_to_mm
+        )
+
+
+
 
 if __name__ == "__main__":
 

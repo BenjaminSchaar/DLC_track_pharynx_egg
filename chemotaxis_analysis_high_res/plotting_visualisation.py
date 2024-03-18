@@ -298,7 +298,7 @@ def plot_NI(df, output_path, file_name):
     # Set the title and labels
     plt.title('Centroid NI')
     plt.xlabel('Time (minutes)')
-    plt.ylabel('mm/sec')
+    plt.ylabel('NI')
 
     # Enable grid
     plt.grid(True)

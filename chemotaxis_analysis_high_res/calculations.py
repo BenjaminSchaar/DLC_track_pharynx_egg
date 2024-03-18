@@ -195,7 +195,7 @@ def calculate_speed(df, fps):
     df['speed'] = ((df['X_rel_skel_pos_centroid'].diff() ** 2 + df['Y_rel_skel_pos_centroid'].diff() ** 2) ** 0.5) * fps
 
     # Assuming df is your DataFrame
-    smoothing_window_size = int(fps)
+    smoothing_window_size = int(fps*2)
 
     # Smooth the 'speed' column using a rolling window and taking the mean
     df['speed'] = df['speed'].rolling(window=smoothing_window_size, min_periods=1).mean()
@@ -213,7 +213,7 @@ def calculate_radial_speed(df, fps):
     '''
 
     # Assuming df is your DataFrame
-    smoothing_window_size = int(fps)
+    smoothing_window_size = int(fps*2)
 
     df['radial_speed'] = df['distance_to_odor_centroid'].diff() * fps
     # Smooth the 'speed' column using a rolling window and taking the mean
