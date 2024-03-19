@@ -440,18 +440,20 @@ def create_worm_animation(df1, df2, output_path, x_odor, y_odor, fps, arena_min_
         # Clear the previous frame
         ax.clear()
 
-        for skel_pos in range(101):  # Iterate over all skeleton positions
-            if skel_pos == 0:
-                ax.scatter(df1[f'X_rel_skel_pos_{skel_pos}'].iloc[row_index],
-                           df1[f'Y_rel_skel_pos_{skel_pos}'].iloc[row_index], label=f'Tracks_skel_pos_{skel_pos}', s=60, c=(df2['dC_0']))
-            elif  skel_pos== 100:
+        skel_number = 0
+        for skel_number in range(101):  # Iterate over all skeleton positions
+            if skel_number == 0:
+                ax.scatter(df1[f'X_rel_skel_pos_{skel_number}'].iloc[row_index],
+                           df1[f'Y_rel_skel_pos_{skel_number}'].iloc[row_index], label=f'Tracks_skel_pos_{skel_number}',
+                           s=60, c=(df2['dC_0']))
+            elif skel_number == 100:
                 ax.scatter(df1[f'X_rel_skel_pos_centroid_corrected'].iloc[row_index],
-                           df1[f'Y_rel_skel_pos_centroid_corrected'].iloc[row_index], label=f'Tracks_skel_pos_{skel_pos}', s=60, c=(df2['speed']))
+                           df1[f'Y_rel_skel_pos_centroid_corrected'].iloc[row_index],
+                           label=f'Tracks_skel_pos_{skel_number}', s=60, c=(df2['speed']))
             else:
-                ax.scatter(df1[f'X_rel_skel_pos_{skel_pos}'].iloc[row_index],
-                       df1[f'Y_rel_skel_pos_{skel_pos}'].iloc[row_index], label=f'Tracks_skel_pos_{skel_pos}', s=30)
-
-
+                ax.scatter(df1[f'X_rel_skel_pos_{skel_number}'].iloc[row_index],
+                           df1[f'Y_rel_skel_pos_{skel_number}'].iloc[row_index], label=f'Tracks_skel_pos_{skel_number}',
+                           s=30)
 
         ax.scatter(x_odor, y_odor, color='red', label='Odor Point', s=100)
 

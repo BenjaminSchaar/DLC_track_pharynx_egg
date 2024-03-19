@@ -453,8 +453,9 @@ def main(arg_list=None):
     skel_pos_movie = 0
 
     # Iterate over skeleton positions from 0 to 100 inclusive
-    for skel_pos in range(101):
-        df_worm_parameter = correct_stage_pos_with_skeleton(
+    for skel_pos_movie in range(101):
+        print(skel_pos_movie)
+        df_worm_movie = correct_stage_pos_with_skeleton(
             df_worm_movie,
             spline_X,
             spline_Y,
@@ -464,7 +465,7 @@ def main(arg_list=None):
             factor_px_to_mm
         )
 
-    create_worm_animation(df_worm_movie, df_worm_pos, output_path, x_odor, y_odor, fps, arena_min_x, arena_max_x, arena_min_y,
+    create_worm_animation(df_worm_movie, df_worm_parameter, output_path, x_odor, y_odor, fps, arena_min_x, arena_max_x, arena_min_y,
                           arena_max_y, file_name='worm_movie.avi')
 
 if __name__ == "__main__":
