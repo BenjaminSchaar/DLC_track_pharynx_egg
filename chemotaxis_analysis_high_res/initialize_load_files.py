@@ -464,6 +464,7 @@ def main(arg_list=None):
             video_resolution_y,
             factor_px_to_mm
         )
+    print('Worm Animation DF:', skel_pos_movie.head())
 
     create_worm_animation(df_worm_movie, df_worm_parameter, output_path, x_odor, y_odor, fps, arena_min_x, arena_max_x, arena_min_y,
                           arena_max_y, file_name='worm_movie.avi')

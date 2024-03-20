@@ -107,9 +107,6 @@ def create_angle_animation(df, output_path, x_odor, y_odor, fps, file_name):
         ax.plot([df.at[frame, 'X_shifted_negative'], df.at[frame, 'X_rel']], [df.at[frame, 'Y_shifted_negative'], df.at[frame, 'Y_rel']], color='green', linestyle='--', linewidth=0.8)
         ax.plot([df.at[frame, 'X_shifted_positive'], df.at[frame, 'X_rel']], [df.at[frame, 'Y_shifted_positive'], df.at[frame, 'Y_rel']], color='blue', linestyle='--', linewidth=0.8)
 
-        # Adding a legend
-        plt.legend()
-
         # Setting plot limits and labels
         ax.set_xlim(center_x_close - 5, center_x_close + 5)
         ax.set_ylim(center_y_close - 5, center_y_close + 5)
@@ -422,7 +419,6 @@ def create_worm_animation(df1, df2, output_path, x_odor, y_odor, fps, arena_min_
     '''
     # Combine the output path and file name
     full_path = os.path.join(output_path, file_name)
-    print("The full file path is:", full_path)
 
     # Define the video's width, height, and codec
     width, height = 600, 600
@@ -442,25 +438,25 @@ def create_worm_animation(df1, df2, output_path, x_odor, y_odor, fps, arena_min_
 
         skel_number = 0
         for skel_number in range(101):  # Iterate over all skeleton positions
+
+            print('iteration wom movie:', skel_number)
+
             if skel_number == 0:
                 ax.scatter(df1[f'X_rel_skel_pos_{skel_number}'].iloc[row_index],
-                           df1[f'Y_rel_skel_pos_{skel_number}'].iloc[row_index], label=f'Tracks_skel_pos_{skel_number}',
+                           df1[f'Y_rel_skel_pos_{skel_number}'].iloc[row_index],
                            s=60, c=(df2['dC_0']))
             elif skel_number == 100:
                 ax.scatter(df1[f'X_rel_skel_pos_centroid_corrected'].iloc[row_index],
                            df1[f'Y_rel_skel_pos_centroid_corrected'].iloc[row_index],
-                           label=f'Tracks_skel_pos_{skel_number}', s=60, c=(df2['speed']))
+                           s=60, c=(df2['speed']))
             else:
                 ax.scatter(df1[f'X_rel_skel_pos_{skel_number}'].iloc[row_index],
-                           df1[f'Y_rel_skel_pos_{skel_number}'].iloc[row_index], label=f'Tracks_skel_pos_{skel_number}',
+                           df1[f'Y_rel_skel_pos_{skel_number}'].iloc[row_index],
                            s=30)
 
         ax.scatter(x_odor, y_odor, color='red', label='Odor Point', s=100)
 
         ax.scatter(x_odor, y_odor, color='red', s=5)
-
-        # Adding a legend
-        plt.legend()
 
         # Setting plot limits and labels
         ax.set_xlim(arena_min_x, arena_max_x)
@@ -472,8 +468,8 @@ def create_worm_animation(df1, df2, output_path, x_odor, y_odor, fps, arena_min_
 
 
         # Text for angles
-        bearing_angle_text = f'Bearing Angle: {df1.at[frame, "bearing_angle"]:.2f}'
-        curving_angle_text = f'Curving Angle: {df1.at[frame, "curving_angle"]:.2f}'
+        bearing_angle_text = f'Bearing Angle: {df2.at[frame, "bearing_angle"]:.2f}'
+        curving_angle_text = f'Curving Angle: {df2.at[frame, "curving_angle"]:.2f}'
         ax.text(0.05, 0.95, bearing_angle_text, transform=ax.transAxes, fontsize=10, color='black')
         ax.text(0.05, 0.90, curving_angle_text, transform=ax.transAxes, fontsize=10, color='black')
 
