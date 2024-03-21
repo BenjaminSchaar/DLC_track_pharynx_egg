@@ -432,6 +432,11 @@ def create_worm_animation(df1, df2, output_path, x_odor, y_odor, fps, arena_min_
     canvas = FigureCanvas(fig)
 
     for frame in range(len(df1)):
+
+        # Extract data for current frame
+        center_x_close = df1.at[frame, 'X_rel']
+        center_y_close = df1.at[frame, 'Y_rel']
+
         row_index = frame
         # Clear the previous frame
         ax.clear()
@@ -459,8 +464,9 @@ def create_worm_animation(df1, df2, output_path, x_odor, y_odor, fps, arena_min_
         ax.scatter(x_odor, y_odor, color='red', s=5)
 
         # Setting plot limits and labels
-        ax.set_xlim(arena_min_x, arena_max_x)
-        ax.set_ylim(arena_min_y, arena_max_y)
+        # Setting plot limits and labels
+        ax.set_xlim(center_x_close - 3, center_x_close + 3)
+        ax.set_ylim(center_y_close - 3, center_y_close + 3)
         ax.set_xlabel('Distance (mm)')
         ax.set_ylabel('Distance (mm)')
         ax.set_title(f'Simulated Worm at Frame: {frame}')
