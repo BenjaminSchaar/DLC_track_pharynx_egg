@@ -1,6 +1,8 @@
 import cv2
 import os
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')  # Set the backend to 'Agg' before importing pyplot
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 import seaborn as sns
@@ -457,7 +459,7 @@ def create_worm_animation(df1, df2, output_path, x_odor, y_odor, fps, arena_min_
             else:
                 ax.scatter(df1[f'X_rel_skel_pos_{skel_number}'].iloc[row_index],
                            df1[f'Y_rel_skel_pos_{skel_number}'].iloc[row_index],
-                           s=30)
+                           s=30, c='blue')
 
         ax.scatter(x_odor, y_odor, color='red', label='Odor Point', s=100)
 
