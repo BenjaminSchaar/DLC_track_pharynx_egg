@@ -133,7 +133,7 @@ def main(arg_list=None):
     parser.add_argument("--output", required=True)
     parser.add_argument("--fps", required=True)
     parser.add_argument("--crop_size", required=True)
-    args = parser.parse_args()
+    args = parser.parse_args(arg_list)
 
     video_path = args.video
     csv_path = args.csv
