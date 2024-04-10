@@ -104,7 +104,6 @@ def crop_video(processed_df, video_path, roi_width, roi_height, frame_rate):
 
     # Release the video capture object and close the OpenCV windows
     cap.release()
-    cv2.destroyAllWindows()
 
     return new_roi_array
 
