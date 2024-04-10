@@ -443,7 +443,6 @@ def main(arg_list=None):
     df_worm_parameter['curving_angle_s'] = df_worm_parameter['curving_angle'].rolling(window=window_size_angle).mean()
 
 
-
     '''
     Plotting part
     
@@ -466,7 +465,7 @@ def main(arg_list=None):
 
     create_angle_animation(df_worm_parameter, output_path, x_odor, y_odor, fps, file_name ='angle_animation.avi')
 
-    plot_binned_data(df_worm_parameter, 'bearing_angle_s', 'curving_angle_s', num_bins=10, file_name='curving_angle_binned_plot.png')
+    plot_binned_data(df_worm_parameter, 'bearing_angle_s', 'curving_angle_s', output_path,  num_bins=10, file_name='curving_angle_binned_plot.png')
 
 
     # Saving param df to a CSV file
@@ -493,8 +492,7 @@ def main(arg_list=None):
 
     print('Worm Animation DF:', df_worm_movie.head())
 
-    create_worm_animation(df_worm_movie, df_worm_parameter, output_path, x_odor, y_odor, fps, arena_min_x, arena_max_x, arena_min_y,
-                          arena_max_y, file_name='worm_movie.avi')
+    create_worm_animation(df_worm_movie, df_worm_parameter, output_path, x_odor, y_odor, fps, arena_min_x, arena_max_x, arena_min_y, arena_max_y, file_name='worm_movie.avi')
 
 if __name__ == "__main__":
 
