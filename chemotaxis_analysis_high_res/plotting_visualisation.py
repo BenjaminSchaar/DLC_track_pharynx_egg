@@ -7,6 +7,8 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 import seaborn as sns
 import pandas as pd
+from matplotlib.lines import Line2D
+import plotly.express as px
 
 
 def plot_chemotaxis_overview(df, output_path, x_odor, y_odor, arena_min_x, arena_max_x, arena_min_y, arena_max_y, fps, file_name):
@@ -139,7 +141,7 @@ def create_angle_animation(df, output_path, x_odor, y_odor, fps, file_name):
 
 
 
-def plot_ethogram(beh_annotation, output_path, file_name):
+def plot_ethogram(df, output_path, file_name, num_lines=4):
     '''
     Inputs beh_annotation df and plots erhtogramm
 
@@ -147,22 +149,32 @@ def plot_ethogram(beh_annotation, output_path, file_name):
     :param output_path:
     :return:
     '''
-    try:
-        num_frames = len(beh_annotation)
-        num_lines = 4
-        cut_frames = num_frames // num_lines
-        fig, axs = plt.subplots(num_lines, 1, dpi=400, figsize=(10, 2 * num_lines))
 
-        for i, ax in enumerate(axs):
-            start_idx = i * cut_frames
-            end_idx = start_idx + cut_frames
-            ax.imshow(beh_annotation.iloc[start_idx:end_idx].T, origin="upper", cmap='seismic_r', aspect=20 * 100, vmin=-0.06,
-                      vmax=0.06)
-            ax.set_xticks(np.linspace(0, cut_frames, 5))
-            ax.set_xticklabels(np.linspace(start_idx, end_idx, 5).astype(int))
-            if i == num_lines - 1:
-                ax.set_xlabel('Frame')
-            ax.set_ylabel('Behavioral State')
+    num_frames = len(df)
+    cut_frames = num_frames // num_lines
+    fig, axs = plt.subplots(num_lines, 1, dpi=400, figsize=(10, 1 * num_lines))
+
+    for i, ax in enumerate(axs):
+        start_idx = i * cut_frames
+        end_idx = start_idx + cut_frames
+        ax.imshow(df.iloc[start_idx:end_idx].T, origin="upper", cmap='seismic_r', aspect=30 * 50)
+        ax.set_xticks(np.linspace(0, cut_frames, 5))
+        ax.set_xticklabels(np.linspace(start_idx, end_idx, 5).astype(int))
+
+        # Hide y-tick intervals
+        ax.set_yticks([])
+
+        if i == num_lines - 1:
+            ax.set_xlabel('Frame')
+        ax.set_ylabel('Beh. State')
+
+        # Add the legend on the first subplot
+        if i == 0:
+            legend_elements = [Line2D([0], [0], color='red', label='Reversal'),
+                               Line2D([0], [0], color='blue', label='Forward motion')]
+            ax.legend(handles=legend_elements, loc='upper left', bbox_to_anchor=(1.1, 1), frameon=True)
+
+        plt.tight_layout()
 
         # Save the plot to a file
         full_path = os.path.join(output_path, file_name)
@@ -170,9 +182,6 @@ def plot_ethogram(beh_annotation, output_path, file_name):
         plt.savefig(full_path)
 
         plt.clf()  # Clear the current figure after displaying the plot
-
-    except Exception as e:
-        print(f'Problem plotting the ethogram: {e}')
 
 
 def plot_skeleton_spline(skeleton_spline, output_path, file_name):
@@ -254,10 +263,10 @@ def plot_speed(df, output_path, file_name):
     times = df['time_seconds'] / 60
 
     # Creating the scatter plot with color based on time
-    scatter = plt.scatter(times, df['speed'], c=times, cmap='plasma', alpha=0.1)
+    scatter = plt.scatter(times, df['speed_s'], c=times, cmap='plasma', alpha=0.1)
 
     # Plotting the line
-    plt.plot(times, df['speed'], alpha=0.5)  # Set lower alpha to make line less prominent
+    plt.plot(times, df['speed_s'], alpha=0.5)  # Set lower alpha to make line less prominent
 
     # Adding a color bar to understand the mapping from time to color
     plt.colorbar(scatter, label='Time (minutes)')
@@ -287,10 +296,10 @@ def plot_NI(df, output_path, file_name):
     times = df['time_seconds'] / 60
 
     # Creating the scatter plot with color based on time
-    scatter = plt.scatter(times, df['NI'], c=times, cmap='plasma', alpha=0.1)
+    scatter = plt.scatter(times, df['NI_s'], c=times, cmap='plasma', alpha=0.1)
 
     # Plotting the line
-    plt.plot(times, df['NI'], alpha=0.5)  # Set lower alpha to make line less prominent
+    plt.plot(times, df['NI_s'], alpha=0.5)  # Set lower alpha to make line less prominent
 
     # Adding a color bar to understand the mapping from time to color
     plt.colorbar(scatter, label='Time (minutes)')
@@ -373,40 +382,6 @@ def plot_reversal_frequency(df, output_path, file_name):
     plt.savefig(full_path)
 
     plt.clf()  # Clear the current figure after displaying the plot
-
-def plot_curving_vs_bearing(df, output_path, file_name):
-
-    # Define the figure size
-    plt.figure(figsize=(16, 4))
-
-    # Convert time from seconds to minutes
-    times = df['time_seconds'] / 60
-
-    # Creating the scatter plot with color based on time
-    scatter = plt.scatter(df['bearing_angle'], df['curving_angle'], c=times, cmap='plasma', alpha=0.1)
-
-    # Plotting the line
-    plt.scatter(df['bearing_angle'], df['curving_angle'], alpha=0.5)  # Set lower alpha to make line less prominent
-
-    # Adding a color bar to understand the mapping from time to color
-    plt.colorbar(scatter, label='Time (minutes)')
-
-    # Set the title and labels
-    plt.title('Bearing Angle vs Curving Angle')
-    plt.xlabel('bearing angle')
-    plt.ylabel('curving angle')
-
-    # Enable grid
-    plt.grid(True)
-
-    # saving part
-    full_path = os.path.join(output_path, file_name)
-    print("The full file path is:", full_path)
-
-    plt.savefig(full_path)
-
-    plt.clf()  # Clear the current figure after displaying the plot
-
 
 def create_worm_animation(df1, df2, output_path, x_odor, y_odor, fps, arena_min_x, arena_max_x, arena_min_y, arena_max_y, file_name):
     '''
@@ -494,3 +469,48 @@ def create_worm_animation(df1, df2, output_path, x_odor, y_odor, fps, arena_min_
     out.release()
     plt.close(fig)  # Close the figure to free memory
 
+def plot_binned_data(df, x_col, y_col, output_path, num_bins=10, file_name='plot.png'):
+    """
+    Plots mean of the y_col binned according to x_col with SEM error bars and saves the plot to a file.
+
+    Parameters:
+    - df : pandas.DataFrame
+        DataFrame containing the data
+    - x_col : str
+        Column name to be used for binning
+    - y_col : str
+        Column name to be plotted as mean with error bars
+    - num_bins : int
+        Number of bins to divide the x_col data into
+    - file_name : str
+        Filename to save the plot. The extension determines the format (e.g., 'plot.png', 'plot.pdf')
+
+    Returns:
+    - A plotly figure object displaying the line plot with error bars
+    """
+    # Step 1: Binning x_col and creating a new column with the midpoint value of each bin interval
+    df[f'{x_col}_binned'] = pd.cut(df[x_col].fillna(0), bins=num_bins).apply(lambda x: x.mid).astype(float)
+
+    # Step 2: Calculate mean, standard deviation and count of y_col for each bin
+    grouped_data = df.groupby(f'{x_col}_binned')[y_col].agg(['mean', 'std', 'count']).reset_index()
+    grouped_data['SEM'] = grouped_data['std'] / np.sqrt(grouped_data['count'])  # Calculating SEM
+    grouped_data.columns = [f'{x_col}_binned', 'mean_value', 'std', 'count', 'SEM']
+
+    # Step 3: Create a line plot with error bars for SEM
+    fig = px.line(grouped_data, x=f'{x_col}_binned', y='mean_value',
+                  title=f'Mean {y_col} at Binned {x_col}', error_y='SEM',
+                  labels={'mean_value': f'Mean {y_col}', f'{x_col}_binned': f'{x_col} Binned'})
+
+    # Adding markers to the line plot to indicate data points
+    fig.add_scatter(x=grouped_data[f'{x_col}_binned'], y=grouped_data['mean_value'], mode='markers', error_y=dict(type='data', array=grouped_data['SEM']))
+
+    # Update axes titles
+    fig.update_xaxes(title_text=f'{x_col} Binned')
+    fig.update_yaxes(title_text=f'Mean {y_col}')
+
+    full_path = os.path.join(output_path, file_name)
+    print("The full file path is:", full_path)
+    # Save the plot
+    fig.write_image(full_path)
+
+    return fig

@@ -27,6 +27,11 @@ from chemotaxis_analysis_high_res.plotting_visualisation import (
     plot_NI,
     plot_curving_vs_bearing,
     create_worm_animation,
+    plot_binned_data
+)
+
+from chemotaxis_analysis_high_res.data_smothing import (
+    replace_outliers_with_nan
 )
 
 def read_csv_files(beh_annotation_path:str, skeleton_spline_path:str, worm_pos_path:str, spline_X_path:str, spline_Y_path:str):
@@ -422,12 +427,21 @@ def main(arg_list=None):
 
     cals functions that smoothen and clean the data
     '''
+    replace_outliers_with_nan(df_worm_parameter, 'speed', 2)
+    replace_outliers_with_nan(df_worm_parameter, 'radial_speed', 2)
+    replace_outliers_with_nan(df_worm_parameter, 'NI', 2)
 
+    #-------------------------------
+    window_size_speed = 2 * fps
 
+    df_worm_parameter['speed_s'] = df_worm_parameter['speed'].rolling(window=window_size_speed).mean()
+    df_worm_parameter['radial_speed_s'] = df_worm_parameter['radial_speed'].rolling(window=window_size_speed).mean()
+    df_worm_parameter['NI_s'] = df_worm_parameter['NI'].rolling(window=window_size_speed).mean()
 
+    window_size_angle = 20 * fps
 
-
-
+    df_worm_parameter['bearing_angle_s'] = df_worm_parameter['bearing_angle'].rolling(window=window_size_angle).mean()
+    df_worm_parameter['curving_angle_s'] = df_worm_parameter['curving_angle'].rolling(window=window_size_angle).mean()
 
 
 
@@ -453,7 +467,7 @@ def main(arg_list=None):
 
     create_angle_animation(df_worm_parameter, output_path, x_odor, y_odor, fps, file_name ='angle_animation.avi')
 
-    plot_curving_vs_bearing(df_worm_parameter, output_path, file_name ='curving_angle_vs_bearing_angle.png')
+    plot_binned_data(df_worm_parameter, 'bearing_angle_s', 'curving_angle_s', num_bins=10, file_name='curving_angle_binned_plot.png')
 
 
     # Saving param df to a CSV file
