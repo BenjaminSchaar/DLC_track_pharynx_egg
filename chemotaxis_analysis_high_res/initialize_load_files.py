@@ -431,13 +431,13 @@ def main(arg_list=None):
     replace_outliers_with_nan(df_worm_parameter, 'NI', 2)
 
     #-------------------------------
-    window_size_speed = 2 * fps
+    window_size_speed = int(2 * fps)
 
     df_worm_parameter['speed_s'] = df_worm_parameter['speed'].rolling(window=window_size_speed).mean()
     df_worm_parameter['radial_speed_s'] = df_worm_parameter['radial_speed'].rolling(window=window_size_speed).mean()
     df_worm_parameter['NI_s'] = df_worm_parameter['NI'].rolling(window=window_size_speed).mean()
 
-    window_size_angle = 20 * fps
+    window_size_angle = int(20 * fps)
 
     df_worm_parameter['bearing_angle_s'] = df_worm_parameter['bearing_angle'].rolling(window=window_size_angle).mean()
     df_worm_parameter['curving_angle_s'] = df_worm_parameter['curving_angle'].rolling(window=window_size_angle).mean()
