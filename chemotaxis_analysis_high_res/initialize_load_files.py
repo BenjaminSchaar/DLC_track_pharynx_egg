@@ -25,7 +25,6 @@ from chemotaxis_analysis_high_res.plotting_visualisation import (
     plot_speed,
     plot_distance_to_odor,
     plot_NI,
-    plot_curving_vs_bearing,
     create_worm_animation,
     plot_binned_data
 )
