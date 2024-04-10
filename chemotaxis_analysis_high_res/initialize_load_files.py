@@ -418,6 +418,20 @@ def main(arg_list=None):
     df_worm_parameter['NI'] = (df_worm_parameter['radial_speed'] / df_worm_parameter['speed'])
 
     '''
+    data smoothing and cleaning part
+
+    cals functions that smoothen and clean the data
+    '''
+
+
+
+
+
+
+
+
+
+    '''
     Plotting part
     
     cals functions that create various visualisations
@@ -440,7 +454,6 @@ def main(arg_list=None):
     create_angle_animation(df_worm_parameter, output_path, x_odor, y_odor, fps, file_name ='angle_animation.avi')
 
     plot_curving_vs_bearing(df_worm_parameter, output_path, file_name ='curving_angle_vs_bearing_angle.png')
-
 
 
     # Saving param df to a CSV file

@@ -125,8 +125,7 @@ def export_video(cropped_video_stack, output, frame_rate, roi_width, roi_height)
     # Release the VideoWriter object
     out.release()
 
-
-if __name__ == "__main__":
+def main(arg_list=None):
 
     parser = argparse.ArgumentParser(description="track with DLC")
     parser.add_argument("--video", required=True)
@@ -155,3 +154,8 @@ if __name__ == "__main__":
     processed_df = read_csv(csv_path)
     cropped_video_stack = crop_video(processed_df, video_path, roi_width, roi_height, frame_rate)
     export_video(cropped_video_stack, output, frame_rate, roi_width, roi_height)
+
+
+if __name__ == "__main__":
+    print("Shell commands passed:", sys.argv)
+    main(sys.argv[1:])  # exclude the script name from the args when called from shell
