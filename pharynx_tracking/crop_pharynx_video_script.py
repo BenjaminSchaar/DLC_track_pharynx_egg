@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 import argparse
 import glob
+import pickle
 
 def read_csv(csv_path):
     # reads DLC csv in and puts the resulting df in a reasonable format to plot data from!
@@ -57,16 +58,13 @@ def read_csv(csv_path):
     return processed_df
 
 
-def crop_video(processed_df, video_path, roi_width, roi_height, frame_rate):
+def crop_video(processed_df, video_path, roi_width, roi_height, downsample_factor):
 
     # Open the video file
     cap = cv2.VideoCapture(video_path)
 
     # Create an empty NumPy array to store grayscale values
     new_roi_array = []
-
-    # Conversion factor from LQ coordinates to HQ coordinates: similar to  the factor of downsampled video
-    conversion_hq = 3
 
     while True:
         frame_number = int(cap.get(cv2.CAP_PROP_POS_FRAMES))  # Get the current frame number
@@ -76,8 +74,8 @@ def crop_video(processed_df, video_path, roi_width, roi_height, frame_rate):
             break  # Break the loop when there are no more frames
 
         # Define the ROI coordinates (x, y, width, height)
-        nose_pahrynx_center_x = processed_df['x'].iloc[frame_number] * conversion_hq
-        nose_pharynx_center_y = processed_df['y'].iloc[frame_number] * conversion_hq
+        nose_pahrynx_center_x = processed_df['x'].iloc[frame_number] * downsample_factor
+        nose_pharynx_center_y = processed_df['y'].iloc[frame_number] * downsample_factor
 
         roi_x = int(nose_pahrynx_center_x - roi_width // 2)
         roi_y = int(nose_pharynx_center_y - roi_width // 2)
@@ -124,6 +122,26 @@ def export_video(cropped_video_stack, output, frame_rate, roi_width, roi_height)
     # Release the VideoWriter object
     out.release()
 
+def load_downsample_factor_from_pickle(tiff_path):
+    # Extract the directory path from the TIFF file path
+    directory_path = os.path.dirname(tiff_path)
+
+    # Construct the full path to the cfactor.pickle file
+    cfactor_pickle_path = os.path.join(directory_path, 'cfactor.pickle')
+
+    # Check if the cfactor.pickle file exists
+    if os.path.exists(cfactor_pickle_path):
+        print(f"Found cfactor.pickle file at {cfactor_pickle_path}")
+        # Load the content of the pickle file
+        with open(cfactor_pickle_path, 'rb') as file:
+            downsample_factor = pickle.load(file)
+            print(f"Loaded downsample factor: {downsample_factor}")
+        return downsample_factor
+    else:
+        # Handle the case where the cfactor.pickle file is not found
+        print("cfactor.pickle file not found in the directory.")
+        return None  # You can return a specific value or raise an exception if needed
+
 def main(arg_list=None):
 
     parser = argparse.ArgumentParser(description="track with DLC")
@@ -148,10 +166,12 @@ def main(arg_list=None):
     print("CSV path:", csv_path)
     print("Output path:", output)
 
+    downsample_factor = load_downsample_factor_from_pickle(video_path)
+
     #call functions that process data----------------------------
 
     processed_df = read_csv(csv_path)
-    cropped_video_stack = crop_video(processed_df, video_path, roi_width, roi_height, frame_rate)
+    cropped_video_stack = crop_video(processed_df, video_path, roi_width, roi_height, downsample_factor)
     export_video(cropped_video_stack, output, frame_rate, roi_width, roi_height)
 
 

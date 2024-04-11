@@ -469,9 +469,10 @@ def create_worm_animation(df1, df2, output_path, x_odor, y_odor, fps, arena_min_
     out.release()
     plt.close(fig)  # Close the figure to free memory
 
+
 def plot_binned_data(df, x_col, y_col, output_path, num_bins=10, file_name='plot.png'):
     """
-    Plots mean of the y_col binned according to x_col with SEM error bars and saves the plot to a file.
+    Plots mean of the y_col binned according to x_col with SEM error bars using Matplotlib and saves the plot to a file.
 
     Parameters:
     - df : pandas.DataFrame
@@ -486,31 +487,32 @@ def plot_binned_data(df, x_col, y_col, output_path, num_bins=10, file_name='plot
         Filename to save the plot. The extension determines the format (e.g., 'plot.png', 'plot.pdf')
 
     Returns:
-    - A plotly figure object displaying the line plot with error bars
+    - A matplotlib figure object displaying the line plot with error bars
     """
     # Step 1: Binning x_col and creating a new column with the midpoint value of each bin interval
-    df[f'{x_col}_binned'] = pd.cut(df[x_col].fillna(0), bins=num_bins).apply(lambda x: x.mid).astype(float)
+    df[f'{x_col}_binned'] = pd.cut(df[x_col].fillna(0), bins=num_bins, labels=range(num_bins))
+    df[f'{x_col}_mid'] = pd.cut(df[x_col].fillna(0), bins=num_bins).apply(lambda x: x.mid).astype(float)
 
-    # Step 2: Calculate mean, standard deviation and count of y_col for each bin
+    # Step 2: Calculate mean, standard deviation, and count of y_col for each bin
     grouped_data = df.groupby(f'{x_col}_binned')[y_col].agg(['mean', 'std', 'count']).reset_index()
     grouped_data['SEM'] = grouped_data['std'] / np.sqrt(grouped_data['count'])  # Calculating SEM
-    grouped_data.columns = [f'{x_col}_binned', 'mean_value', 'std', 'count', 'SEM']
 
     # Step 3: Create a line plot with error bars for SEM
-    fig = px.line(grouped_data, x=f'{x_col}_binned', y='mean_value',
-                  title=f'Mean {y_col} at Binned {x_col}', error_y='SEM',
-                  labels={'mean_value': f'Mean {y_col}', f'{x_col}_binned': f'{x_col} Binned'})
+    fig, ax = plt.subplots()
+    ax.errorbar(grouped_data[f'{x_col}_mid'], grouped_data['mean'], yerr=grouped_data['SEM'], fmt='-o', capsize=5,
+                capthick=1, elinewidth=1)
 
-    # Adding markers to the line plot to indicate data points
-    fig.add_scatter(x=grouped_data[f'{x_col}_binned'], y=grouped_data['mean_value'], mode='markers', error_y=dict(type='data', array=grouped_data['SEM']))
+    ax.set_title(f'Mean {y_col} at Binned {x_col}')
+    ax.set_xlabel(f'{x_col} (Binned)')
+    ax.set_ylabel(f'Mean {y_col}')
+    ax.grid(True)
 
-    # Update axes titles
-    fig.update_xaxes(title_text=f'{x_col} Binned')
-    fig.update_yaxes(title_text=f'Mean {y_col}')
-
+    # Constructing the full path to save the plot
     full_path = os.path.join(output_path, file_name)
     print("The full file path is:", full_path)
+
     # Save the plot
-    fig.write_image(full_path)
+    plt.savefig(full_path)
+    plt.close()
 
     return fig
