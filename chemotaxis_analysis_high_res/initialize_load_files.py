@@ -52,7 +52,15 @@ def read_csv_files(beh_annotation_path:str, skeleton_spline_path:str, worm_pos_p
     # Read CSV files into separate dataframes
     beh_annotation_df = pd.read_csv(beh_annotation_path, header=None)
     skeleton_spline_df = pd.read_csv(skeleton_spline_path, header=None)
-    turn_annotation_df = pd.read_csv(turn_annotation_path)
+
+    # Try reading with different encodings
+    try:
+        turn_annotation_df = pd.read_csv(turn_annotation_path, encoding='utf-8')
+    except UnicodeDecodeError:
+        try:
+            turn_annotation_df = pd.read_csv(turn_annotation_path, encoding='cp1252')
+        except UnicodeDecodeError:
+            turn_annotation_df = pd.read_csv(turn_annotation_path, encoding='iso-8859-1')
 
     worm_pos_df = pd.read_csv(worm_pos_path)
     worm_pos_df = worm_pos_df.drop(columns=['time'],errors='ignore')  # deletes old time column before interplation step
