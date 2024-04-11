@@ -52,7 +52,7 @@ def read_csv_files(beh_annotation_path:str, skeleton_spline_path:str, worm_pos_p
     # Read CSV files into separate dataframes
     beh_annotation_df = pd.read_csv(beh_annotation_path, header=None)
     skeleton_spline_df = pd.read_csv(skeleton_spline_path, header=None)
-    turn_annotation_df = pd.read_csv(turn_annotation_path, header=None)
+    turn_annotation_df = pd.read_excel(turn_annotation_path)
 
     worm_pos_df = pd.read_csv(worm_pos_path)
     worm_pos_df = worm_pos_df.drop(columns=['time'],errors='ignore')  # deletes old time column before interplation step
