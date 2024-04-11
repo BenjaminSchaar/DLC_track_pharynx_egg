@@ -513,4 +513,40 @@ def plot_binned_data(df, x_col, y_col, output_path, num_bins=10, file_name='plot
     # Save the plot
     fig.write_image(full_path)
 
-    return fig
+    return None
+
+
+def plot_turns(df, output_path, file_name='plot.png'):
+    """
+    Function to plot 'turn' values over their respective indices from a DataFrame and optionally save the figure.
+
+    Args:
+    turns_df (DataFrame): A pandas DataFrame containing at least one column named 'turn'.
+    save_path (str, optional): Path where the figure should be saved. If not specified, the figure is not saved.
+
+    Returns:
+    fig (plotly.graph_objects.Figure): The Plotly figure object for the plot.
+    """
+
+    # Convert time from seconds to minutes
+    times = df['time_seconds'] / 60
+
+    fig = px.scatter(df, x = times,  y='turn', title='Turns Over Index',
+                     color='turn', symbol='turn',
+                     category_orders={"turn": [1, 0, -1]},  # Ensure consistent order of categories
+                     color_discrete_map={1: 'green', 0: 'blue', -1: 'red'},
+                     symbol_map={1: 'triangle-up', 0: 'circle', -1: 'triangle-down'})
+
+    fig.update_layout(
+        xaxis_title='Index',
+        yaxis_title='Turn Value',
+        showlegend=False  # This removes the legend
+    )
+
+    full_path = os.path.join(output_path, file_name)
+    print("The full file path is:", full_path)
+
+    fig.write_image(full_path)
+    print(f"Figure saved to {full_path}")
+
+    return None

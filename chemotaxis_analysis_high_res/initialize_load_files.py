@@ -26,14 +26,15 @@ from chemotaxis_analysis_high_res.plotting_visualisation import (
     plot_distance_to_odor,
     plot_NI,
     create_worm_animation,
-    plot_binned_data
+    plot_binned_data,
+    plot_turns,
 )
 
 from chemotaxis_analysis_high_res.data_smothing import (
     replace_outliers_with_nan
 )
 
-def read_csv_files(beh_annotation_path:str, skeleton_spline_path:str, worm_pos_path:str, spline_X_path:str, spline_Y_path:str):
+def read_csv_files(beh_annotation_path:str, skeleton_spline_path:str, worm_pos_path:str, spline_X_path:str, spline_Y_path:str, turn_annotation_path:str):
     # Check if the file paths exist
     if not os.path.exists(beh_annotation_path):
         raise FileNotFoundError(f"The file '{beh_annotation_path}' does not exist.")
@@ -45,10 +46,13 @@ def read_csv_files(beh_annotation_path:str, skeleton_spline_path:str, worm_pos_p
         raise FileNotFoundError(f"The file '{spline_X_path}' does not exist.")
     if not os.path.exists(spline_Y_path):
         raise FileNotFoundError(f"The file '{spline_Y_path}' does not exist.")
+    if not os.path.exists(turn_annotation_path):
+        raise FileNotFoundError(f"The file '{turn_annotation_path}' does not exist.")
 
     # Read CSV files into separate dataframes
     beh_annotation_df = pd.read_csv(beh_annotation_path, header=None)
     skeleton_spline_df = pd.read_csv(skeleton_spline_path, header=None)
+    turn_annotation_df = pd.read_csv(turn_annotation_path)
 
     worm_pos_df = pd.read_csv(worm_pos_path)
     worm_pos_df = worm_pos_df.drop(columns=['time'],errors='ignore')  # deletes old time column before interplation step
@@ -59,6 +63,9 @@ def read_csv_files(beh_annotation_path:str, skeleton_spline_path:str, worm_pos_p
     # Print the head of each dataframe
     print("Behavior Annotation DataFrame:")
     print(beh_annotation_df.head())
+
+    print("Turn Annotation DataFrame:")
+    print(turn_annotation_df.head())
 
     print("\nSkeleton Spline DataFrame:")
     print(skeleton_spline_df.head())
@@ -74,6 +81,7 @@ def read_csv_files(beh_annotation_path:str, skeleton_spline_path:str, worm_pos_p
 
     # Convert all columns to numeric, if possible
     beh_annotation_df = beh_annotation_df.apply(pd.to_numeric, errors='coerce')
+    turn_annotation_df = turn_annotation_df.apply(pd.to_numeric, errors='coerce')
     skeleton_spline_df = skeleton_spline_df.apply(pd.to_numeric, errors='coerce')
     worm_pos_df = worm_pos_df.apply(pd.to_numeric, errors='coerce')
     spline_X_df = spline_X_df.apply(pd.to_numeric, errors='coerce')
@@ -82,6 +90,10 @@ def read_csv_files(beh_annotation_path:str, skeleton_spline_path:str, worm_pos_p
     # Print the head of each dataframe
     print("_Behavior Annotation DataFrame:")
     print(beh_annotation_df.head())
+
+    # Print the head of each dataframe
+    print("_Behavior Annotation DataFrame:")
+    print(turn_annotation_df.head())
 
     print("\nSkeleton Spline DataFrame:")
     print(skeleton_spline_df.head())
@@ -96,6 +108,7 @@ def read_csv_files(beh_annotation_path:str, skeleton_spline_path:str, worm_pos_p
     print(spline_Y_df.head())
 
     print("Number of rows in beh_annotation_df:", len(beh_annotation_df))
+    print("Number of rows in turn_annotation_df:", len(turn_annotation_df))
     print("Number of rows in skeleton_spline_df:", len(skeleton_spline_df))
     print("Number of rows in worm_pos_df:", len(worm_pos_df))
     print("Number of rows in spline_X_df:", len(spline_X_df))
@@ -115,7 +128,7 @@ def read_csv_files(beh_annotation_path:str, skeleton_spline_path:str, worm_pos_p
         print("Stage Position Dataframe head after interpolation:", worm_pos_df.head())
         print("Frame lenght of recorded video:", len(spline_X_df))
 
-    return beh_annotation_df, skeleton_spline_df, worm_pos_df, spline_X_df, spline_Y_df
+    return beh_annotation_df, skeleton_spline_df, worm_pos_df, spline_X_df, spline_Y_df, turn_annotation_df
 
 # Define a function to extract the x and y values from the yaml file
 def extract_coords(coord_string:str):
@@ -165,10 +178,12 @@ def main(arg_list=None):
     parser.add_argument('--fps', help='fps', required=True)
     parser.add_argument('--conc_gradient_array', help='exportet concentration_gradient.npy file for the odor used', required=True)
     parser.add_argument('--distance_array', help='exportet distance_array.npy file for the odor used', required=True)
+    parser.add_argument('--turn_annotation', help='Full path to the turn annotation CSV file', required=True)
 
     args = parser.parse_args(arg_list)
 
     beh_annotation_path = args.beh_annotation
+    turn_annotation_path = args.turn_annotation
     skeleton_spline_path = args.skeleton_spline
     worm_pos_path = args.worm_pos
     stage_pos_path = args.stage_pos
@@ -201,7 +216,7 @@ def main(arg_list=None):
     output_path = os.path.dirname(beh_annotation_path)
 
     #-------------loading necessary files
-    beh_annotation, skeleton_spline, df_worm_parameter, spline_X, spline_Y = read_csv_files(beh_annotation_path, skeleton_spline_path, worm_pos_path, spline_X_path, spline_Y_path)
+    beh_annotation, skeleton_spline, df_worm_parameter, spline_X, spline_Y, turn_annotation = read_csv_files(beh_annotation_path, skeleton_spline_path, worm_pos_path, spline_X_path, spline_Y_path, turn_annotation_path)
 
     #-----------------load config file for odor and arena positions
     with open(stage_pos_path, 'r') as config_file:
@@ -393,6 +408,7 @@ def main(arg_list=None):
 
     # Merge/join based on index
     df_worm_parameter = pd.merge(df_worm_parameter, beh_annotation, left_index=True, right_index=True, how='left')
+    df_worm_parameter = pd.merge(df_worm_parameter, turn_annotation, left_index=True, right_index=True, how='left')
 
     # Show the head of the merged DataFrame
     print(df_worm_parameter.head())
@@ -466,6 +482,8 @@ def main(arg_list=None):
     create_angle_animation(df_worm_parameter, output_path, x_odor, y_odor, fps, file_name ='angle_animation.avi')
 
     plot_binned_data(df_worm_parameter, 'bearing_angle_s', 'curving_angle_s', output_path,  num_bins=10, file_name='curving_angle_binned_plot.png')
+
+    plot_turns(df_worm_parameter, output_path, file_name='turns.png')
 
 
     # Saving param df to a CSV file
