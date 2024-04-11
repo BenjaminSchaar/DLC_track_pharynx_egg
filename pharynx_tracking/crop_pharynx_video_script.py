@@ -7,6 +7,7 @@ from matplotlib.animation import FuncAnimation
 import argparse
 import glob
 import pickle
+import os
 
 def read_csv(csv_path):
     # reads DLC csv in and puts the resulting df in a reasonable format to plot data from!
