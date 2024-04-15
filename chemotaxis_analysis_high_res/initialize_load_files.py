@@ -186,7 +186,7 @@ def main(arg_list=None):
     args = parser.parse_args(arg_list)
 
     beh_annotation_path = args.beh_annotation
-    turn_annotation_path = args.turn_annotation
+    turn_annotation_path = str(args.turn_annotation)
     skeleton_spline_path = args.skeleton_spline
     worm_pos_path = args.worm_pos
     stage_pos_path = args.stage_pos
@@ -217,6 +217,8 @@ def main(arg_list=None):
 
     # Extracting the directory path and saving it to a new variable
     output_path = os.path.dirname(beh_annotation_path)
+
+    print(turn_annotation_path)
 
     #-------------loading necessary files
     beh_annotation, skeleton_spline, df_worm_parameter, spline_X, spline_Y, turn_annotation = read_csv_files(beh_annotation_path, skeleton_spline_path, worm_pos_path, spline_X_path, spline_Y_path, turn_annotation_path)
