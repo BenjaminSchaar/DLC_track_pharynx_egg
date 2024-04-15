@@ -49,6 +49,9 @@ def read_csv_files(beh_annotation_path:str, skeleton_spline_path:str, worm_pos_p
     if not os.path.exists(turn_annotation_path):
         raise FileNotFoundError(f"The file '{turn_annotation_path}' does not exist.")
 
+    print(turn_annotation_path)
+
+
     # Read CSV files into separate dataframes
     beh_annotation_df = pd.read_csv(beh_annotation_path, header=None)
     skeleton_spline_df = pd.read_csv(skeleton_spline_path, header=None)
