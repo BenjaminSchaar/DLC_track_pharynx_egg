@@ -532,7 +532,7 @@ def plot_turns(df, output_path, file_name='plot.png'):
     times = df['time_seconds'] / 60
 
     fig = px.scatter(df, x = times,  y='turns', title='Turns Over Index',
-                     color='turn', symbol='turn',
+                     color='turns', symbol='turns',
                      category_orders={"turn": [1, 0, -1]},
                      color_discrete_map={1: 'green', 0: 'blue', -1: 'red'},
                      symbol_map={1: 'triangle-up', 0: 'circle', -1: 'triangle-down'}
