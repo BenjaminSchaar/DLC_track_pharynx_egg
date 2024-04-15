@@ -531,7 +531,7 @@ def plot_turns(df, output_path, file_name='plot.png'):
     # Convert time from seconds to minutes
     times = df['time_seconds'] / 60
 
-    fig = px.scatter(df, x = times,  y='turn', title='Turns Over Index',
+    fig = px.scatter(df, x = times,  y='turns', title='Turns Over Index',
                      color='turn', symbol='turn',
                      category_orders={"turn": [1, 0, -1]},  # Ensure consistent order of categories
                      color_discrete_map={1: 'green', 0: 'blue', -1: 'red'},

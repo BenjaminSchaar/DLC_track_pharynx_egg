@@ -413,6 +413,8 @@ def main(arg_list=None):
     df_worm_parameter = pd.merge(df_worm_parameter, beh_annotation, left_index=True, right_index=True, how='left')
     df_worm_parameter = pd.merge(df_worm_parameter, turn_annotation, left_index=True, right_index=True, how='left')
 
+    df_worm_parameter = df_worm_parameter.drop(columns=['Unnamed: 0']) #index colum from turn annotations
+
     # Show the head of the merged DataFrame
     print(df_worm_parameter.head())
 
