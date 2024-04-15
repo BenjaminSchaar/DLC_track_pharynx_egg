@@ -533,9 +533,10 @@ def plot_turns(df, output_path, file_name='plot.png'):
 
     fig = px.scatter(df, x = times,  y='turns', title='Turns Over Index',
                      color='turn', symbol='turn',
-                     category_orders={"turn": [1, 0, -1]},  # Ensure consistent order of categories
+                     category_orders={"turn": [1, 0, -1]},
                      color_discrete_map={1: 'green', 0: 'blue', -1: 'red'},
-                     symbol_map={1: 'triangle-up', 0: 'circle', -1: 'triangle-down'})
+                     symbol_map={1: 'triangle-up', 0: 'circle', -1: 'triangle-down'}
+                     )
 
     fig.update_layout(
         xaxis_title='Index',
