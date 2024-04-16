@@ -539,10 +539,11 @@ def plot_turns(df, output_path, file_name='plot.png'):
                      )
 
     fig.update_layout(
-        xaxis_title='Index',
+        xaxis_title='Time(min)',
         yaxis_title='Turn Value',
         showlegend=False  # This removes the legend
     )
+
 
     full_path = os.path.join(output_path, file_name)
     print("The full file path is:", full_path)
