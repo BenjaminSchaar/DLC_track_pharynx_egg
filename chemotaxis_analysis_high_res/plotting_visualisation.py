@@ -426,15 +426,15 @@ def create_worm_animation(df1, df2, output_path, x_odor, y_odor, fps, arena_min_
             if skel_number == 0:
                 ax.scatter(df1[f'X_rel_skel_pos_{skel_number}'].iloc[row_index],
                            df1[f'Y_rel_skel_pos_{skel_number}'].iloc[row_index],
-                           s=60, c=df2['dC_0'].iloc[row_index])
+                           s=10, c=df2['dC_0'].iloc[row_index])
             elif skel_number == 100:
                 ax.scatter(df1['X_rel_skel_pos_centroid'].iloc[row_index],
                            df1['Y_rel_skel_pos_centroid'].iloc[row_index],
-                           s=60, c=df2['speed'].iloc[row_index])
+                           s=10, c=df2['speed'].iloc[row_index])
             else:
                 ax.scatter(df1[f'X_rel_skel_pos_{skel_number}'].iloc[row_index],
                            df1[f'Y_rel_skel_pos_{skel_number}'].iloc[row_index],
-                           s=30, c='blue')
+                           s=10, c='blue')
 
         ax.scatter(x_odor, y_odor, color='red', label='Odor Point', s=100)
 
