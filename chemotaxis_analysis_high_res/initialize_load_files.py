@@ -31,10 +31,11 @@ from chemotaxis_analysis_high_res.plotting_visualisation import (
 )
 
 from chemotaxis_analysis_high_res.data_smothing import (
-    replace_outliers_with_nan
+    replace_outliers_with_nan,
+    update_behaviour_based_on_speed,
 )
 
-def read_csv_files(beh_annotation_path:str, skeleton_spline_path:str, worm_pos_path:str, spline_X_path:str, spline_Y_path:str, turn_annotation_path:str):
+def read_csv_files(beh_annotation_path:str, skeleton_spline_path:str, worm_pos_path:str, spline_X_path:str, spline_Y_path:str, turn_annotation_path:str, pharynx_pump_csv_path:str):
     # Check if the file paths exist
     if not os.path.exists(beh_annotation_path):
         raise FileNotFoundError(f"The file '{beh_annotation_path}' does not exist.")
@@ -48,14 +49,16 @@ def read_csv_files(beh_annotation_path:str, skeleton_spline_path:str, worm_pos_p
         raise FileNotFoundError(f"The file '{spline_Y_path}' does not exist.")
     if not os.path.exists(turn_annotation_path):
         raise FileNotFoundError(f"The file '{turn_annotation_path}' does not exist.")
+    if not os.path.exists(pharynx_pump_csv_path):
+        raise FileNotFoundError(f"The file '{pharynx_pump_csv_path}' does not exist.")
 
     print(turn_annotation_path)
-
 
     # Read CSV files into separate dataframes
     beh_annotation_df = pd.read_csv(beh_annotation_path, header=None)
     skeleton_spline_df = pd.read_csv(skeleton_spline_path, header=None)
     turn_annotation_df = pd.read_csv(turn_annotation_path)
+    pharynx_pump_df = pd.read_csv(pharynx_pump_csv_path)
 
     worm_pos_df = pd.read_csv(worm_pos_path)
     worm_pos_df = worm_pos_df.drop(columns=['time'], errors='ignore')  # deletes old time column before interplation step
@@ -131,7 +134,7 @@ def read_csv_files(beh_annotation_path:str, skeleton_spline_path:str, worm_pos_p
         print("Stage Position Dataframe head after interpolation:", worm_pos_df.head())
         print("Frame lenght of recorded video:", len(spline_X_df))
 
-    return beh_annotation_df, skeleton_spline_df, worm_pos_df, spline_X_df, spline_Y_df, turn_annotation_df
+    return beh_annotation_df, skeleton_spline_df, worm_pos_df, spline_X_df, spline_Y_df, turn_annotation_df, pharynx_pump_df
 
 # Define a function to extract the x and y values from the yaml file
 def extract_coords(coord_string:str):
@@ -182,6 +185,7 @@ def main(arg_list=None):
     parser.add_argument('--conc_gradient_array', help='exportet concentration_gradient.npy file for the odor used', required=True)
     parser.add_argument('--distance_array', help='exportet distance_array.npy file for the odor used', required=True)
     parser.add_argument('--turn_annotation', help='Full path to the turn annotation CSV file', required=True)
+    parser.add_argument('--pharynx_pump_csv', help='Full path to the CSV file from DLC tracking', required=True)
 
     args = parser.parse_args(arg_list)
 
@@ -196,6 +200,7 @@ def main(arg_list=None):
     video_resolution_x = int(args.video_resolution_x)
     video_resolution_y = int(args.video_resolution_y)
     fps = float(args.fps)
+    pharynx_pump_csv_path = str(args.pharynx_pump_csv)
 
     # Load arrays from .npy files
     conc_gradient_array = np.load(args.conc_gradient_array)
@@ -219,7 +224,7 @@ def main(arg_list=None):
     output_path = os.path.dirname(beh_annotation_path)
 
     #-------------loading necessary files
-    beh_annotation, skeleton_spline, df_worm_parameter, spline_X, spline_Y, turn_annotation = read_csv_files(beh_annotation_path, skeleton_spline_path, worm_pos_path, spline_X_path, spline_Y_path, turn_annotation_path)
+    beh_annotation, skeleton_spline, df_worm_parameter, spline_X, spline_Y, turn_annotation,  pharynx_pump_df = read_csv_files(beh_annotation_path, skeleton_spline_path, worm_pos_path, spline_X_path, spline_Y_path, turn_annotation_path, pharynx_pump_csv_path)
 
     #-----------------load config file for odor and arena positions
     with open(stage_pos_path, 'r') as config_file:
@@ -463,6 +468,8 @@ def main(arg_list=None):
     df_worm_parameter['bearing_angle_s'] = df_worm_parameter['bearing_angle'].rolling(window=window_size_angle).mean()
     df_worm_parameter['curving_angle_s'] = df_worm_parameter['curving_angle'].rolling(window=window_size_angle).mean()
 
+    #up
+    update_behaviour_based_on_speed(df_worm_parameter, threshold=0.04)
 
     '''
     Plotting part

@@ -27,3 +27,16 @@ def replace_outliers_with_nan(dataframe, column_name, threshold):
 
     return dataframe
 
+def update_behaviour_based_on_speed(df, threshold):
+    """
+    Parameters:
+    - data_df (pd.DataFrame): DataFrame containing the 'turns' and 'speed' columns.
+    - threshold (float, optional): The threshold value for the 'speed' column. Defaults to 0.04.
+
+    Returns:
+    - pd.DataFrame: The updated DataFrame with modified 'turns' column.
+    """
+    df['behaviour_state'] = np.where((df['speed'] >= threshold) & (df['behaviour_state'] == 0), 1, df['behaviour_state'])
+    return df
+
+
