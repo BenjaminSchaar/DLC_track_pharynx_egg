@@ -28,6 +28,7 @@ from chemotaxis_analysis_high_res.plotting_visualisation import (
     create_worm_animation,
     plot_binned_data,
     plot_turns,
+    plot_pumps,
 )
 
 from chemotaxis_analysis_high_res.data_smothing import (
@@ -49,16 +50,11 @@ def read_csv_files(beh_annotation_path:str, skeleton_spline_path:str, worm_pos_p
         raise FileNotFoundError(f"The file '{spline_Y_path}' does not exist.")
     if not os.path.exists(turn_annotation_path):
         raise FileNotFoundError(f"The file '{turn_annotation_path}' does not exist.")
-    if not os.path.exists(pharynx_pump_csv_path):
-        raise FileNotFoundError(f"The file '{pharynx_pump_csv_path}' does not exist.")
-
-    print(turn_annotation_path)
 
     # Read CSV files into separate dataframes
     beh_annotation_df = pd.read_csv(beh_annotation_path, header=None)
     skeleton_spline_df = pd.read_csv(skeleton_spline_path, header=None)
     turn_annotation_df = pd.read_csv(turn_annotation_path)
-    pharynx_pump_df = pd.read_csv(pharynx_pump_csv_path)
 
     worm_pos_df = pd.read_csv(worm_pos_path)
     worm_pos_df = worm_pos_df.drop(columns=['time'], errors='ignore')  # deletes old time column before interplation step
@@ -134,7 +130,81 @@ def read_csv_files(beh_annotation_path:str, skeleton_spline_path:str, worm_pos_p
         print("Stage Position Dataframe head after interpolation:", worm_pos_df.head())
         print("Frame lenght of recorded video:", len(spline_X_df))
 
-    return beh_annotation_df, skeleton_spline_df, worm_pos_df, spline_X_df, spline_Y_df, turn_annotation_df, pharynx_pump_df
+    return beh_annotation_df, skeleton_spline_df, worm_pos_df, spline_X_df, spline_Y_df, turn_annotation_df
+
+def process_pharynx_pump_csv(file_path, fps):
+    '''
+    I need to implement this cleaner, this seems messy when it is just one function
+    '''
+
+    print(f"Processing pharynx CSV file at {file_path}")
+    # Assuming the file has a header row
+    df = pd.read_csv(file_path)
+
+    # remove column names and set first row to new column name
+    df.columns = df.iloc[0]
+    df = df[1:]
+
+    # Get the first row (which will become the second level of column names)
+    second_level_names = df.iloc[0]
+
+    # Create a MultiIndex for columns using the existing column names as the first level
+    first_level_names = df.columns
+    multi_index = pd.MultiIndex.from_arrays([first_level_names, second_level_names])
+
+    # Set the new MultiIndex as the columns of the DataFrame
+    df.columns = multi_index
+
+    # Remove the first row from the DataFrame as it's now used for column names
+    df = df.iloc[1:]
+
+    # Removing the first column (index 0)
+    df = df.drop(df.columns[0], axis=1)
+    df = df.reset_index(drop=True)
+
+    flow_df = df.xs(key='end', level=0, axis=1)
+    flow_df['x'] = pd.to_numeric(flow_df['x'])
+    flow_df['y'] = pd.to_numeric(flow_df['y'])
+
+    nose_df = df.xs(key='nose', level=0, axis=1)
+    nose_df['x'] = pd.to_numeric(nose_df['x'])
+    nose_df['y'] = pd.to_numeric(nose_df['y'])
+
+    x_diff_squared = (flow_df['x'] - nose_df['x'])
+    y_diff_squared = (flow_df['y'] - nose_df['y'])
+
+    # Calculate the Euclidean distance
+    distance_series = np.sqrt(x_diff_squared + y_diff_squared)
+
+    distance_df = pd.DataFrame({'distance': distance_series})
+
+    def binarize_data(column, lower_threshold, upper_threshold):
+        return [1 if lower_threshold <= x <= upper_threshold else 0 for x in column]
+
+    lower_threshold_value = 6.5
+    upper_threshold_value = 14
+
+    distance_df['binarized'] = binarize_data(distance_df['distance'], lower_threshold_value, upper_threshold_value)
+
+    # Define the number of frames per minutes (30 fps * 60 seconds)
+    frames_per_10_seconds = fps * 60
+
+    # Calculate the rolling sum of 'binary_data' with a window size of frames_per_10_seconds
+    distance_df['pumping_frequency'] = distance_df['binarized'].rolling(frames_per_10_seconds, min_periods=1).sum()
+
+    distance_df['pumping_frequency'] = distance_df['pumping_frequency'] / 2 #needed because of how DLC tracks pumping
+
+    # Fill NaN values with 0
+    distance_df['pumping_frequency'].fillna(0, inplace=True)
+
+    # Convert the 'frequency' column to integers
+    distance_df['pumping_frequency'] = distance_df['pumping_frequency'].astype(int)
+
+    print("pharynx pumping binarized!")
+    print(distance_df.head())
+
+    return distance_df
+
 
 # Define a function to extract the x and y values from the yaml file
 def extract_coords(coord_string:str):
@@ -169,7 +239,6 @@ def export_dataframe_to_csv(df: pd.DataFrame, output_path: str, file_name: str):
     # Export the DataFrame to a CSV file
     df.to_csv(full_path, index=False)  # Change 'index=False' to 'index=True' if you want to include the index.
 
-
 def main(arg_list=None):
     parser = argparse.ArgumentParser(description='Read CSV files and plot data')
     parser.add_argument('--beh_annotation', help='Full path to the behavior annotation CSV file', required=True)
@@ -185,7 +254,7 @@ def main(arg_list=None):
     parser.add_argument('--conc_gradient_array', help='exportet concentration_gradient.npy file for the odor used', required=True)
     parser.add_argument('--distance_array', help='exportet distance_array.npy file for the odor used', required=True)
     parser.add_argument('--turn_annotation', help='Full path to the turn annotation CSV file', required=True)
-    parser.add_argument('--pharynx_pump_csv', help='Full path to the CSV file from DLC tracking', required=True)
+    parser.add_argument('--pharynx_pump_csv', help='Full path to the CSV file from DLC tracking', required=False)
 
     args = parser.parse_args(arg_list)
 
@@ -224,7 +293,14 @@ def main(arg_list=None):
     output_path = os.path.dirname(beh_annotation_path)
 
     #-------------loading necessary files
-    beh_annotation, skeleton_spline, df_worm_parameter, spline_X, spline_Y, turn_annotation,  pharynx_pump_df = read_csv_files(beh_annotation_path, skeleton_spline_path, worm_pos_path, spline_X_path, spline_Y_path, turn_annotation_path, pharynx_pump_csv_path)
+    beh_annotation, skeleton_spline, df_worm_parameter, spline_X, spline_Y, turn_annotation = read_csv_files(beh_annotation_path, skeleton_spline_path, worm_pos_path, spline_X_path, spline_Y_path, turn_annotation_path)
+
+    # Check if the pharynx_pump_csv argument is provided and not None
+    if args.pharynx_pump_csv is not None:
+        process_pharynx_pump_csv(pharynx_pump_csv_path, fps)
+    else:
+        print("analysis without pharynx pumping data")
+
 
     #-----------------load config file for odor and arena positions
     with open(stage_pos_path, 'r') as config_file:
@@ -420,6 +496,11 @@ def main(arg_list=None):
 
     df_worm_parameter = df_worm_parameter.drop(columns=['Unnamed: 0']) #index colum from turn annotations
 
+    if args.pharynx_pump_csv is not None:
+        df_worm_parameter = pd.merge(df_worm_parameter, process_pharynx_pump_csv, left_index=True, right_index=True, how='left')
+    else:
+        print("analysis without pharynx pumping data")
+
     # Show the head of the merged DataFrame
     print(df_worm_parameter.head())
 
@@ -446,6 +527,12 @@ def main(arg_list=None):
     # calculating column navigational index based on speed and radial speed
 
     df_worm_parameter['NI'] = (df_worm_parameter['radial_speed'] / df_worm_parameter['speed'])
+
+    #pharynx pumping calculations
+
+    pharynx_pump_df
+
+    binarize_pumps =
 
     '''
     data smoothing and cleaning part
@@ -496,6 +583,11 @@ def main(arg_list=None):
     plot_binned_data(df_worm_parameter, 'bearing_angle_s', 'curving_angle_s', output_path,  num_bins=10, file_name='curving_angle_binned_plot.png')
 
     plot_turns(df_worm_parameter, output_path, file_name='turns.png')
+
+    if args.pharynx_pump_csv is not None:
+        plot_pumps(df_worm_parameter, output_path, file_name='pharynx_pumps.png')
+    else:
+        print("analysis without pharynx pumping data")
 
 
     # Saving param df to a CSV file

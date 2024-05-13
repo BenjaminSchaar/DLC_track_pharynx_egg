@@ -219,4 +219,9 @@ def calculate_radial_speed(df, fps):
 
     return df
 
-#def clean_reversal():
+
+def calc_distance_for_pharynx_pumping(flow_df, nose_df):
+    # Calculate the squared differences for x and y
+
+
+    return distance_df

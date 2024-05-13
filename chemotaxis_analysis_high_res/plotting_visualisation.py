@@ -552,3 +552,30 @@ def plot_turns(df, output_path, file_name='plot.png'):
     print(f"Figure saved to {full_path}")
 
     return None
+
+def plot_pumps(df, output_path, file_name):
+
+    # Convert time from seconds to minutes
+    times = df['time_seconds'] / 60
+    # Create the line plot
+    plt.figure(figsize=(30, 8))  # Optional: Adjust the figure size
+    plt.plot(times, df['pumping_frequency'])
+
+    # Optional: Add labels and a title
+    plt.xlabel('Time')
+    plt.ylabel('pumps/60 sec')
+    plt.title('Frequency')
+
+    # Enable grid
+    plt.grid(True)
+
+    #saving part
+
+    full_path = os.path.join(output_path, file_name)
+    print("The full file path is:", full_path)
+
+    plt.savefig(full_path)
+
+    plt.clf()  # Clear the current figure after displaying the plot
+
+
