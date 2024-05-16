@@ -36,7 +36,7 @@ from chemotaxis_analysis_high_res.data_smothing import (
     update_behaviour_based_on_speed,
 )
 
-def read_csv_files(beh_annotation_path:str, skeleton_spline_path:str, worm_pos_path:str, spline_X_path:str, spline_Y_path:str, turn_annotation_path:str, pharynx_pump_csv_path:str):
+def read_csv_files(beh_annotation_path:str, skeleton_spline_path:str, worm_pos_path:str, spline_X_path:str, spline_Y_path:str, turn_annotation_path:str):
     # Check if the file paths exist
     if not os.path.exists(beh_annotation_path):
         raise FileNotFoundError(f"The file '{beh_annotation_path}' does not exist.")
