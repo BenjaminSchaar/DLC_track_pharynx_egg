@@ -299,7 +299,7 @@ def main(arg_list=None):
 
     # Check if the pharynx_pump_csv argument is provided and not None
     if args.pharynx_pump_csv is not None:
-        process_pharynx_pump_csv(pharynx_pump_csv_path, fps)
+        pharynx_pumping_binary_df = process_pharynx_pump_csv(pharynx_pump_csv_path, fps)
     else:
         print("analysis without pharynx pumping data")
 
@@ -499,7 +499,7 @@ def main(arg_list=None):
     df_worm_parameter = df_worm_parameter.drop(columns=['Unnamed: 0']) #index colum from turn annotations
 
     if args.pharynx_pump_csv is not None:
-        df_worm_parameter = pd.merge(df_worm_parameter, process_pharynx_pump_csv, left_index=True, right_index=True, how='left')
+        df_worm_parameter = pd.merge(df_worm_parameter, pharynx_pumping_binary_df, left_index=True, right_index=True, how='left')
     else:
         print("analysis without pharynx pumping data")
 
