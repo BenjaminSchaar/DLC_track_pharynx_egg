@@ -187,7 +187,7 @@ def process_pharynx_pump_csv(file_path, fps):
     distance_df['binarized'] = binarize_data(distance_df['distance'], lower_threshold_value, upper_threshold_value)
 
     # Define the number of frames per minutes (30 fps * 60 seconds)
-    frames_per_10_seconds = fps * 60
+    frames_per_10_seconds = int(fps * 60)
 
     # Calculate the rolling sum of 'binary_data' with a window size of frames_per_10_seconds
     distance_df['pumping_frequency'] = distance_df['binarized'].rolling(frames_per_10_seconds, min_periods=1).sum()
