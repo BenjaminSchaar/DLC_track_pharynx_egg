@@ -528,12 +528,6 @@ def main(arg_list=None):
 
     df_worm_parameter['NI'] = (df_worm_parameter['radial_speed'] / df_worm_parameter['speed'])
 
-    #pharynx pumping calculations
-
-    pharynx_pump_df
-
-    binarize_pumps =
-
     '''
     data smoothing and cleaning part
 
