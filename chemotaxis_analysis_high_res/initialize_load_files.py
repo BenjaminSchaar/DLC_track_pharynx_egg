@@ -317,34 +317,33 @@ def main(arg_list=None):
     print("Top left position: x =", x_zero, ", y =", y_zero)
 
     # -------------shifts every value of x and y in the positive range, by addition of the lowest value to all values
-    # Finding the lowest negative value among X_rel and Y_rel columns
-    if len(df_worm_parameter['X'][df_worm_parameter['X'] < 0]) > 0:
-        lowest_neg_x = float(np.nanmin(df_worm_parameter['X'][df_worm_parameter['X'] < 0]))
-    else:
-        lowest_neg_x = 0.0
 
-    if len(df_worm_parameter['Y'][df_worm_parameter['Y'] < 0]) > 0:
-        lowest_neg_y = float(np.nanmin(df_worm_parameter['Y'][df_worm_parameter['Y'] < 0]))
-        print(f"Lowest negative Y: {lowest_neg_y}")  # Print statement for lowest_neg_y
-    else:
-        lowest_neg_y = 0.0
+    # Find the minimum values in the X and Y columns
+    min_x = float(np.nanmin(df_worm_parameter['X']))
+    min_y = float(np.nanmin(df_worm_parameter['Y']))
 
-    # Saving the lowest negative value as move_grid_factor
-    move_grid_factor = min(float(lowest_neg_x), float(lowest_neg_y), float(x_odor), float(y_odor), float(x_zero), float(y_zero))
-    print(f"Move grid factor: {move_grid_factor}")  # Print statement for move_grid_factor
+    # Determine the overall minimum values for x and y (including odor and zero points)
+    overall_min_x = min(min_x, x_odor, x_zero)
+    overall_min_y = min(min_y, y_odor, y_zero)
 
-    # Adding the lowest negative value to every value in x_rel, y_rel, and additional values
-    df_worm_parameter['X'] += abs(move_grid_factor)
-    df_worm_parameter['Y'] += abs(move_grid_factor)
-    x_odor += abs(move_grid_factor)
-    y_odor += abs(move_grid_factor)
-    x_zero += abs(move_grid_factor)
-    y_zero += abs(move_grid_factor)
+    # Calculate the necessary shift for each column
+    shift_x = abs(overall_min_x) if overall_min_x < 0 else 0.0
+    shift_y = abs(overall_min_y) if overall_min_y < 0 else 0.0
 
-    print(f"x_odor increased by {abs(move_grid_factor)}.")
-    print(f"y_odor increased by {abs(move_grid_factor)}.")
-    print(f"x_zero increased by {abs(move_grid_factor)}.")
-    print(f"y_zero increased by {abs(move_grid_factor)}.")
+    # Apply the shift to the DataFrame and additional values if necessary
+    if shift_x > 0:
+        df_worm_parameter['X'] += shift_x
+        x_odor += shift_x
+        x_zero += shift_x
+
+    if shift_y > 0:
+        df_worm_parameter['Y'] += shift_y
+        y_odor += shift_y
+        y_zero += shift_y
+
+    print(f"Shift X: {shift_x}, Shift Y: {shift_y}")
+
+    print(f"Shift X: {shift_x}, Shift Y: {shift_y}")
 
     print("\nWorm Pos DataFrame shifted:")
     print(df_worm_parameter.head())
