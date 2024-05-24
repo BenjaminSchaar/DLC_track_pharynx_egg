@@ -574,7 +574,7 @@ def main(arg_list=None):
 
     plot_chemotaxis_overview(df_worm_parameter, output_path, x_odor, y_odor, arena_min_x, arena_max_x, arena_min_y, arena_max_y, fps, file_name="chemotaxis_overview.png")
 
-    create_angle_animation(df_worm_parameter, output_path, x_odor, y_odor, fps, file_name ='angle_animation.avi')
+    #create_angle_animation(df_worm_parameter, output_path, x_odor, y_odor, fps, file_name ='angle_animation.avi')
 
     plot_binned_data(df_worm_parameter, 'bearing_angle_s', 'curving_angle_s', output_path,  num_bins=10, file_name='curving_angle_binned_plot.png')
 
@@ -591,10 +591,10 @@ def main(arg_list=None):
 
     #create animation of whole worm skelleton in arena
     # Assuming df_worm_parameter, spline_X, spline_Y, video_resolution_x, video_resolution_y, factor_px_to_mm are defined
-
+    '''
     # Define skel_pos_0
     skel_pos_movie = 0
-
+    
     # Iterate over skeleton positions from 0 to 100 inclusive
     for skel_pos_movie in range(101):
         print(skel_pos_movie)
@@ -611,6 +611,7 @@ def main(arg_list=None):
     print('Worm Animation DF:', df_worm_movie.head())
 
     create_worm_animation(df_worm_movie, df_worm_parameter, output_path, x_odor, y_odor, fps, arena_min_x, arena_max_x, arena_min_y, arena_max_y, file_name='worm_movie.avi')
+    '''
 
 if __name__ == "__main__":
 
