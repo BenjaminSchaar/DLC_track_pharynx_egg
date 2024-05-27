@@ -11,7 +11,7 @@ from chemotaxis_analysis_high_res.calculations import (
     calculate_distance,
     calculate_time_in_seconds,
     calculate_preceived_conc,
-    calculate_angle,
+    calculate_angles,
     calculate_speed,
     calculate_radial_speed,
 )
@@ -457,31 +457,14 @@ def main(arg_list=None):
     After applying a shift of +2: [NaN, NaN, 1, 2, 3]
     
     '''
-    time_shifted_for_angles = int(fps*2) #2 seconds in the past
 
-    # Replace NaN values with a placeholder value before applying the shift
-    df_worm_parameter['X_shifted_negative'] = df_worm_parameter['X_rel_skel_pos_centroid_corrected'].shift(-time_shifted_for_angles).fillna(np.nan)
-    df_worm_parameter['Y_shifted_negative'] = df_worm_parameter['Y_rel_skel_pos_centroid_corrected'].shift(-time_shifted_for_angles).fillna(np.nan)
+    df_worm_parameter = calculate_angles(df_worm_parameter, fps, x_odor, y_odor)
 
-    # Replace NaN values with a placeholder value before applying the shift
-    df_worm_parameter['X_shifted_positive'] = df_worm_parameter['X_rel_skel_pos_centroid_corrected'].shift(+time_shifted_for_angles).fillna(np.nan)
-    df_worm_parameter['Y_shifted_positive'] = df_worm_parameter['Y_rel_skel_pos_centroid_corrected'].shift(+time_shifted_for_angles).fillna(np.nan)
+    # Print confirmation and first few rows of the DataFrame
+    print("Angles calculated.")
+    print(df_worm_parameter.head())
 
-    # Applying the function to each row and creating a new column 'bearing_angle'
-    df_worm_parameter['bearing_angle'] = df_worm_parameter.apply(
-        lambda row: calculate_angle(row['X_rel_skel_pos_centroid_corrected'], row['Y_rel_skel_pos_centroid_corrected'],
-                                    row['X_shifted_negative'], row['Y_shifted_negative'], x_odor, y_odor, 'bearing_angle'), axis=1)
 
-    print("DataFrame after adding 'bearing_angle':")
-    print(df_worm_parameter.head())  # This will print the first few rows of the DataFrame after adding the 'bearing_angle' column
-
-    # Applying the function to each row and creating a new column 'curving_angle'
-    df_worm_parameter['curving_angle'] = df_worm_parameter.apply(
-        lambda row: calculate_angle(row['X_rel_skel_pos_centroid_corrected'], row['Y_rel_skel_pos_centroid_corrected'],
-                                    row['X_shifted_negative'], row['Y_shifted_negative'], row['X_shifted_positive'],
-                                    row['Y_shifted_positive'], 'curving_angle'), axis=1)
-
-    print("DataFrame after adding 'curving_angle':")
     print(df_worm_parameter.head())  # This will print the first few rows of the DataFrame after adding the 'curving_angle' column
     '''
     - add behaviorial state dataframe to main dataframe 

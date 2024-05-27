@@ -128,100 +128,124 @@ def calculate_preceived_conc(distance: float, time_seconds: float, conc_array: n
 
     return conc_value
 
-
-def calculate_angle(x:float, y:float, n_x:float, n_y:float, o_x:float, o_y:float, angle_type) -> float:
+def calculate_angles(df, fps, x_odor, y_odor):
     """
-    Angle Calculation Between Two Vectors:
+    Calculates bearing and curving angles with smoothed positions and adds them as new columns to the DataFrame.
 
-    Introduction:
-    The angle between two vectors in a plane is a measure of the difference in their directions. This concept is widely used in physics, engineering, and mathematics to understand and quantify the orientation of different entities relative to each other.
-
-    Definitions:
-    1. Vector: A vector is a mathematical object that has magnitude (or length) and direction. It can be represented in a coordinate system by coordinates (x, y) in two-dimensional space or (x, y, z) in three-dimensional space.
-
-    2. Dot Product: The dot product (also known as the scalar product) between two vectors A and B, represented as A·B, is a measure of the vectors' mutual alignment. It is defined as:
-       A·B = |A| |B| cos(θ)
-       where |A| and |B| are the magnitudes (lengths) of vectors A and B, respectively, and θ is the angle between them.
-
-    3. Magnitude of a Vector: The magnitude (or length) of a vector A = (a1, a2) in two-dimensional space is given by:
-       |A| = sqrt(a1² + a2²)
-
-    Angle Between Vectors:
-    The angle θ between two vectors can be found using the dot product and magnitudes of the vectors. If we have two vectors, A = (a1, a2) and B = (b1, b2), the angle θ between them can be calculated as follows:
-
-    1. Calculate the dot product of vectors A and B:
-       A·B = a1*b1 + a2*b2
-
-    2. Calculate the magnitudes of vectors A and B:
-       |A| = sqrt(a1² + a2²)
-       |B| = sqrt(b1² + b2²)
-
-    3. Find the cosine of the angle between A and B:
-       cos(θ) = (A·B) / (|A| |B|)
-
-    4. Determine the angle θ:
-       θ = cos⁻¹[(A·B) / (|A| |B|)]
-
+    :param df: DataFrame with columns 'X_rel_skel_pos_centroid_corrected' and 'Y_rel_skel_pos_centroid_corrected'
+    :param fps: Frames per second of the video
+    :param x_odor: X-coordinate of the odor source
+    :param y_odor: Y-coordinate of the odor source
+    :return: DataFrame with added 'bearing_angle' and 'curving_angle' columns
     """
-    x, y, n_x, n_y, o_x, o_y = map(float, [x, y, n_x, n_y, o_x, o_y])
+    # Smoothing window size, using fps as the window size
+    smoothing_window_size = 2
 
-    a = (n_x, n_y)  # Past position of the object
-    b = (x, y)  # Current position of the object
-    c = (o_x, o_y) # future position
+    # Create a temporary DataFrame for smoothed positions
+    temp_df = pd.DataFrame()
+    temp_df['X_smooth'] = df['X_rel_skel_pos_centroid_corrected'].rolling(window=smoothing_window_size, min_periods=1).mean()
+    temp_df['Y_smooth'] = df['Y_rel_skel_pos_centroid_corrected'].rolling(window=smoothing_window_size, min_periods=1).mean()
 
-    ang = math.degrees(math.atan2(c[1] - b[1], c[0] - b[0]) - math.atan2(a[1] - b[1], a[0] - b[0]))
+    # Time shift for past and future positions
+    time_shifted_for_angles = int(fps * 2)  # 2 seconds in the past/future
 
-    ang = abs(ang)  # Take the absolute value of the angle
+    # Calculate shifted positions in the temporary DataFrame
+    temp_df['X_shifted_negative'] = temp_df['X_smooth'].shift(-time_shifted_for_angles)
+    temp_df['Y_shifted_negative'] = temp_df['Y_smooth'].shift(-time_shifted_for_angles)
+    temp_df['X_shifted_positive'] = temp_df['X_smooth'].shift(time_shifted_for_angles)
+    temp_df['Y_shifted_positive'] = temp_df['Y_smooth'].shift(time_shifted_for_angles)
 
-    ang = ang if ang <= 180 else 360 - ang  # Ensure the angle is within the range 0 to 180
+    # Define the angle calculation function
+    def calculate_angle(x, y, n_x, n_y, o_x, o_y, angle_type):
+        a = (n_x, n_y)  # Past position
+        b = (x, y)      # Current position
+        c = (o_x, o_y)  # Future position
 
-    if (angle_type == 'curving_angle'):
-        # Calculate the complementary angle
+        ang = math.degrees(math.atan2(c[1] - b[1], c[0] - b[0]) - math.atan2(a[1] - b[1], a[0] - b[0]))
+        ang = abs(ang)
+        ang = ang if ang <= 180 else 360 - ang
+
+        if angle_type == 'curving_angle':
             ang = 180 - ang
 
-    return ang
+        return ang
 
+    # Calculate bearing angle using the temporary DataFrame
+    df['bearing_angle'] = temp_df.apply(
+        lambda row: calculate_angle(
+            row['X_smooth'], row['Y_smooth'],
+            row['X_shifted_negative'], row['Y_shifted_negative'],
+            x_odor, y_odor, 'bearing_angle'), axis=1)
+
+    # Calculate curving angle using the temporary DataFrame
+    df['curving_angle'] = temp_df.apply(
+        lambda row: calculate_angle(
+            row['X_smooth'], row['Y_smooth'],
+            row['X_shifted_negative'], row['Y_shifted_negative'],
+            row['X_shifted_positive'], row['Y_shifted_positive'], 'curving_angle'), axis=1)
+
+    return df
 
 def calculate_speed(df, fps):
     '''
-    This function calculates speed per seconds of the centroid position and adds the column speed
-    :param df:
-    :param fps:
-    :return:
+    This function calculates the speed per second of the centroid position and adds the column speed
+    :param df: pandas DataFrame with columns 'X_rel_skel_pos_centroid' and 'Y_rel_skel_pos_centroid'
+    :param fps: frames per second of the video
+    :return: DataFrame with an additional 'speed' column
     '''
-    # Assuming df is a pandas DataFrame with columns 'X_rel' and 'Y_rel'
-    df['speed'] = ((df['X_rel_skel_pos_centroid'].diff() ** 2 + df['Y_rel_skel_pos_centroid'].diff() ** 2) ** 0.5) * fps
+    # Smoothing window size for position, to reduce noise
+    position_smoothing_window = 2  # For averaging the latest 2 positions
 
-    # Assuming df is your DataFrame
-    smoothing_window_size = int(fps*2)
+    # Apply rolling mean to smooth positions
+    df['X_smooth'] = df['X_rel_skel_pos_centroid'].rolling(window=position_smoothing_window, min_periods=1).mean()
+    df['Y_smooth'] = df['Y_rel_skel_pos_centroid'].rolling(window=position_smoothing_window, min_periods=1).mean()
 
-    # Smooth the 'speed' column using a rolling window and taking the mean
-    df['speed'] = df['speed'].rolling(window=smoothing_window_size, min_periods=1).mean()
+    # Calculate the difference between consecutive smoothed positions
+    df['X_diff'] = df['X_smooth'].diff()
+    df['Y_diff'] = df['Y_smooth'].diff()
+
+    # Calculate the speed (distance traveled per frame) and convert to per second
+    df['speed'] = ((df['X_diff'] ** 2 + df['Y_diff'] ** 2) ** 0.5) * fps
+
+    # Further smooth the 'speed' column to reduce variability
+    speed_smoothing_window_size = int(fps * 2)  # For a 2-second window
+    df['speed'] = df['speed'].rolling(window=speed_smoothing_window_size, min_periods=1).mean()
+
+    # Drop intermediate columns used for calculation
+    df.drop(columns=['X_smooth', 'Y_smooth', 'X_diff', 'Y_diff'], inplace=True)
 
     return df
+
 
 def calculate_radial_speed(df, fps):
     '''
-    calculates raidal speed (speed towards the odor source) by using the change in distance to the odor over time
-    in mm/second and adda the column radial speed
+    Calculates radial speed (speed towards the odor source) by using the change in distance to the odor over time
+    in mm/second and adds the column radial_speed.
 
-    :param df:
-    :param fps:
-    :return:
+    :param df: pandas DataFrame with column 'distance_to_odor_centroid'
+    :param fps: frames per second of the video
+    :return: DataFrame with an additional 'radial_speed' column
     '''
+    temp_df = df[['distance_to_odor_centroid']].copy()
 
-    # Assuming df is your DataFrame
-    smoothing_window_size = int(fps*2)
+    # Smoothing window size for distance, to reduce noise
+    distance_smoothing_window = 2  # For averaging the latest 2 distances
 
-    df['radial_speed'] = df['distance_to_odor_centroid'].diff() * fps
-    # Smooth the 'speed' column using a rolling window and taking the mean
-    df['radial_speed'] = df['radial_speed'].rolling(window=smoothing_window_size, min_periods=1).mean()
+    # Apply rolling mean to smooth distances
+    temp_df['distance_smooth'] = temp_df['distance_to_odor_centroid'].rolling(window=distance_smoothing_window,
+                                                                              min_periods=1).mean()
+
+    # Calculate the difference between consecutive smoothed distances
+    temp_df['distance_diff'] = temp_df['distance_smooth'].diff()
+
+    # Calculate the radial speed (change in distance per frame) and convert to per second
+    temp_df['radial_speed'] = temp_df['distance_diff'] * fps
+
+    # Further smooth the 'radial_speed' column to reduce variability
+    speed_smoothing_window_size = int(fps * 2)  # For a 2-second window
+    temp_df['radial_speed'] = temp_df['radial_speed'].rolling(window=speed_smoothing_window_size, min_periods=1).mean()
+
+    # Add the radial speed column to the original DataFrame
+    df['radial_speed'] = temp_df['radial_speed']
 
     return df
-
-
-def calc_distance_for_pharynx_pumping(flow_df, nose_df):
-    # Calculate the squared differences for x and y
-
-
-    return distance_df
