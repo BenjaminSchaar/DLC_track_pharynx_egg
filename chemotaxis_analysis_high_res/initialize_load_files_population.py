@@ -165,12 +165,19 @@ def export_dataframe_to_csv(df: pd.DataFrame, output_path: str, file_name: str):
     # Export the DataFrame to a CSV file
     df.to_csv(full_path, index=False)  # Change 'index=False' to 'index=True' if you want to include the index.
 
+def extract_coords(pos_string):
+    # Remove the 'x=' and 'y=' parts and split by comma
+    pos_string = pos_string.replace('x=', '').replace('y=', '')
+    # Split the string by comma
+    x_str, y_str = pos_string.split(',')
+    # Convert to integers and return as tuple
+    return int(x_str.strip()), int(y_str.strip())
+
 def main(arg_list=None):
     parser = argparse.ArgumentParser(description='Read CSV files and plot data')
     parser.add_argument('--beh_annotation', help='Full path to the behavior annotation CSV file', required=True)
     parser.add_argument('--skeleton_spline', help='Full path to the skeleton spline CSV file', required=True)
     parser.add_argument('--worm_pos', help='Full path to the worm pos text file', required=True)
-    parser.add_argument('--stage_pos', help='Full path to the odor pos file', required=True)
     parser.add_argument('--skeleton_spline_X_coords', help='Full path to the skeleton_spline_X_coords CSV file', required=True)
     parser.add_argument('--skeleton_spline_Y_coords', help='Full path to the skeleton_spline_Y_coords CSV file', required=True)
     parser.add_argument('--factor_px_to_mm', help='conversion_facor px to mm',required=True)
@@ -180,6 +187,9 @@ def main(arg_list=None):
     parser.add_argument('--conc_gradient_array', help='exportet concentration_gradient.npy file for the odor used', required=True)
     parser.add_argument('--distance_array', help='exportet distance_array.npy file for the odor used', required=True)
     parser.add_argument('--turn_annotation', help='Full path to the turn annotation CSV file', required=True)
+    parser.add_argument('--top_left_pos', help='Tuple of x and y with top left arena position', required=True)
+    parser.add_argument('--odor_pos', help='Tuple of x and y with odor position', required=True)
+
 
     args = parser.parse_args(arg_list)
 
@@ -187,7 +197,6 @@ def main(arg_list=None):
     turn_annotation_path = str(args.turn_annotation)
     skeleton_spline_path = args.skeleton_spline
     worm_pos_path = args.worm_pos
-    stage_pos_path = args.stage_pos
     spline_X_path = args.skeleton_spline_X_coords
     spline_Y_path = args.skeleton_spline_Y_coords
     factor_px_to_mm = float(args.factor_px_to_mm)
@@ -219,14 +228,13 @@ def main(arg_list=None):
     #-------------loading necessary files
     beh_annotation, skeleton_spline, df_worm_parameter, spline_X, spline_Y, turn_annotation = read_csv_files(beh_annotation_path, skeleton_spline_path, worm_pos_path, spline_X_path, spline_Y_path, turn_annotation_path)
 
-
-    #-----------------load config file for odor and arena positions
-    with open(stage_pos_path, 'r') as config_file:
-        stage_pos = yaml.safe_load(config_file)
+    # Convert the position strings to tuples
+    top_left_tuple = extract_coords(args.top_left_pos)
+    odor_pos_tuple = extract_coords(args.odor_pos)
 
     # Access the odor coordinates
-    x_odor, y_odor = extract_coords(stage_pos['odor_pos'])
-    x_zero, y_zero = extract_coords(stage_pos['top_left'])
+    x_odor, y_odor = odor_pos_tuple
+    x_zero, y_zero = top_left_tuple
 
     # Multiply with the variable: factor_px_to_mm
     x_odor_mm = x_odor * factor_px_to_mm
