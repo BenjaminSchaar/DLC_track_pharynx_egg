@@ -237,10 +237,10 @@ def main(arg_list=None):
     x_zero, y_zero = top_left_tuple
 
     # Multiply with the variable: factor_px_to_mm
-    x_odor_mm = x_odor * factor_px_to_mm
-    y_odor_mm = y_odor * factor_px_to_mm
-    x_zero_mm = x_zero * factor_px_to_mm
-    y_zero_mm = y_zero * factor_px_to_mm
+    x_odor = x_odor * factor_px_to_mm
+    y_odor = y_odor * factor_px_to_mm
+    x_zero = x_zero * factor_px_to_mm
+    y_zero = y_zero * factor_px_to_mm
 
     # Print the variables together
     print("Odor position: x =", x_odor, ", y =", y_odor)
@@ -486,12 +486,6 @@ def main(arg_list=None):
     plot_binned_data(df_worm_parameter, 'bearing_angle_s', 'curving_angle_s', output_path,  num_bins=10, file_name='curving_angle_binned_plot.png')
 
     plot_turns(df_worm_parameter, output_path, file_name='turns.png')
-
-    if args.pharynx_pump_csv is not None:
-        plot_pumps(df_worm_parameter, output_path, file_name='pharynx_pumps.png')
-    else:
-        print("analysis without pharynx pumping data")
-
 
     # Saving param df to a CSV file
     df_worm_parameter.to_csv(os.path.join(output_path, 'chemotaxis_params.csv'), index=False)
