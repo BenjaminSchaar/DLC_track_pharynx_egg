@@ -43,8 +43,9 @@ def correct_stage_pos_with_skeleton(
     center_y = video_resolution_y / 2
 
     if skel_pos == 100:  # calculate centroid
-        column_skel_pos_x = spline_X.iloc[:, 0:100].mean(axis=1).to_numpy().astype(float)
-        column_skel_pos_y = spline_Y.iloc[:, 0:100].mean(axis=1).to_numpy().astype(float)
+        # Calculate the mean of all columns for each row dynamically
+        column_skel_pos_x = spline_X.mean(axis=1).to_numpy().astype(float)
+        column_skel_pos_y = spline_Y.mean(axis=1).to_numpy().astype(float)
     else:
         column_skel_pos_x = spline_X.iloc[:, skel_pos].to_numpy().astype(float)
         column_skel_pos_y = spline_Y.iloc[:, skel_pos].to_numpy().astype(float)

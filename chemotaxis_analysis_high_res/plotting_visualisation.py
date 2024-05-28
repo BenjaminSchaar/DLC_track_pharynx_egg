@@ -143,45 +143,49 @@ def create_angle_animation(df, output_path, x_odor, y_odor, fps, file_name):
 
 def plot_ethogram(df, output_path, file_name, num_lines=4):
     '''
-    Inputs beh_annotation df and plots erhtogramm
+    Inputs beh_annotation df and plots ethogram.
 
-    :param beh_annotation:
-    :param output_path:
-    :return:
+    :param df: DataFrame containing behavioral annotations
+    :param output_path: Directory where the plot will be saved
+    :param file_name: Name of the output file
+    :param num_lines: Number of lines in the plot
+    :return: None
     '''
+    try:
+        num_frames = len(df)
+        cut_frames = num_frames // num_lines
+        fig, axs = plt.subplots(num_lines, 1, dpi=400, figsize=(10, 1 * num_lines))
 
-    num_frames = len(df)
-    cut_frames = num_frames // num_lines
-    fig, axs = plt.subplots(num_lines, 1, dpi=400, figsize=(10, 1 * num_lines))
+        for i, ax in enumerate(axs):
+            start_idx = i * cut_frames
+            end_idx = start_idx + cut_frames
+            ax.imshow(df.iloc[start_idx:end_idx].T, origin="upper", cmap='seismic_r', aspect=30 * 50)
+            ax.set_xticks(np.linspace(0, cut_frames, 5))
+            ax.set_xticklabels(np.linspace(start_idx, end_idx, 5).astype(int), fontsize=6)
 
-    for i, ax in enumerate(axs):
-        start_idx = i * cut_frames
-        end_idx = start_idx + cut_frames
-        ax.imshow(df.iloc[start_idx:end_idx].T, origin="upper", cmap='seismic_r', aspect=30 * 50)
-        ax.set_xticks(np.linspace(0, cut_frames, 5))
-        ax.set_xticklabels(np.linspace(start_idx, end_idx, 5).astype(int))
+            # Hide y-tick intervals
+            ax.set_yticks([])
 
-        # Hide y-tick intervals
-        ax.set_yticks([])
+            if i == num_lines - 1:
+                ax.set_xlabel('Frame', fontsize=6)
+            ax.set_ylabel('Beh. State', fontsize=6)
 
-        if i == num_lines - 1:
-            ax.set_xlabel('Frame')
-        ax.set_ylabel('Beh. State')
-
-        # Add the legend on the first subplot
-        if i == 0:
-            legend_elements = [Line2D([0], [0], color='red', label='Reversal'),
-                               Line2D([0], [0], color='blue', label='Forward motion')]
-            ax.legend(handles=legend_elements, loc='upper left', bbox_to_anchor=(1.1, 1), frameon=True)
-
-        plt.tight_layout()
+            # Add the legend on the first subplot
+            if i == 0:
+                legend_elements = [Line2D([0], [0], color='red', label='Reversal'),
+                                   Line2D([0], [0], color='blue', label='Forward motion')]
+                ax.legend(handles=legend_elements, loc='upper left', bbox_to_anchor=(1.1, 1), frameon=True, fontsize=6)
 
         # Save the plot to a file
+        plt.tight_layout()
         full_path = os.path.join(output_path, file_name)
         print("The full file path is:", full_path)
         plt.savefig(full_path)
 
-        plt.clf()  # Clear the current figure after displaying the plot
+        plt.clf()  # Clear the current figure after saving the plot
+
+    except Exception as e:
+        print(f'Problem plotting the data: {e}')
 
 
 def plot_skeleton_spline(skeleton_spline, output_path, file_name):
