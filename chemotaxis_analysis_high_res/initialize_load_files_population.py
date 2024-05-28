@@ -294,6 +294,10 @@ def main(arg_list=None):
 
     df_worm_parameter['X_rel'] = df_worm_parameter['X_rel'].abs()  # shift relative stage position to positive values
 
+    # Applying the conversion factor to the columns
+    df_worm_parameter['X_rel'] = df_worm_parameter['X_rel'] * factor_px_to_mm
+    df_worm_parameter['Y_rel'] = df_worm_parameter['Y_rel'] * factor_px_to_mm
+
     #finished initialisation and aligning
 
     # Create a copy of df_worm_parameter
