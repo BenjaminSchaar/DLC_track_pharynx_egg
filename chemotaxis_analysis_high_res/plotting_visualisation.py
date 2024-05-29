@@ -198,47 +198,44 @@ def plot_skeleton_spline(skeleton_spline, output_path, file_name):
     :return: None
     '''
     print("plottin skelleton")
-    try:
-        num_frames = len(skeleton_spline)
-
-        # Determine the number of rows based on the number of frames
-        if num_frames < 15000:
-            num_lines = 1
-        elif num_frames < 30000:
-            num_lines = 2
-        elif num_frames < 45000:
-            num_lines = 3
-        else:
-            num_lines = 4
-
-        cut_frames = num_frames // num_lines
-        fig, axs = plt.subplots(num_lines, 1, dpi=400, figsize=(10, 1 * num_lines))
-
-        for i, ax in enumerate(axs):
-            start_idx = i * cut_frames
-            end_idx = start_idx + cut_frames
-            ax.imshow(skeleton_spline.iloc[start_idx:end_idx].T, origin="upper", cmap='seismic', aspect=20, vmin=-0.06, vmax=0.06)
-            ax.set_xticks(np.linspace(0, cut_frames, 5))
-            ax.set_xticklabels(np.linspace(start_idx, end_idx, 5).astype(int), fontsize=6)
-            ax.set_yticklabels(ax.get_yticks(), fontsize=6)
-            if i == num_lines - 1:
-                ax.set_xlabel('Frame', fontsize=6)
-            ax.set_ylabel('Body Part', fontsize=6)
-
-        # Save the plot to a file
-        plt.tight_layout()
-
-        full_path = os.path.join(output_path, file_name)
-        print("The full file path is:", full_path)
-
-        plt.savefig(full_path)
-
-        plt.clf()  # Clear the current figure after displaying the plot
-
-    except Exception as e:
-        print(f'Problem plotting the data: {e}')
 
 
+    df_kymo = skeleton_spline
+    num_frames = len(df_kymo)
+
+    # Dynamically adjust number of rows and plot stretch
+    if num_frames < 10000:
+        num_lines = 1
+    elif num_frames < 20000:
+        num_lines = 2
+    elif num_frames < 30000:
+        num_lines = 3
+    else:
+        num_lines = 4
+
+    cut_frames = num_frames // num_lines
+    fig, axs = plt.subplots(num_lines, 1, dpi=400, figsize=(10, max(1, num_lines)))
+
+    for i, ax in enumerate(axs if num_lines > 1 else [axs]):
+        start_idx = i * cut_frames
+        end_idx = start_idx + cut_frames
+        ax.imshow(df_kymo.iloc[start_idx:end_idx].T, origin="upper", cmap='seismic', aspect='auto', vmin=-0.06,
+                  vmax=0.06)
+        ax.set_xticks(np.linspace(0, cut_frames, 5))
+        ax.set_xticklabels(np.linspace(start_idx, end_idx, 5).astype(int), fontsize=6)
+        ax.set_yticklabels(ax.get_yticks(), fontsize=6)
+        if i == num_lines - 1:
+            ax.set_xlabel('Frame', fontsize=6)
+        ax.set_ylabel('Body Part', fontsize=6)
+
+    plt.tight_layout()
+
+    # Save as PNG
+    output_filename = os.path.splitext(os.path.basename(kymo_path))[0] + '_kymograph.png'
+    output_filepath = os.path.join(main_path, output_filename)
+    plt.savefig(output_filepath, format='png', dpi=400)
+
+    plt.show()
 
 def plot_odor_concentration(df, output_path, file_name):
     # Define the figure size
