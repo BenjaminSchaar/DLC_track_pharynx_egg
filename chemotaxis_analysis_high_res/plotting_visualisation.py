@@ -200,7 +200,17 @@ def plot_skeleton_spline(skeleton_spline, output_path, file_name):
     '''
     try:
         num_frames = len(skeleton_spline)
-        num_lines = 4
+
+        # Dynamically adjust number of rows and plot stretch
+        if num_frames < 10000:
+            num_lines = 1
+        elif num_frames < 20000:
+            num_lines = 2
+        elif num_frames < 30000:
+            num_lines = 3
+        else:
+            num_lines = 4
+
         cut_frames = num_frames // num_lines
         fig, axs = plt.subplots(num_lines, 1, dpi=400, figsize=(10, 1 * num_lines))
 
