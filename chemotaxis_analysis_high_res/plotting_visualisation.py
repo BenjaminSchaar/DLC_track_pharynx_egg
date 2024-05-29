@@ -205,14 +205,14 @@ def plot_skeleton_spline(skeleton_spline, output_path, file_name):
         else:
             num_lines = 4
 
-        print(num_lines)
-
         cut_frames = num_frames // num_lines
         fig, axs = plt.subplots(num_lines, 1, dpi=400, figsize=(10, 1 * num_lines))
 
-        print(len(skeleton_spline))
+        # Ensure axs is iterable by converting it to an array if it's not
+        if num_lines == 1:
+            axs = [axs]  # Make it a list if only one subplot
 
-        for i, ax in enumerate(num_lines):
+        for i, ax in enumerate(axs):
             start_idx = i * cut_frames
             end_idx = start_idx + cut_frames
             ax.imshow(skeleton_spline.iloc[start_idx:end_idx].T, origin="upper", cmap='seismic', aspect=20, vmin=-0.06,
