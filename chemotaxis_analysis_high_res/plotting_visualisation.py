@@ -140,7 +140,6 @@ def create_angle_animation(df, output_path, x_odor, y_odor, fps, file_name):
     plt.close(fig)  # Close the figure to free memory
 
 
-
 def plot_ethogram(df, output_path, file_name, num_lines=4):
     '''
     Inputs beh_annotation df and plots ethogram.
@@ -167,7 +166,7 @@ def plot_ethogram(df, output_path, file_name, num_lines=4):
             num_lines = 4
 
         cut_frames = num_frames // num_lines
-        fig, axs = plt.subplots(num_lines, 1, dpi=400, figsize=(10, 2 * num_lines))
+        fig, axs = plt.subplots(num_lines, 1, dpi=400, figsize=(10, 2 * num_lines), sharex=True, sharey=True)
 
         # Ensure axs is iterable by converting it to an array if it's not
         if num_lines == 1:
@@ -175,14 +174,16 @@ def plot_ethogram(df, output_path, file_name, num_lines=4):
 
         for i, ax in enumerate(axs):
             start_idx = i * cut_frames
-            end_idx = start_idx + cut_frames
-            ax.imshow(df_etho.iloc[start_idx:end_idx].T, origin="upper", cmap='seismic_r', aspect=20 * 100, vmin=-0.06,
-                      vmax=0.06)
-            ax.set_xticks(np.linspace(0, cut_frames, 5))
+            end_idx = start_idx + cut_frames if i < num_lines - 1 else num_frames
+            segment = df_etho.iloc[start_idx:end_idx].T
+            cax = ax.imshow(segment, origin="upper", cmap='seismic_r', aspect='auto', vmin=-0.06, vmax=0.06)
+            ax.set_ylabel('Behavioral State')
+            ax.set_xticks(np.linspace(0, segment.shape[1] - 1, 5))
             ax.set_xticklabels(np.linspace(start_idx, end_idx, 5).astype(int))
             if i == num_lines - 1:
                 ax.set_xlabel('Frame')
-            ax.set_ylabel('Behavioral State')
+
+        fig.colorbar(cax, ax=axs, orientation='vertical')
 
         full_path = os.path.join(output_path, file_name)
         print("The full file path is:", full_path)
@@ -192,6 +193,7 @@ def plot_ethogram(df, output_path, file_name, num_lines=4):
 
     except Exception as e:
         print(f'Problem plotting the data: {e}')
+
 
 
 def plot_skeleton_spline(skeleton_spline, output_path, file_name):
