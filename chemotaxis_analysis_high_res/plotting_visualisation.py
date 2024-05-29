@@ -155,8 +155,8 @@ def plot_ethogram(df, output_path, file_name, num_lines=4):
 
     # Print unique values in the DataFrame
     print("Unique values in the DataFrame:")
-    for column in df_etho.columns:
-        unique_values = df_etho[column].unique()
+    for column in df.columns:
+        unique_values = df[column].unique()
         print(f"Column '{column}': {unique_values}")
 
     try:
