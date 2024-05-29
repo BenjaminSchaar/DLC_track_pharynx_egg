@@ -170,15 +170,9 @@ def plot_ethogram(df, output_path, file_name, num_lines=4):
                 ax.set_xlabel('Frame')
             ax.set_ylabel('Behavioral State')
 
-            # Save the plot to a file (e.g., a PNG image)
         plt.tight_layout()
-        plot_name = 'kymogram.png'
-        plt.savefig(plot_name)
-        plt.tight_layout()
-        plt.show()
         # Save the plot to a file
         plt.tight_layout()
-
 
         full_path = os.path.join(output_path, file_name)
         print("The full file path is:", full_path)
@@ -211,8 +205,12 @@ def plot_skeleton_spline(skeleton_spline, output_path, file_name):
         else:
             num_lines = 4
 
+        print(num_lines)
+
         cut_frames = num_frames // num_lines
         fig, axs = plt.subplots(num_lines, 1, dpi=400, figsize=(10, 1 * num_lines))
+
+        print(len(skeleton_spline))
 
         for i, ax in enumerate(axs):
             start_idx = i * cut_frames
