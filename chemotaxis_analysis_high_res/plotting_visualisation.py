@@ -139,30 +139,37 @@ def create_angle_animation(df, output_path, x_odor, y_odor, fps, file_name):
     out.release()
     plt.close(fig)  # Close the figure to free memory
 
-
-
-def plot_ethogram(df, output_path, file_name, num_lines=4):
+def plot_ethogram(df, output_path, file_name):
     '''
     Inputs beh_annotation df and plots ethogram.
 
     :param df: DataFrame containing behavioral annotations
     :param output_path: Directory where the plot will be saved
     :param file_name: Name of the output file
-    :param num_lines: Number of lines in the plot
     :return: None
     '''
 
     try:
         df_etho = df
         num_frames = len(df_etho)
-        num_lines = 4
+
+        # Determine the number of rows based on the number of frames
+        if num_frames < 15000:
+            num_lines = 1
+        elif num_frames < 30000:
+            num_lines = 2
+        elif num_frames < 45000:
+            num_lines = 3
+        else:
+            num_lines = 4
+
         cut_frames = num_frames // num_lines
-        fig, axs = plt.subplots(num_lines, 1, dpi=400, figsize=(10, 2 * num_lines))
+        fig, axs = plt.subplots(num_lines, 1, dpi=100, figsize=(12, 2 * num_lines))
 
         for i, ax in enumerate(axs):
             start_idx = i * cut_frames
             end_idx = start_idx + cut_frames
-            ax.imshow(df_etho.iloc[start_idx:end_idx].T, origin="upper", cmap='seismic_r', aspect=20 * 100, vmin=-0.06,
+            ax.imshow(df_etho.iloc[start_idx:end_idx].T, origin="upper", cmap='seismic_r', aspect='auto', vmin=-0.06,
                       vmax=0.06)
             ax.set_xticks(np.linspace(0, cut_frames, 5))
             ax.set_xticklabels(np.linspace(start_idx, end_idx, 5).astype(int))
@@ -170,20 +177,10 @@ def plot_ethogram(df, output_path, file_name, num_lines=4):
                 ax.set_xlabel('Frame')
             ax.set_ylabel('Behavioral State')
 
-            # Save the plot to a file (e.g., a PNG image)
         plt.tight_layout()
-        plot_name = 'kymogram.png'
-        plt.savefig(plot_name)
-        plt.tight_layout()
-        plt.show()
-        # Save the plot to a file
-        plt.tight_layout()
-
-
         full_path = os.path.join(output_path, file_name)
-        print("The full file path is:", full_path)
         plt.savefig(full_path)
-
+        plt.show()
         plt.clf()  # Clear the current figure after saving the plot
 
     except Exception as e:
@@ -192,23 +189,33 @@ def plot_ethogram(df, output_path, file_name, num_lines=4):
 
 def plot_skeleton_spline(skeleton_spline, output_path, file_name):
     '''
-    Inputs skelleton_spline_df and plots kymogramm
+    Inputs skeleton_spline_df and plots kymogram
 
-    :param skeleton_spline:
-    :param output_path:
-    :return:
+    :param skeleton_spline: DataFrame containing skeleton spline data
+    :param output_path: Path where the plot will be saved
+    :param file_name: Name of the output file
+    :return: None
     '''
     try:
         num_frames = len(skeleton_spline)
-        num_lines = 4
+
+        # Determine the number of rows based on the number of frames
+        if num_frames < 15000:
+            num_lines = 1
+        elif num_frames < 30000:
+            num_lines = 2
+        elif num_frames < 45000:
+            num_lines = 3
+        else:
+            num_lines = 4
+
         cut_frames = num_frames // num_lines
         fig, axs = plt.subplots(num_lines, 1, dpi=400, figsize=(10, 1 * num_lines))
 
         for i, ax in enumerate(axs):
             start_idx = i * cut_frames
             end_idx = start_idx + cut_frames
-            ax.imshow(skeleton_spline.iloc[start_idx:end_idx].T, origin="upper", cmap='seismic', aspect=20, vmin=-0.06,
-                      vmax=0.06)
+            ax.imshow(skeleton_spline.iloc[start_idx:end_idx].T, origin="upper", cmap='seismic', aspect=20, vmin=-0.06, vmax=0.06)
             ax.set_xticks(np.linspace(0, cut_frames, 5))
             ax.set_xticklabels(np.linspace(start_idx, end_idx, 5).astype(int), fontsize=6)
             ax.set_yticklabels(ax.get_yticks(), fontsize=6)
@@ -228,6 +235,7 @@ def plot_skeleton_spline(skeleton_spline, output_path, file_name):
 
     except Exception as e:
         print(f'Problem plotting the data: {e}')
+
 
 
 def plot_odor_concentration(df, output_path, file_name):
