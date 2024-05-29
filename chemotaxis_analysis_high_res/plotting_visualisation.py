@@ -155,9 +155,23 @@ def plot_ethogram(df, output_path, file_name, num_lines=4):
     try:
         df_etho = df
         num_frames = len(df_etho)
-        num_lines = 4
+
+        # Dynamically adjust number of rows and plot stretch
+        if num_frames < 10000:
+            num_lines = 1
+        elif num_frames < 20000:
+            num_lines = 2
+        elif num_frames < 30000:
+            num_lines = 3
+        else:
+            num_lines = 4
+
         cut_frames = num_frames // num_lines
         fig, axs = plt.subplots(num_lines, 1, dpi=400, figsize=(10, 2 * num_lines))
+
+        # Ensure axs is iterable by converting it to an array if it's not
+        if num_lines == 1:
+            axs = [axs]  # Make it a list if only one subplot
 
         for i, ax in enumerate(axs):
             start_idx = i * cut_frames
@@ -169,10 +183,6 @@ def plot_ethogram(df, output_path, file_name, num_lines=4):
             if i == num_lines - 1:
                 ax.set_xlabel('Frame')
             ax.set_ylabel('Behavioral State')
-
-        plt.tight_layout()
-        # Save the plot to a file
-        plt.tight_layout()
 
         full_path = os.path.join(output_path, file_name)
         print("The full file path is:", full_path)
