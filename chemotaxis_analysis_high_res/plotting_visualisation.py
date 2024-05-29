@@ -151,6 +151,14 @@ def plot_ethogram(df, output_path, file_name, num_lines=4):
     :return: None
     '''
 
+    print(df)
+
+    # Print unique values in the DataFrame
+    print("Unique values in the DataFrame:")
+    for column in df_etho.columns:
+        unique_values = df_etho[column].unique()
+        print(f"Column '{column}': {unique_values}")
+
     try:
         df_etho = df
         num_frames = len(df_etho)
