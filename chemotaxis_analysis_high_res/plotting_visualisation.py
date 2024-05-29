@@ -212,7 +212,7 @@ def plot_skeleton_spline(skeleton_spline, output_path, file_name):
 
         print(len(skeleton_spline))
 
-        for i, ax in enumerate(axs):
+        for i, ax in enumerate(num_lines):
             start_idx = i * cut_frames
             end_idx = start_idx + cut_frames
             ax.imshow(skeleton_spline.iloc[start_idx:end_idx].T, origin="upper", cmap='seismic', aspect=20, vmin=-0.06,
