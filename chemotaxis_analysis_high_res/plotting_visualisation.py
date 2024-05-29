@@ -151,33 +151,35 @@ def plot_ethogram(df, output_path, file_name, num_lines=4):
     :param num_lines: Number of lines in the plot
     :return: None
     '''
+
     try:
-        num_frames = len(df)
+        df_etho = df
+        num_frames = len(df_etho)
+        num_lines = 4
         cut_frames = num_frames // num_lines
-        fig, axs = plt.subplots(num_lines, 1, dpi=400, figsize=(10, 1 * num_lines))
+        fig, axs = plt.subplots(num_lines, 1, dpi=400, figsize=(10, 2 * num_lines))
 
         for i, ax in enumerate(axs):
             start_idx = i * cut_frames
             end_idx = start_idx + cut_frames
-            ax.imshow(df.iloc[start_idx:end_idx].T, origin="upper", cmap='seismic_r', aspect=30 * 50)
+            ax.imshow(df_etho.iloc[start_idx:end_idx].T, origin="upper", cmap='seismic_r', aspect=20 * 100, vmin=-0.06,
+                      vmax=0.06)
             ax.set_xticks(np.linspace(0, cut_frames, 5))
-            ax.set_xticklabels(np.linspace(start_idx, end_idx, 5).astype(int), fontsize=6)
-
-            # Hide y-tick intervals
-            ax.set_yticks([])
-
+            ax.set_xticklabels(np.linspace(start_idx, end_idx, 5).astype(int))
             if i == num_lines - 1:
-                ax.set_xlabel('Frame', fontsize=6)
-            ax.set_ylabel('Beh. State', fontsize=6)
+                ax.set_xlabel('Frame')
+            ax.set_ylabel('Behavioral State')
 
-            # Add the legend on the first subplot
-            if i == 0:
-                legend_elements = [Line2D([0], [0], color='red', label='Reversal'),
-                                   Line2D([0], [0], color='blue', label='Forward motion')]
-                ax.legend(handles=legend_elements, loc='upper left', bbox_to_anchor=(1.1, 1), frameon=True, fontsize=6)
-
+            # Save the plot to a file (e.g., a PNG image)
+        plt.tight_layout()
+        plot_name = 'kymogram.png'
+        plt.savefig(plot_name)
+        plt.tight_layout()
+        plt.show()
         # Save the plot to a file
         plt.tight_layout()
+
+
         full_path = os.path.join(output_path, file_name)
         print("The full file path is:", full_path)
         plt.savefig(full_path)
