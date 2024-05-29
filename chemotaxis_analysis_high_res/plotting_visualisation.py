@@ -196,6 +196,7 @@ def plot_skeleton_spline(skeleton_spline, output_path, file_name):
     :param file_name: Name of the output file
     :return: None
     '''
+    print("plottin skelleton")
     try:
         num_frames = len(skeleton_spline)
 
