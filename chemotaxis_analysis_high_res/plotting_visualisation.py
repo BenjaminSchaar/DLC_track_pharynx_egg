@@ -139,6 +139,7 @@ def create_angle_animation(df, output_path, x_odor, y_odor, fps, file_name):
     out.release()
     plt.close(fig)  # Close the figure to free memory
 
+
 def plot_ethogram(df, output_path, file_name):
     '''
     Inputs beh_annotation df and plots ethogram.
@@ -149,42 +150,42 @@ def plot_ethogram(df, output_path, file_name):
     :return: None
     '''
 
-    try:
-        df_etho = df
-        num_frames = len(df_etho)
+    df_etho = df
+    num_frames = len(df_etho)
 
-        # Determine the number of rows based on the number of frames
-        if num_frames < 15000:
-            num_lines = 1
-        elif num_frames < 30000:
-            num_lines = 2
-        elif num_frames < 45000:
-            num_lines = 3
-        else:
-            num_lines = 4
+    # Determine the number of rows based on the number of frames
+    if num_frames < 15000:
+        num_lines = 1
+    elif num_frames < 30000:
+        num_lines = 2
+    elif num_frames < 45000:
+        num_lines = 3
+    else:
+        num_lines = 4
 
-        cut_frames = num_frames // num_lines
-        fig, axs = plt.subplots(num_lines, 1, dpi=100, figsize=(12, 2 * num_lines))
+    cut_frames = num_frames // num_lines
+    fig, axs = plt.subplots(num_lines, 1, dpi=100, figsize=(12, 2 * num_lines))
 
-        for i, ax in enumerate(axs):
-            start_idx = i * cut_frames
-            end_idx = start_idx + cut_frames
-            ax.imshow(df_etho.iloc[start_idx:end_idx].T, origin="upper", cmap='seismic_r', aspect='auto', vmin=-0.06,
-                      vmax=0.06)
-            ax.set_xticks(np.linspace(0, cut_frames, 5))
-            ax.set_xticklabels(np.linspace(start_idx, end_idx, 5).astype(int))
-            if i == num_lines - 1:
-                ax.set_xlabel('Frame')
-            ax.set_ylabel('Behavioral State')
+    # Ensure axs is always iterable
+    if num_lines == 1:
+        axs = [axs]
 
-        plt.tight_layout()
-        full_path = os.path.join(output_path, file_name)
-        plt.savefig(full_path)
-        plt.show()
-        plt.clf()  # Clear the current figure after saving the plot
+    for i in range(num_lines):
+        start_idx = i * cut_frames
+        end_idx = start_idx + cut_frames
+        axs[i].imshow(df_etho.iloc[start_idx:end_idx].T, origin="upper", cmap='seismic_r', aspect='auto',
+                      vmin=-0.06, vmax=0.06)
+        axs[i].set_xticks(np.linspace(0, cut_frames, 5))
+        axs[i].set_xticklabels(np.linspace(start_idx, end_idx, 5).astype(int))
+        if i == num_lines - 1:
+            axs[i].set_xlabel('Frame')
+        axs[i].set_ylabel('Behavioral State')
 
-    except Exception as e:
-        print(f'Problem plotting the data: {e}')
+    plt.tight_layout()
+    full_path = os.path.join(output_path, file_name)
+    plt.savefig(full_path)
+    plt.show()
+    plt.clf()  # Clear the current figure after saving the plot
 
 
 def plot_skeleton_spline(skeleton_spline, output_path, file_name):
