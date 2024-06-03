@@ -140,6 +140,11 @@ def create_angle_animation(df, output_path, x_odor, y_odor, fps, file_name):
     plt.close(fig)  # Close the figure to free memory
 
 
+import matplotlib.pyplot as plt
+import numpy as np
+import os
+
+
 def plot_ethogram(df, output_path, file_name, num_lines=4):
     '''
     Inputs beh_annotation df and plots ethogram.
@@ -204,8 +209,12 @@ def plot_ethogram(df, output_path, file_name, num_lines=4):
             axs[0].bar(0, 0, color=color, label=f'State {state}')
         axs[0].legend(title='Behavioral State')
 
+        # Set x-axis limits and ticks
+        for ax in axs:
+            ax.set_xlim([0, num_frames])  # Set x-axis limits
+            ax.set_xticks(np.linspace(0, num_frames, 10).astype(int))  # Set x-axis ticks
+
         plt.tight_layout()
-        plt.subplots_adjust(left=0, right=1, top=1, bottom=0)
 
         full_path = os.path.join(output_path, file_name)
         print("The full file path is:", full_path)
@@ -215,6 +224,7 @@ def plot_ethogram(df, output_path, file_name, num_lines=4):
 
     except Exception as e:
         print(f'Problem plotting the data: {e}')
+
 
 def plot_skeleton_spline(skeleton_spline, output_path, file_name):
     '''
