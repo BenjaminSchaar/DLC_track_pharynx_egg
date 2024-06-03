@@ -184,7 +184,7 @@ def plot_ethogram(df, output_path, file_name, num_lines=4):
             start_idx = i * cut_frames
             end_idx = start_idx + cut_frames if i < num_lines - 1 else num_frames
             segment = df_etho.iloc[start_idx:end_idx].T
-            cax = ax.imshow(segment, origin="upper", cmap='seismic_r', aspect='auto', vmin=-0.06, vmax=0.06)
+            cax = ax.imshow(segment, origin="upper", cmap='seismic_r', aspect='auto')
             ax.set_ylabel('Behavioral State')
             ax.set_xticks(np.linspace(0, segment.shape[1] - 1, 5))
             ax.set_xticklabels(np.linspace(start_idx, end_idx, 5).astype(int))
@@ -235,8 +235,7 @@ def plot_skeleton_spline(skeleton_spline, output_path, file_name):
         for i, ax in enumerate(axs):
             start_idx = i * cut_frames
             end_idx = start_idx + cut_frames
-            ax.imshow(skeleton_spline.iloc[start_idx:end_idx].T, origin="upper", cmap='seismic', aspect=20, vmin=-0.06,
-                      vmax=0.06)
+            ax.imshow(skeleton_spline.iloc[start_idx:end_idx].T, origin="upper", cmap='seismic', aspect='auto', vmin=-0.06, vmax=0.06)
             ax.set_xticks(np.linspace(0, cut_frames, 5))
             ax.set_xticklabels(np.linspace(start_idx, end_idx, 5).astype(int), fontsize=6)
             ax.set_yticklabels(ax.get_yticks(), fontsize=6)
