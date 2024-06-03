@@ -183,15 +183,13 @@ def plot_ethogram(df, output_path, file_name, num_lines=4):
         for i, ax in enumerate(axs):
             start_idx = i * cut_frames
             end_idx = start_idx + cut_frames if i < num_lines - 1 else num_frames
-            segment = df_etho.iloc[start_idx:end_idx].T
-            cax = ax.imshow(segment, origin="upper", cmap='seismic_r', aspect='auto')
+            segment = df_etho.iloc[start_idx:end_idx]
+            ax.plot(segment.index, segment['behavior_state'])
             ax.set_ylabel('Behavioral State')
-            ax.set_xticks(np.linspace(0, segment.shape[1] - 1, 5))
+            ax.set_xticks(np.linspace(start_idx, end_idx, 5).astype(int))
             ax.set_xticklabels(np.linspace(start_idx, end_idx, 5).astype(int))
             if i == num_lines - 1:
                 ax.set_xlabel('Frame')
-
-        fig.colorbar(cax, ax=axs, orientation='vertical')
 
         full_path = os.path.join(output_path, file_name)
         print("The full file path is:", full_path)
