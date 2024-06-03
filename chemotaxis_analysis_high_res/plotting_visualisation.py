@@ -218,7 +218,7 @@ def plot_ethogram(df, output_path, file_name, num_lines=4):
 
         full_path = os.path.join(output_path, file_name)
         print("The full file path is:", full_path)
-        plt.savefig(full_path, bbox_inches='tight', pad_inches=0)
+        plt.savefig(full_path)
 
         plt.clf()  # Clear the current figure after saving the plot
 
