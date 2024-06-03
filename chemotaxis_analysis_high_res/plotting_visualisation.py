@@ -140,13 +140,14 @@ def create_angle_animation(df, output_path, x_odor, y_odor, fps, file_name):
     plt.close(fig)  # Close the figure to free memory
 
 
-def plot_ethogram(df, output_path, file_name):
+def plot_ethogram(df, output_path, file_name, num_lines=4):
     '''
-    Inputs beh_annotation df and plots ethogram with color-coded behavioral states.
+    Inputs beh_annotation df and plots ethogram.
 
     :param df: DataFrame containing behavioral annotations
     :param output_path: Directory where the plot will be saved
     :param file_name: Name of the output file
+    :param num_lines: Number of lines in the plot
     :return: None
     '''
 
@@ -159,8 +160,7 @@ def plot_ethogram(df, output_path, file_name):
         print(f"Column '{column}': {unique_values}")
 
     try:
-        df_etho = df.reset_index()  # Reset the index
-
+        df_etho = df
         num_frames = len(df_etho)
 
         # Dynamically adjust number of rows and plot stretch
@@ -174,36 +174,28 @@ def plot_ethogram(df, output_path, file_name):
             num_lines = 4
 
         cut_frames = num_frames // num_lines
-        fig, axs = plt.subplots(num_lines, 1, dpi=400, figsize=(10, 2 * num_lines), sharex=True)
+        fig, axs = plt.subplots(num_lines, 1, dpi=400, figsize=(16, 2 * num_lines), sharex=True, sharey=True)
 
         # Ensure axs is iterable by converting it to an array if it's not
         if num_lines == 1:
             axs = [axs]  # Make it a list if only one subplot
 
-        # Define a colormap for the behavioral states
-        cmap = plt.cm.get_cmap('coolwarm')  # Adjust the colormap as desired
-
         for i, ax in enumerate(axs):
             start_idx = i * cut_frames
             end_idx = start_idx + cut_frames if i < num_lines - 1 else num_frames
             segment = df_etho.iloc[start_idx:end_idx]
-
-            # Map behavioral states to colors
-            colors = cmap(segment['behaviour_state'])
-
-            # Plot with line segments to create a zebra-like pattern
-            for idx in range(1, len(segment)):
-                prev_state, state = segment.loc[idx-1, 'behaviour_state'], segment.loc[idx, 'behaviour_state']
-                if prev_state != state:  # Change color at state transitions
-                    ax.plot(segment.iloc[idx-1:idx+1, 0], [prev_state, state], color=colors[idx])
-                else:
-                    ax.plot(segment.iloc[idx-1:idx+1, 0], [prev_state, state], color=colors[idx-1])  # Maintain color for same state
-
+            ax.bar(segment.index, height=1, width=1, color=plt.cm.viridis(segment['BehaviorState'] / df_etho['BehaviorState'].max()))
             ax.set_ylabel('Behavioral State')
-            ax.set_xticks(np.linspace(segment[0].min(), segment[0].max(), 5).astype(int))
-            ax.set_xticklabels(np.linspace(segment[0].min(), segment[0].max(), 5).astype(int))
+            ax.set_xticks(np.linspace(start_idx, end_idx, 5).astype(int))
+            ax.set_xticklabels(np.linspace(start_idx, end_idx, 5).astype(int))
             if i == num_lines - 1:
                 ax.set_xlabel('Frame')
+
+        # Creating a custom legend
+        unique_states = df_etho['BehaviorState'].unique()
+        for state in unique_states:
+            axs[0].bar(0, 0, color=plt.cm.viridis(state / df_etho['BehaviorState'].max()), label=f'State {state}')
+        axs[0].legend(title='Behavioral State')
 
         full_path = os.path.join(output_path, file_name)
         print("The full file path is:", full_path)
@@ -211,8 +203,6 @@ def plot_ethogram(df, output_path, file_name):
 
         plt.clf()  # Clear the current figure after saving the plot
 
-    except KeyError as e:
-        print(f"KeyError: Column '{str(e)}' not found in the DataFrame.")
     except Exception as e:
         print(f'Problem plotting the data: {e}')
 
