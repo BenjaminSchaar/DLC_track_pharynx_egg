@@ -184,10 +184,10 @@ def plot_ethogram(df, output_path, file_name):
             start_idx = i * cut_frames
             end_idx = start_idx + cut_frames if i < num_lines - 1 else num_frames
             segment = df_etho.iloc[start_idx:end_idx]
-            ax.plot(segment['index'], segment['behavior_state'])
+            ax.plot(segment[0], segment['behaviour_state'])
             ax.set_ylabel('Behavioral State')
-            ax.set_xticks(np.linspace(segment['index'].min(), segment['index'].max(), 5).astype(int))
-            ax.set_xticklabels(np.linspace(segment['index'].min(), segment['index'].max(), 5).astype(int))
+            ax.set_xticks(np.linspace(segment[0].min(), segment[0].max(), 5).astype(int))
+            ax.set_xticklabels(np.linspace(segment[0].min(), segment[0].max(), 5).astype(int))
             if i == num_lines - 1:
                 ax.set_xlabel('Frame')
 
