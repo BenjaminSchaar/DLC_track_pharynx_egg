@@ -174,27 +174,34 @@ def plot_ethogram(df, output_path, file_name, num_lines=4):
             num_lines = 4
 
         cut_frames = num_frames // num_lines
-        fig, axs = plt.subplots(num_lines, 1, dpi=400, figsize=(16, 2 * num_lines), sharex=True, sharey=True)
+        fig, axs = plt.subplots(num_lines, 1, dpi=400, figsize=(16, 1 * num_lines), sharex=True, sharey=True)
 
         # Ensure axs is iterable by converting it to an array if it's not
         if num_lines == 1:
             axs = [axs]  # Make it a list if only one subplot
 
+        # Define a color map from the seismic palette
+        cmap = plt.get_cmap('seismic')
+        state_colors = {-1: cmap(0.0), 0: cmap(0.5), 1: cmap(1.0)}
+
         for i, ax in enumerate(axs):
             start_idx = i * cut_frames
             end_idx = start_idx + cut_frames if i < num_lines - 1 else num_frames
             segment = df_etho.iloc[start_idx:end_idx]
-            ax.bar(segment.index, height=1, width=1, color=plt.cm.viridis(segment['behaviour_state'] / df_etho['behaviour_state'].max()))
-            ax.set_ylabel('Behavioral State')
+
+            # Apply the color based on the state
+            colors = [state_colors[state] for state in segment['BehaviorState']]
+            ax.bar(segment.index, height=1, width=1, color=colors)
+            ax.set_ylabel('')  # Removing y-axis label
+            ax.set_yticks([])  # Removing y-ticks
             ax.set_xticks(np.linspace(start_idx, end_idx, 5).astype(int))
             ax.set_xticklabels(np.linspace(start_idx, end_idx, 5).astype(int))
             if i == num_lines - 1:
                 ax.set_xlabel('Frame')
 
         # Creating a custom legend
-        unique_states = df_etho['behaviour_state'].unique()
-        for state in unique_states:
-            axs[0].bar(0, 0, color=plt.cm.viridis(state / df_etho['behaviour_state'].max()), label=f'State {state}')
+        for state, color in state_colors.items():
+            axs[0].bar(0, 0, color=color, label=f'State {state}')
         axs[0].legend(title='Behavioral State')
 
         full_path = os.path.join(output_path, file_name)
@@ -205,8 +212,6 @@ def plot_ethogram(df, output_path, file_name, num_lines=4):
 
     except Exception as e:
         print(f'Problem plotting the data: {e}')
-
-
 
 def plot_skeleton_spline(skeleton_spline, output_path, file_name):
     '''
