@@ -140,7 +140,7 @@ def create_angle_animation(df, output_path, x_odor, y_odor, fps, file_name):
     plt.close(fig)  # Close the figure to free memory
 
 
-def plot_ethogram(df, output_path, file_name, num_lines=4):
+def plot_ethogram(df, output_path, file_name):
     '''
     Inputs beh_annotation df and plots ethogram.
 
@@ -160,7 +160,7 @@ def plot_ethogram(df, output_path, file_name, num_lines=4):
         print(f"Column '{column}': {unique_values}")
 
     try:
-        df_etho = df
+        df_etho = df.reset_index()  # Reset the index to make it a regular column
         num_frames = len(df_etho)
 
         # Dynamically adjust number of rows and plot stretch
@@ -184,10 +184,10 @@ def plot_ethogram(df, output_path, file_name, num_lines=4):
             start_idx = i * cut_frames
             end_idx = start_idx + cut_frames if i < num_lines - 1 else num_frames
             segment = df_etho.iloc[start_idx:end_idx]
-            ax.plot(segment.index, segment['behavior_state'])
+            ax.plot(segment['index'], segment['behavior_state'])
             ax.set_ylabel('Behavioral State')
-            ax.set_xticks(np.linspace(start_idx, end_idx, 5).astype(int))
-            ax.set_xticklabels(np.linspace(start_idx, end_idx, 5).astype(int))
+            ax.set_xticks(np.linspace(segment['index'].min(), segment['index'].max(), 5).astype(int))
+            ax.set_xticklabels(np.linspace(segment['index'].min(), segment['index'].max(), 5).astype(int))
             if i == num_lines - 1:
                 ax.set_xlabel('Frame')
 
@@ -197,6 +197,8 @@ def plot_ethogram(df, output_path, file_name, num_lines=4):
 
         plt.clf()  # Clear the current figure after saving the plot
 
+    except KeyError as e:
+        print(f"KeyError: Column '{str(e)}' not found in the DataFrame.")
     except Exception as e:
         print(f'Problem plotting the data: {e}')
 
