@@ -142,12 +142,11 @@ def create_angle_animation(df, output_path, x_odor, y_odor, fps, file_name):
 
 def plot_ethogram(df, output_path, file_name):
     '''
-    Inputs beh_annotation df and plots ethogram.
+    Inputs beh_annotation df and plots ethogram with color-coded behavioral states.
 
     :param df: DataFrame containing behavioral annotations
     :param output_path: Directory where the plot will be saved
     :param file_name: Name of the output file
-    :param num_lines: Number of lines in the plot
     :return: None
     '''
 
@@ -160,7 +159,8 @@ def plot_ethogram(df, output_path, file_name):
         print(f"Column '{column}': {unique_values}")
 
     try:
-        df_etho = df.reset_index()  # Reset the index to make it a regular column
+        df_etho = df.reset_index()  # Reset the index
+
         num_frames = len(df_etho)
 
         # Dynamically adjust number of rows and plot stretch
@@ -174,17 +174,31 @@ def plot_ethogram(df, output_path, file_name):
             num_lines = 4
 
         cut_frames = num_frames // num_lines
-        fig, axs = plt.subplots(num_lines, 1, dpi=400, figsize=(10, 2 * num_lines), sharex=True, sharey=True)
+        fig, axs = plt.subplots(num_lines, 1, dpi=400, figsize=(10, 2 * num_lines), sharex=True)
 
         # Ensure axs is iterable by converting it to an array if it's not
         if num_lines == 1:
             axs = [axs]  # Make it a list if only one subplot
 
+        # Define a colormap for the behavioral states
+        cmap = plt.cm.get_cmap('coolwarm')  # Adjust the colormap as desired
+
         for i, ax in enumerate(axs):
             start_idx = i * cut_frames
             end_idx = start_idx + cut_frames if i < num_lines - 1 else num_frames
             segment = df_etho.iloc[start_idx:end_idx]
-            ax.plot(segment[0], segment['behaviour_state'])
+
+            # Map behavioral states to colors
+            colors = cmap(segment['behaviour_state'])
+
+            # Plot with line segments to create a zebra-like pattern
+            for idx in range(1, len(segment)):
+                prev_state, state = segment.loc[idx-1, 'behaviour_state'], segment.loc[idx, 'behaviour_state']
+                if prev_state != state:  # Change color at state transitions
+                    ax.plot(segment.iloc[idx-1:idx+1, 0], [prev_state, state], color=colors[idx])
+                else:
+                    ax.plot(segment.iloc[idx-1:idx+1, 0], [prev_state, state], color=colors[idx-1])  # Maintain color for same state
+
             ax.set_ylabel('Behavioral State')
             ax.set_xticks(np.linspace(segment[0].min(), segment[0].max(), 5).astype(int))
             ax.set_xticklabels(np.linspace(segment[0].min(), segment[0].max(), 5).astype(int))
