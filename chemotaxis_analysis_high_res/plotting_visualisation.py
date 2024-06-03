@@ -204,9 +204,12 @@ def plot_ethogram(df, output_path, file_name, num_lines=4):
             axs[0].bar(0, 0, color=color, label=f'State {state}')
         axs[0].legend(title='Behavioral State')
 
+        plt.tight_layout()
+        plt.subplots_adjust(left=0, right=1, top=1, bottom=0)
+
         full_path = os.path.join(output_path, file_name)
         print("The full file path is:", full_path)
-        plt.savefig(full_path)
+        plt.savefig(full_path, bbox_inches='tight', pad_inches=0)
 
         plt.clf()  # Clear the current figure after saving the plot
 
