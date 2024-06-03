@@ -179,7 +179,7 @@ def plot_ethogram(df, output_path, file_name, num_lines=4):
             num_lines = 4
 
         cut_frames = num_frames // num_lines
-        fig, axs = plt.subplots(num_lines, 1, dpi=400, figsize=(16, 1 * num_lines), sharex=True, sharey=True)
+        fig, axs = plt.subplots(num_lines, 1, dpi=400, figsize=(10, 1 * num_lines))
 
         # Ensure axs is iterable by converting it to an array if it's not
         if num_lines == 1:
