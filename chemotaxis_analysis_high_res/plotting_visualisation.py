@@ -190,7 +190,7 @@ def plot_ethogram(df, output_path, file_name, num_lines=4):
             segment = df_etho.iloc[start_idx:end_idx]
 
             # Apply the color based on the state
-            colors = [state_colors[state] for state in segment['BehaviorState']]
+            colors = [state_colors[state] for state in segment['behaviour_state']]
             ax.bar(segment.index, height=1, width=1, color=colors)
             ax.set_ylabel('')  # Removing y-axis label
             ax.set_yticks([])  # Removing y-ticks
