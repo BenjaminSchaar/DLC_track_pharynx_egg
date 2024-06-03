@@ -184,7 +184,7 @@ def plot_ethogram(df, output_path, file_name, num_lines=4):
             start_idx = i * cut_frames
             end_idx = start_idx + cut_frames if i < num_lines - 1 else num_frames
             segment = df_etho.iloc[start_idx:end_idx]
-            ax.bar(segment.index, height=1, width=1, color=plt.cm.viridis(segment['BehaviorState'] / df_etho['BehaviorState'].max()))
+            ax.bar(segment.index, height=1, width=1, color=plt.cm.viridis(segment['behaviour_state'] / df_etho['behaviour_state'].max()))
             ax.set_ylabel('Behavioral State')
             ax.set_xticks(np.linspace(start_idx, end_idx, 5).astype(int))
             ax.set_xticklabels(np.linspace(start_idx, end_idx, 5).astype(int))
@@ -192,9 +192,9 @@ def plot_ethogram(df, output_path, file_name, num_lines=4):
                 ax.set_xlabel('Frame')
 
         # Creating a custom legend
-        unique_states = df_etho['BehaviorState'].unique()
+        unique_states = df_etho['behaviour_state'].unique()
         for state in unique_states:
-            axs[0].bar(0, 0, color=plt.cm.viridis(state / df_etho['BehaviorState'].max()), label=f'State {state}')
+            axs[0].bar(0, 0, color=plt.cm.viridis(state / df_etho['behaviour_state'].max()), label=f'State {state}')
         axs[0].legend(title='Behavioral State')
 
         full_path = os.path.join(output_path, file_name)
