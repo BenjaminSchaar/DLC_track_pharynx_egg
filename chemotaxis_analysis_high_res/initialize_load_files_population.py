@@ -173,6 +173,14 @@ def extract_coords(pos_string):
     # Convert to integers and return as tuple
     return int(x_str.strip()), int(y_str.strip())
 
+# Function to rotate coordinates
+def rotate_coordinates(row):
+    x_rel, y_rel = row["X_rel"], row["Y_rel"]
+    row["X_rel"] = y_rel
+    row["Y_rel"] = -x_rel
+    row["Y_rel"] = abs(row["Y_rel"])  # Make Y_rel positive
+    return row
+
 def main(arg_list=None):
     parser = argparse.ArgumentParser(description='Read CSV files and plot data')
     parser.add_argument('--beh_annotation', help='Full path to the behavior annotation CSV file', required=True)
@@ -298,7 +306,19 @@ def main(arg_list=None):
     df_worm_parameter['X_rel'] = df_worm_parameter['X_rel'] * factor_px_to_mm
     df_worm_parameter['Y_rel'] = df_worm_parameter['Y_rel'] * factor_px_to_mm
 
-    #finished initialisation and aligning
+    # Rotate coordinate system counterclockwise by 90 degrees
+    # Swap and invert coordinates for all relevant points
+    x_odor, y_odor = y_odor, -x_odor  # Rotate odor position
+    y_odor = abs(y_odor)  # Make y_odor positive
+
+    # Apply the rotation function to each row
+    df_worm_parameter = df_worm_parameter.apply(rotate_coordinates, axis=1)
+
+    print("After rotation:")
+    print(f"Odor position: x ={x_odor}, y ={y_odor}")
+    print(df_worm_parameter.head())
+
+    #_--------------------coorinate system augmentation finished!
 
     # Create a copy of df_worm_parameter
     df_worm_movie = df_worm_parameter.copy()  # create copy of df_worm_parameter fo wormmovie later
@@ -312,7 +332,7 @@ def main(arg_list=None):
         skel_pos_centroid, #100 will calculate the centroid -> column name will be 'X/Y_rel_skel_pos_centroid'
         video_resolution_x,
         video_resolution_y,
-        factor_px_to_mm
+        0
     )
 
     skel_pos_0 = 0
