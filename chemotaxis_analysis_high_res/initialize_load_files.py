@@ -26,7 +26,7 @@ from chemotaxis_analysis_high_res.plotting_visualisation import (
     plot_distance_to_odor,
     plot_NI,
     create_worm_animation,
-    plot_binned_data,
+    plot_angles_binned,
     plot_turns,
     plot_pumps,
 )
@@ -522,13 +522,13 @@ def main(arg_list=None):
     replace_outliers_with_nan(df_worm_parameter, 'NI', 2)
 
     #-------------------------------
-    window_size_speed = int(2 * fps)
+    window_size_speed = int(fps) #2 seconds smoothing for speed
 
     df_worm_parameter['speed_s'] = df_worm_parameter['speed'].rolling(window=window_size_speed).mean()
     df_worm_parameter['radial_speed_s'] = df_worm_parameter['radial_speed'].rolling(window=window_size_speed).mean()
     df_worm_parameter['NI_s'] = df_worm_parameter['NI'].rolling(window=window_size_speed).mean()
 
-    window_size_angle = int(20 * fps)
+    window_size_angle = int(fps)
 
     df_worm_parameter['bearing_angle_s'] = df_worm_parameter['bearing_angle'].rolling(window=window_size_angle).mean()
     df_worm_parameter['curving_angle_s'] = df_worm_parameter['curving_angle'].rolling(window=window_size_angle).mean()
@@ -556,9 +556,9 @@ def main(arg_list=None):
 
     plot_chemotaxis_overview(df_worm_parameter, output_path, x_odor, y_odor, arena_min_x, arena_max_x, arena_min_y, arena_max_y, fps, file_name="chemotaxis_overview.png")
 
-    #create_angle_animation(df_worm_parameter, output_path, x_odor, y_odor, fps, file_name ='angle_animation.avi')
+    create_angle_animation(df_worm_parameter, output_path, x_odor, y_odor, fps, file_name='angle_animation.avi', nth_frame=100)
 
-    plot_binned_data(df_worm_parameter, 'bearing_angle_s', 'curving_angle_s', output_path,  num_bins=10, file_name='curving_angle_binned_plot.png')
+    plot_angles_binned(df_worm_parameter, 'bearing_angle_s', 'curving_angle_s', output_path,  num_bins=10, file_name='curving_angle_binned_plot.png')
 
     plot_turns(df_worm_parameter, output_path, file_name='turns.png')
 

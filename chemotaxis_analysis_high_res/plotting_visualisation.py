@@ -68,7 +68,7 @@ def plot_chemotaxis_overview(df, output_path, x_odor, y_odor, arena_min_x, arena
     plt.savefig(full_path)
     plt.close()  # Close the plot to free memory
 
-def create_angle_animation(df, output_path, x_odor, y_odor, fps, file_name):
+def create_angle_animation(df, output_path, x_odor, y_odor, fps, file_name, nth_frame):
     '''
     Create and save an animation showing angles from a DataFrame using OpenCV.
 
@@ -78,6 +78,7 @@ def create_angle_animation(df, output_path, x_odor, y_odor, fps, file_name):
     :param y_odor: Y-coordinate for the odor/source location.
     :param fps: Frames per second for the output video.
     :param file_name: Name of the output file.
+    :param nth_frame: Plot every nth frame (default is 1, which plots every frame).
     '''
     # Combine the output path and file name
     full_path = os.path.join(output_path, file_name)
@@ -94,7 +95,7 @@ def create_angle_animation(df, output_path, x_odor, y_odor, fps, file_name):
     fig, ax = plt.subplots(figsize=(6, 6), dpi=100)  # Adjust figsize if needed
     canvas = FigureCanvas(fig)
 
-    for frame in range(len(df)):
+    for frame in range(0, len(df), nth_frame):
         # Clear the previous frame
         ax.clear()
 
@@ -118,7 +119,6 @@ def create_angle_animation(df, output_path, x_odor, y_odor, fps, file_name):
         ax.set_ylabel('Distance (mm)')
         ax.set_title(f'Bearing Angle Visualization for Frame {frame}')
         ax.grid(True)
-
 
         # Text for angles
         bearing_angle_text = f'Bearing Angle: {df.at[frame, "bearing_angle"]:.2f}'
@@ -497,9 +497,10 @@ def create_worm_animation(df1, df2, output_path, x_odor, y_odor, fps, arena_min_
     out.release()
     plt.close(fig)  # Close the figure to free memory
 
-def plot_binned_data(df, x_col, y_col, output_path, num_bins=10, file_name='plot.png'):
+def plot_angles_binned(df, x_col, y_col, output_path, num_bins=10, file_name='plot.png'):
     """
     Plots mean of the y_col binned according to x_col with SEM error bars and saves the plot to a file.
+    All axes are set between -180 and +180 degrees.
 
     Parameters:
     - df : pandas.DataFrame
@@ -514,7 +515,7 @@ def plot_binned_data(df, x_col, y_col, output_path, num_bins=10, file_name='plot
         Filename to save the plot. The extension determines the format (e.g., 'plot.png', 'plot.pdf')
 
     Returns:
-    - A plotly figure object displaying the line plot with error bars
+    - None
     """
     # Step 1: Binning x_col and creating a new column with the midpoint value of each bin interval
     df[f'{x_col}_binned'] = pd.cut(df[x_col].fillna(0), bins=num_bins).apply(lambda x: x.mid).astype(float)
@@ -532,9 +533,15 @@ def plot_binned_data(df, x_col, y_col, output_path, num_bins=10, file_name='plot
     # Adding markers to the line plot to indicate data points
     fig.add_scatter(x=grouped_data[f'{x_col}_binned'], y=grouped_data['mean_value'], mode='markers', error_y=dict(type='data', array=grouped_data['SEM']))
 
-    # Update axes titles
-    fig.update_xaxes(title_text=f'{x_col} Binned')
-    fig.update_yaxes(title_text=f'Mean {y_col}')
+    # Update axes titles and ranges
+    fig.update_xaxes(title_text=f'{x_col} Binned', range=[-180, 180])
+    fig.update_yaxes(title_text=f'Mean {y_col}', range=[-180, 180])
+
+    # Update layout to ensure axes are centered at 0
+    fig.update_layout(
+        xaxis=dict(zeroline=True, zerolinewidth=2, zerolinecolor='black'),
+        yaxis=dict(zeroline=True, zerolinewidth=2, zerolinecolor='black')
+    )
 
     full_path = os.path.join(output_path, file_name)
     print("The full file path is:", full_path)

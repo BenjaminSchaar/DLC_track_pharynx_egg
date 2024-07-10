@@ -129,6 +129,10 @@ def calculate_preceived_conc(distance: float, time_seconds: float, conc_array: n
 
     return conc_value
 
+
+import math
+import pandas as pd
+
 def calculate_angles(df, fps, x_odor, y_odor):
     """
     Calculates bearing and curving angles with smoothed positions and adds them as new columns to the DataFrame.
@@ -138,6 +142,18 @@ def calculate_angles(df, fps, x_odor, y_odor):
     :param x_odor: X-coordinate of the odor source
     :param y_odor: Y-coordinate of the odor source
     :return: DataFrame with added 'bearing_angle' and 'curving_angle' columns
+
+    Bearing angle: -180 to +180 degrees, where:
+    - 0 degrees: The worm is moving directly towards the odor source.
+    - Positive angles (+1 to +180): The odor source is to the left of the worm's trajectory.
+    - Negative angles (-1 to -180): The odor source is to the right of the worm's trajectory.
+    - +180 or -180 degrees: The worm is moving directly away from the odor source.
+
+    Curving angle: -180 to +180 degrees, where:
+    - 0 degrees: The worm is moving in a straight line.
+    - Positive angles (+1 to +180): The worm is turning to the left.
+    - Negative angles (-1 to -180): The worm is turning to the right.
+    - The magnitude of the angle indicates the sharpness of the turn.
     """
     # Smoothing window size, using fps as the window size
     smoothing_window_size = 2
@@ -160,14 +176,18 @@ def calculate_angles(df, fps, x_odor, y_odor):
     def calculate_angle(x, y, n_x, n_y, o_x, o_y, angle_type):
         a = (n_x, n_y)  # Past position
         b = (x, y)      # Current position
-        c = (o_x, o_y)  # Future position
+        c = (o_x, o_y)  # Future position or odor position
 
-        ang = math.degrees(math.atan2(c[1] - b[1], c[0] - b[0]) - math.atan2(a[1] - b[1], a[0] - b[0]))
-        ang = abs(ang)
-        ang = ang if ang <= 180 else 360 - ang
+        # Calculate vectors
+        vector_past_to_current = (b[0] - a[0], b[1] - a[1])
+        vector_current_to_target = (c[0] - b[0], c[1] - b[1])
 
-        if angle_type == 'curving_angle':
-            ang = 180 - ang
+        # Calculate the angle using atan2
+        ang = math.degrees(math.atan2(vector_current_to_target[1], vector_current_to_target[0]) -
+                           math.atan2(vector_past_to_current[1], vector_past_to_current[0]))
+
+        # Normalize the angle to be between -180 and 180 degrees
+        ang = (ang + 180) % 360 - 180
 
         return ang
 
