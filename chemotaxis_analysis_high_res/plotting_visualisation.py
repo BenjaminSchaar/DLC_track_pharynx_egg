@@ -139,61 +139,66 @@ def create_angle_animation(df, output_path, x_odor, y_odor, fps, file_name, nth_
     out.release()
     plt.close(fig)  # Close the figure to free memory
 
-def plot_ethogram(df, output_path, file_name, num_lines=4):
-    print(df)
+def plot_ethogram(df, output_path, file_name):
+    '''
+    Inputs ethogram dataframe and plots it
 
-    # Print unique values in the DataFrame
-    print("Unique values in the DataFrame:")
-    for column in df.columns:
-        unique_values = df[column].unique()
-        print(f"Column '{column}': {unique_values}")
-
+    :param df: Input dataframe containing ethogram data
+    :param output_path: Path to save the output plot
+    :param file_name: Name of the output file
+    :return: None
+    '''
     try:
-        df_etho = df
-        num_frames = len(df_etho)
+        num_frames = len(df)
 
-        # Dynamically adjust number of rows based on frame count
-        num_lines = min(num_lines, num_frames // 10000 + 1) if num_frames > 10000 else 1
+        # Dynamically adjust number of rows and plot stretch
+        if num_frames < 10000:
+            num_lines = 1
+        elif num_frames < 20000:
+            num_lines = 2
+        elif num_frames < 30000:
+            num_lines = 3
+        else:
+            num_lines = 4
 
-        # Calculate suitable figure dimensions
-        height_per_line = 2  # Increase height per line for better visibility
-        fig_width = 10
-        fig_height = num_lines * height_per_line
-
-        fig, axs = plt.subplots(num_lines, 1, dpi=400, figsize=(fig_width, fig_height))
+        cut_frames = num_frames // num_lines
+        fig, axs = plt.subplots(num_lines, 1, dpi=400, figsize=(10, 1.5 * num_lines))
 
         # Ensure axs is iterable by converting it to an array if it's not
         if num_lines == 1:
-            axs = [axs]
+            axs = [axs]  # Make it a list if only one subplot
 
         cmap = plt.get_cmap('seismic')
         state_colors = {-1: cmap(0.0), 0: cmap(0.5), 1: cmap(1.0)}
 
         for i, ax in enumerate(axs):
-            start_idx = i * (num_frames // num_lines)
-            end_idx = start_idx + (num_frames // num_lines)
-            segment = df_etho.iloc[start_idx:end_idx]
+            start_idx = i * cut_frames
+            end_idx = start_idx + cut_frames
+            segment = df.iloc[start_idx:end_idx]
 
             colors = [state_colors[state] for state in segment['behaviour_state']]
             ax.bar(segment.index, height=1, width=1, color=colors)
-            ax.set_ylabel('')
+            ax.set_xticks(np.linspace(0, cut_frames, 5))
+            ax.set_xticklabels(np.linspace(start_idx, end_idx, 5).astype(int), fontsize=6)
             ax.set_yticks([])
-            ax.set_xticks(np.linspace(start_idx, end_idx, 5).astype(int))
-            ax.set_xticklabels(np.linspace(start_idx, end_idx, 5).astype(int))
-
             if i == num_lines - 1:
-                ax.set_xlabel('Frame')
+                ax.set_xlabel('Frame', fontsize=6)
+            ax.set_ylabel('Behavior', fontsize=6)
 
+        # Add legend to the first subplot
         for state, color in state_colors.items():
             axs[0].bar(0, 0, color=color, label=f'State {state}')
-        axs[0].legend(title='Behavioral State')
+        axs[0].legend(title='Behavioral State', fontsize=6, title_fontsize=6)
 
-        for ax in axs:
-            ax.set_xlim([0, num_frames])
-
+        # Save the plot to a file
         plt.tight_layout()
-        plt.savefig(os.path.join(output_path, file_name))
-        plt.clf()
+
+        full_path = os.path.join(output_path, file_name)
+        print("The full file path is:", full_path)
+
+        plt.savefig(full_path)
+
+        plt.clf()  # Clear the current figure after displaying the plot
 
     except Exception as e:
         print(f'Problem plotting the data: {e}')
