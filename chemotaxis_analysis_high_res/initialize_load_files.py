@@ -259,6 +259,7 @@ def main(arg_list=None):
     parser.add_argument('--distance_array', help='exportet distance_array.npy file for the odor used', required=True)
     parser.add_argument('--turn_annotation', help='Full path to the turn annotation CSV file', required=True)
     parser.add_argument('--pharynx_pump_csv', help='Full path to the CSV file from DLC tracking', required=False)
+    parser.add_argument('--', help='Full path to the compressed avi', required=True)
 
     args = parser.parse_args(arg_list)
 
@@ -274,6 +275,7 @@ def main(arg_list=None):
     video_resolution_y = int(args.video_resolution_y)
     fps = float(args.fps)
     pharynx_pump_csv_path = str(args.pharynx_pump_csv)
+    downsampled_avi_path = str(args.downsampled_avi)
 
     # Load arrays from .npy files
     conc_gradient_array = np.load(args.conc_gradient_array)
@@ -560,7 +562,7 @@ def main(arg_list=None):
 
     plot_chemotaxis_overview(df_worm_parameter, output_path, x_odor, y_odor, arena_min_x, arena_max_x, arena_min_y, arena_max_y, fps, file_name="chemotaxis_overview.png")
 
-    create_angle_animation(df_worm_parameter, output_path, x_odor, y_odor, fps, file_name='angle_animation.avi', nth_frame=100)
+    create_angle_animation(df_worm_parameter, output_path, x_odor, y_odor, fps, file_name='angle_animation.avi', nth_frame=1000)
 
     plot_angles_binned(df_worm_parameter, 'bearing_angle_s', 'curving_angle_s', output_path,  num_bins=10, file_name='curving_angle_binned_plot.png')
 
@@ -577,7 +579,7 @@ def main(arg_list=None):
 
     #create animation of whole worm skelleton in arena
     # Assuming df_worm_parameter, spline_X, spline_Y, video_resolution_x, video_resolution_y, factor_px_to_mm are defined
-    '''
+
     # Define skel_pos_0
     skel_pos_movie = 0
     
@@ -596,8 +598,8 @@ def main(arg_list=None):
 
     print('Worm Animation DF:', df_worm_movie.head())
 
-    create_worm_animation(df_worm_movie, df_worm_parameter, output_path, x_odor, y_odor, fps, arena_min_x, arena_max_x, arena_min_y, arena_max_y, file_name='worm_movie.avi')
-    '''
+    create_worm_animation(df_worm_movie, df_worm_parameter, output_path, x_odor, y_odor, fps, arena_min_x, arena_max_x, arena_min_y, arena_max_y, downsampled_avi_path, 1000,  file_name='worm_movie.avi', )
+
 
 if __name__ == "__main__":
 

@@ -113,10 +113,10 @@ def create_angle_animation(df, output_path, x_odor, y_odor, fps, file_name, nth_
         df['Y_shifted_positive'] = df['Y_rel_skel_pos_centroid'].shift(time)
 
         # Plot points and lines for the current frame
-        ax.scatter(df.at[frame, 'X_rel'], df.at[frame, 'Y_rel'], color='blue', s=5)
-        ax.scatter(df.at[frame, 'X_shifted_negative'], df.at[frame, 'Y_shifted_negative'], color='lightblue', s=5)
-        ax.scatter(df.at[frame, 'X_shifted_positive'], df.at[frame, 'Y_shifted_positive'], color='purple', s=5)
-        ax.scatter(x_odor, y_odor, color='red', s=5)
+        current_point = ax.scatter(df.at[frame, 'X_rel'], df.at[frame, 'Y_rel'], color='blue', s=5, label='Current Position')
+        past_point = ax.scatter(df.at[frame, 'X_shifted_negative'], df.at[frame, 'Y_shifted_negative'], color='lightblue', s=5, label='Past Position')
+        future_point = ax.scatter(df.at[frame, 'X_shifted_positive'], df.at[frame, 'Y_shifted_positive'], color='purple', s=5, label='Future Position')
+        odor_source = ax.scatter(x_odor, y_odor, color='red', s=5, label='Odor Source')
         ax.plot([x_odor, df.at[frame, 'X_rel']], [y_odor, df.at[frame, 'Y_rel']], color='red', linestyle='--', linewidth=0.8)
         ax.plot([df.at[frame, 'X_shifted_negative'], df.at[frame, 'X_rel']], [df.at[frame, 'Y_shifted_negative'], df.at[frame, 'Y_rel']], color='green', linestyle='--', linewidth=0.8)
         ax.plot([df.at[frame, 'X_shifted_positive'], df.at[frame, 'X_rel']], [df.at[frame, 'Y_shifted_positive'], df.at[frame, 'Y_rel']], color='blue', linestyle='--', linewidth=0.8)
@@ -128,6 +128,90 @@ def create_angle_animation(df, output_path, x_odor, y_odor, fps, file_name, nth_
         ax.set_ylabel('Distance (mm)')
         ax.set_title(f'Bearing Angle Visualization for Frame {frame}')
         ax.grid(True)
+
+        # Add legend
+        ax.legend(loc='upper right', fontsize=8)
+
+        # Text for angles
+        bearing_angle_text = f'Bearing Angle: {df.at[frame, "bearing_angle"]:.2f}'
+        curving_angle_text = f'Curving Angle: {df.at[frame, "curving_angle"]:.2f}'
+        ax.text(0.05, 0.95, bearing_angle_text, transform=ax.transAxes, fontsize=10, color='black')
+        ax.text(0.05, 0.90, curving_angle_text, transform=ax.transAxes, fontsize=10, color='black')
+
+        # Convert the Matplotlib figure to an array
+        canvas.draw()  # Draw the canvas
+        frame_array = np.array(canvas.renderer.buffer_rgba())  # Get the RGBA buffer from the canvas
+        frame_array = cv2.cvtColor(frame_array, cv2.COLOR_RGBA2BGR)  # Convert RGBA to BGR
+
+        # Write the frame to the video
+        out.write(frame_array)
+
+    print("The full file path is:", full_path)
+    # Release everything when job is finished
+    out.release()
+    plt.close(fig)  # Close the figure to free memorydef create_angle_animation(df, output_path, x_odor, y_odor, fps, file_name, nth_frame):
+    '''
+    Create and save an animation showing angles from a DataFrame using OpenCV.
+
+    :param df: DataFrame containing the data points for the animation.
+    :param output_path: The directory to save the output file.
+    :param x_odor: X-coordinate for the odor/source location.
+    :param y_odor: Y-coordinate for the odor/source location.
+    :param fps: Frames per second for the output video.
+    :param file_name: Name of the output file.
+    :param nth_frame: Plot every nth frame (default is 1, which plots every frame).
+    '''
+    # Combine the output path and file name
+    full_path = os.path.join(output_path, file_name)
+    print("The full file path is:", full_path)
+
+    # Define the video's width, height, and codec
+    width, height = 600, 600
+    fourcc = cv2.VideoWriter_fourcc(*'DIVX')  # 'XVID' can also be used
+
+    # Create VideoWriter object
+    out = cv2.VideoWriter(full_path, fourcc, fps, (width, height))
+
+    # Create a figure for plotting
+    fig, ax = plt.subplots(figsize=(6, 6), dpi=100)  # Adjust figsize if needed
+    canvas = FigureCanvas(fig)
+
+    for frame in range(0, len(df), nth_frame):
+        # Clear the previous frame
+        ax.clear()
+
+        # Extract data for current frame
+        center_x_close = df.at[frame, 'X_rel_skel_pos_centroid']
+        center_y_close = df.at[frame, 'Y_rel_skel_pos_centroid']
+
+        # Time shift for past and future positions
+        time = 1
+
+        # Calculate shifted positions in the temporary DataFrame
+        df['X_shifted_negative'] = df['X_rel_skel_pos_centroid'].shift(-time)
+        df['Y_shifted_negative'] = df['Y_rel_skel_pos_centroid'].shift(-time)
+        df['X_shifted_positive'] = df['X_rel_skel_pos_centroid'].shift(time)
+        df['Y_shifted_positive'] = df['Y_rel_skel_pos_centroid'].shift(time)
+
+        # Plot points and lines for the current frame
+        current_point = ax.scatter(df.at[frame, 'X_rel'], df.at[frame, 'Y_rel'], color='blue', s=5, label='Current Position')
+        past_point = ax.scatter(df.at[frame, 'X_shifted_negative'], df.at[frame, 'Y_shifted_negative'], color='lightblue', s=5, label='Past Position')
+        future_point = ax.scatter(df.at[frame, 'X_shifted_positive'], df.at[frame, 'Y_shifted_positive'], color='purple', s=5, label='Future Position')
+        odor_source = ax.scatter(x_odor, y_odor, color='red', s=5, label='Odor Source')
+        ax.plot([x_odor, df.at[frame, 'X_rel']], [y_odor, df.at[frame, 'Y_rel']], color='red', linestyle='--', linewidth=0.8)
+        ax.plot([df.at[frame, 'X_shifted_negative'], df.at[frame, 'X_rel']], [df.at[frame, 'Y_shifted_negative'], df.at[frame, 'Y_rel']], color='green', linestyle='--', linewidth=0.8)
+        ax.plot([df.at[frame, 'X_shifted_positive'], df.at[frame, 'X_rel']], [df.at[frame, 'Y_shifted_positive'], df.at[frame, 'Y_rel']], color='blue', linestyle='--', linewidth=0.8)
+
+        # Setting plot limits and labels
+        ax.set_xlim(center_x_close - 5, center_x_close + 5)
+        ax.set_ylim(center_y_close - 5, center_y_close + 5)
+        ax.set_xlabel('Distance (mm)')
+        ax.set_ylabel('Distance (mm)')
+        ax.set_title(f'Bearing Angle Visualization for Frame {frame}')
+        ax.grid(True)
+
+        # Add legend
+        ax.legend(loc='upper right', fontsize=8)
 
         # Text for angles
         bearing_angle_text = f'Bearing Angle: {df.at[frame, "bearing_angle"]:.2f}'
@@ -425,91 +509,103 @@ def plot_reversal_frequency(df, output_path, file_name):
 
     plt.clf()  # Clear the current figure after displaying the plot
 
-def create_worm_animation(df1, df2, output_path, x_odor, y_odor, fps, arena_min_x, arena_max_x, arena_min_y, arena_max_y, file_name):
+def create_worm_animation(df1, df2, output_path, x_odor, y_odor, fps, arena_min_x, arena_max_x, arena_min_y, arena_max_y, video_path, nth_frame, file_name):
     '''
     Create and save an animation showing angles from a DataFrame using OpenCV.
 
     :param df1: DataFrame containing the data points for the animation.
+    :param df2: DataFrame containing additional data points (e.g., angles).
     :param output_path: The directory to save the output file.
     :param x_odor: X-coordinate for the odor/source location.
     :param y_odor: Y-coordinate for the odor/source location.
     :param fps: Frames per second for the output video.
+    :param arena_min_x: Minimum x-coordinate for the arena.
+    :param arena_max_x: Maximum x-coordinate for the arena.
+    :param arena_min_y: Minimum y-coordinate for the arena.
+    :param arena_max_y: Maximum y-coordinate for the arena.
     :param file_name: Name of the output file.
+    :param nth_frame: Plot every nth frame.
     '''
-    # Combine the output path and file name
     full_path = os.path.join(output_path, file_name)
 
-    # Define the video's width, height, and codec
-    width, height = 600, 600
-    fourcc = cv2.VideoWriter_fourcc(*'DIVX')  # 'XVID' can also be used
+    cap = cv2.VideoCapture(video_path)
+    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    fourcc = cv2.VideoWriter_fourcc(*'DIVX')
 
-    # Create VideoWriter object
     out = cv2.VideoWriter(full_path, fourcc, fps, (width, height))
 
-    # Create a figure for plotting
-    fig, ax = plt.subplots(figsize=(6, 6), dpi=100)  # Adjust figsize if needed
+    fig, ax = plt.subplots(figsize=(width / 100, height / 100), dpi=100)
     canvas = FigureCanvas(fig)
 
-    for frame in range(len(df1)):
+    frame_count = 0
+    row_index = 0
 
-        # Extract data for current frame
-        center_x_close = df1.at[frame, 'X_rel']
-        center_y_close = df1.at[frame, 'Y_rel']
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            break
 
-        row_index = frame
-        # Clear the previous frame
-        ax.clear()
+        if frame_count % nth_frame == 0:
+            if row_index >= len(df1) or row_index >= len(df2):
+                print(f"Row index {row_index} is out of range for the dataframes.")
+                break
 
-        skel_number = 0
-        for skel_number in range(101):  # Iterate over all skeleton positions
+            center_x_close = df1.at[row_index, 'X_rel']
+            center_y_close = df1.at[row_index, 'Y_rel']
 
-            print('iteration wom movie:', skel_number)
+            ax.clear()
 
-            if skel_number == 0:
-                ax.scatter(df1[f'X_rel_skel_pos_{skel_number}'].iloc[row_index],
-                           df1[f'Y_rel_skel_pos_{skel_number}'].iloc[row_index],
-                           s=10, c=df2['dC_0'].iloc[row_index])
-            elif skel_number == 100:
-                ax.scatter(df1['X_rel_skel_pos_centroid'].iloc[row_index],
-                           df1['Y_rel_skel_pos_centroid'].iloc[row_index],
-                           s=10, c=df2['speed'].iloc[row_index])
-            else:
-                ax.scatter(df1[f'X_rel_skel_pos_{skel_number}'].iloc[row_index],
-                           df1[f'Y_rel_skel_pos_{skel_number}'].iloc[row_index],
-                           s=10, c='blue')
+            for skel_number in range(101):
+                if skel_number == 0:
+                    ax.scatter(df1[f'X_rel_skel_pos_{skel_number}'].iloc[row_index],
+                               df1[f'Y_rel_skel_pos_{skel_number}'].iloc[row_index],
+                               s=10, c=df2['dC_0'].iloc[row_index])
+                elif skel_number == 100:
+                    ax.scatter(df1['X_rel_skel_pos_centroid'].iloc[row_index],
+                               df1['Y_rel_skel_pos_centroid'].iloc[row_index],
+                               s=10, c=df2['speed'].iloc[row_index])
+                else:
+                    ax.scatter(df1[f'X_rel_skel_pos_{skel_number}'].iloc[row_index],
+                               df1[f'Y_rel_skel_pos_{skel_number}'].iloc[row_index],
+                               s=10, c='blue')
 
-        ax.scatter(x_odor, y_odor, color='red', label='Odor Point', s=100)
+            ax.scatter(x_odor, y_odor, color='red', label='Odor Point', s=100)
 
-        ax.scatter(x_odor, y_odor, color='red', s=5)
+            ax.set_xlim(center_x_close - 0.7, center_x_close + 0.7)
+            ax.set_ylim(center_y_close - 0.7, center_y_close + 0.7)
+            ax.set_xlabel('Distance (mm)')
+            ax.set_ylabel('Distance (mm)')
+            ax.set_title(f'Simulated Worm at Frame: {frame_count}')
+            ax.grid(True)
 
-        # Setting plot limits and labels
-        # Setting plot limits and labels
-        ax.set_xlim(center_x_close - 3, center_x_close + 3)
-        ax.set_ylim(center_y_close - 3, center_y_close + 3)
-        ax.set_xlabel('Distance (mm)')
-        ax.set_ylabel('Distance (mm)')
-        ax.set_title(f'Simulated Worm at Frame: {frame}')
-        ax.grid(True)
+            ax.set_position([0, 0, 1, 1])
+            ax.axis('off')
+            ax.invert_xaxis()
 
+            bearing_angle_text = f'Bearing Angle: {df2.at[row_index, "bearing_angle"]:.2f}'
+            curving_angle_text = f'Curving Angle: {df2.at[row_index, "curving_angle"]:.2f}'
+            ax.text(0.05, 0.95, bearing_angle_text, transform=ax.transAxes, fontsize=10, color='black')
+            ax.text(0.05, 0.90, curving_angle_text, transform=ax.transAxes, fontsize=10, color='black')
 
-        # Text for angles
-        bearing_angle_text = f'Bearing Angle: {df2.at[frame, "bearing_angle"]:.2f}'
-        curving_angle_text = f'Curving Angle: {df2.at[frame, "curving_angle"]:.2f}'
-        ax.text(0.05, 0.95, bearing_angle_text, transform=ax.transAxes, fontsize=10, color='black')
-        ax.text(0.05, 0.90, curving_angle_text, transform=ax.transAxes, fontsize=10, color='black')
+            canvas.draw()
+            frame_array = np.array(canvas.renderer.buffer_rgba())
+            frame_array = cv2.cvtColor(frame_array, cv2.COLOR_RGBA2BGR)
 
-        # Convert the Matplotlib figure to an array
-        canvas.draw()  # Draw the canvas
-        frame_array = np.array(canvas.renderer.buffer_rgba())  # Get the RGBA buffer from the canvas
-        frame_array = cv2.cvtColor(frame_array, cv2.COLOR_RGBA2BGR)  # Convert RGBA to BGR
+            frame_array_resized = cv2.resize(frame_array, (width, height))
 
-        # Write the frame to the video
-        out.write(frame_array)
+            overlay = cv2.addWeighted(frame, 0.7, frame_array_resized, 0.3, 0)
 
-    print("The full file path is:", full_path)
-    # Release everything when job is finished
+            out.write(overlay)
+
+            row_index += 1
+
+        frame_count += 1
+
     out.release()
-    plt.close(fig)  # Close the figure to free memory
+    cap.release()
+    plt.close(fig)
+    print("The full file path is:", full_path)
 
 def plot_angles_binned(df, x_col, y_col, output_path, num_bins=10, file_name='plot.png'):
     """
