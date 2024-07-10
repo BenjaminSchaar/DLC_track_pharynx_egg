@@ -540,7 +540,6 @@ def create_worm_animation(df1, df2, output_path, x_odor, y_odor, fps, arena_min_
     canvas = FigureCanvas(fig)
 
     frame_count = 0
-    df_index = 0
 
     while True:
         ret, frame = cap.read()
@@ -548,27 +547,27 @@ def create_worm_animation(df1, df2, output_path, x_odor, y_odor, fps, arena_min_
             break
 
         if frame_count % nth_frame == 0:
-            if df_index >= len(df1) or df_index >= len(df2):
-                print(f"DataFrame index {df_index} is out of range for the dataframes.")
+            if frame_count >= len(df1) or frame_count >= len(df2):
+                print(f"Frame count {frame_count} is out of range for the dataframes.")
                 break
 
-            center_x_close = df1.at[df_index, 'X_rel']
-            center_y_close = df1.at[df_index, 'Y_rel']
+            center_x_close = df1.at[frame_count, 'X_rel']
+            center_y_close = df1.at[frame_count, 'Y_rel']
 
             ax.clear()
 
             for skel_number in range(101):
                 if skel_number == 0:
-                    ax.scatter(df1.at[df_index, f'X_rel_skel_pos_{skel_number}'],
-                               df1.at[df_index, f'Y_rel_skel_pos_{skel_number}'],
-                               s=10, c=df2.at[df_index, 'dC_0'])
+                    ax.scatter(df1.at[frame_count, f'X_rel_skel_pos_{skel_number}'],
+                               df1.at[frame_count, f'Y_rel_skel_pos_{skel_number}'],
+                               s=10, c=df2.at[frame_count, 'dC_0'])
                 elif skel_number == 100:
-                    ax.scatter(df1.at[df_index, 'X_rel_skel_pos_centroid'],
-                               df1.at[df_index, 'Y_rel_skel_pos_centroid'],
-                               s=10, c=df2.at[df_index, 'speed'])
+                    ax.scatter(df1.at[frame_count, 'X_rel_skel_pos_centroid'],
+                               df1.at[frame_count, 'Y_rel_skel_pos_centroid'],
+                               s=10, c=df2.at[frame_count, 'speed'])
                 else:
-                    ax.scatter(df1.at[df_index, f'X_rel_skel_pos_{skel_number}'],
-                               df1.at[df_index, f'Y_rel_skel_pos_{skel_number}'],
+                    ax.scatter(df1.at[frame_count, f'X_rel_skel_pos_{skel_number}'],
+                               df1.at[frame_count, f'Y_rel_skel_pos_{skel_number}'],
                                s=10, c='blue')
 
             ax.scatter(x_odor, y_odor, color='red', label='Odor Point', s=100)
@@ -584,8 +583,8 @@ def create_worm_animation(df1, df2, output_path, x_odor, y_odor, fps, arena_min_
             ax.axis('off')
             ax.invert_xaxis()
 
-            bearing_angle_text = f'Bearing Angle: {df2.at[df_index, "bearing_angle"]:.2f}'
-            curving_angle_text = f'Curving Angle: {df2.at[df_index, "curving_angle"]:.2f}'
+            bearing_angle_text = f'Bearing Angle: {df2.at[frame_count, "bearing_angle"]:.2f}'
+            curving_angle_text = f'Curving Angle: {df2.at[frame_count, "curving_angle"]:.2f}'
             ax.text(0.05, 0.95, bearing_angle_text, transform=ax.transAxes, fontsize=10, color='black')
             ax.text(0.05, 0.90, curving_angle_text, transform=ax.transAxes, fontsize=10, color='black')
 
@@ -598,8 +597,6 @@ def create_worm_animation(df1, df2, output_path, x_odor, y_odor, fps, arena_min_
             overlay = cv2.addWeighted(frame, 0.7, frame_array_resized, 0.3, 0)
 
             out.write(overlay)
-
-            df_index += 1
 
         frame_count += 1
 
