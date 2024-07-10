@@ -259,7 +259,7 @@ def main(arg_list=None):
     parser.add_argument('--distance_array', help='exportet distance_array.npy file for the odor used', required=True)
     parser.add_argument('--turn_annotation', help='Full path to the turn annotation CSV file', required=True)
     parser.add_argument('--pharynx_pump_csv', help='Full path to the CSV file from DLC tracking', required=False)
-    parser.add_argument('--', help='Full path to the compressed avi', required=True)
+    parser.add_argument('--downsampled_avi', help='Full path to the compressed avi', required=True)
 
     args = parser.parse_args(arg_list)
 
@@ -598,7 +598,7 @@ def main(arg_list=None):
 
     print('Worm Animation DF:', df_worm_movie.head())
 
-    create_worm_animation(df_worm_movie, df_worm_parameter, output_path, x_odor, y_odor, fps, arena_min_x, arena_max_x, arena_min_y, arena_max_y, downsampled_avi_path, 1000,  file_name='worm_movie.avi', )
+    create_worm_animation(df_worm_movie, df_worm_parameter, output_path, x_odor, y_odor, fps, arena_min_x, arena_max_x, arena_min_y, arena_max_y, downsampled_avi_path, 1000,  file_name='worm_movie.avi')
 
 
 if __name__ == "__main__":
