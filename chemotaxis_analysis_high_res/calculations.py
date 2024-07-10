@@ -129,14 +129,6 @@ def calculate_preceived_conc(distance: float, time_seconds: float, conc_array: n
 
     return conc_value
 
-
-import math
-import pandas as pd
-
-
-import numpy as np
-import pandas as pd
-
 def calculate_displacement_vector(df_worm_parameter):
     '''
     Calculate and add the displacement vector components to the DataFrame.
@@ -214,7 +206,7 @@ def calculate_curving_angle(df_worm_parameter, bearing_range=1):
         # Ensure the change is in the range [-180, 180]
         bearing_change[i] = (change + 180) % 360 - 180
 
-    df_worm_parameter['curving_angle_degrees'] = bearing_change
+    df_worm_parameter['curving_angle'] = bearing_change
 
     return df_worm_parameter
 
@@ -262,7 +254,7 @@ def calculate_bearing_angle(df_worm_parameter, x_odor, y_odor):
     # Normalize angle to [-180, 180] range
     bearing_angle = (bearing_angle + 180) % 360 - 180
 
-    df_worm_parameter['bearing_angle_degrees'] = bearing_angle
+    df_worm_parameter['bearing_angle'] = bearing_angle
 
     return df_worm_parameter
 
