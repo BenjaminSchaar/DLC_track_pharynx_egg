@@ -133,79 +133,138 @@ def calculate_preceived_conc(distance: float, time_seconds: float, conc_array: n
 import math
 import pandas as pd
 
-def calculate_angles(df, fps, x_odor, y_odor):
-    """
-    Calculates bearing and curving angles with smoothed positions and adds them as new columns to the DataFrame.
 
-    :param df: DataFrame with columns 'X_rel_skel_pos_centroid_corrected' and 'Y_rel_skel_pos_centroid_corrected'
-    :param fps: Frames per second of the video
-    :param x_odor: X-coordinate of the odor source
-    :param y_odor: Y-coordinate of the odor source
-    :return: DataFrame with added 'bearing_angle' and 'curving_angle' columns
+import numpy as np
+import pandas as pd
 
-    Bearing angle: -180 to +180 degrees, where:
+def calculate_displacement_vector(df_worm_parameter):
+    '''
+    Calculate and add the displacement vector components to the DataFrame.
+
+    This function computes the components of the displacement vector
+    for each time point in the worm's movement data. It approximates
+    the instantaneous velocity vector, which represents the rate of
+    change of position with respect to time.
+
+    The function uses numpy.gradient to estimate the rate of change
+    of x and y positions, then applies numpy.arctan2 to compute the
+    angle of the displacement vector.
+
+    Parameters:
+    df_worm_parameter (pd.DataFrame): DataFrame with 'X_rel_skel_pos_centroid_corrected'
+                                      and 'Y_rel_skel_pos_centroid_corrected' columns
+                                      representing worm positions over time.
+
+    Returns:
+    pd.DataFrame: Original DataFrame with new columns added:
+                  - 'dx_dt': Rate of change in x direction
+                  - 'dy_dt': Rate of change in y direction
+                  - 'direction': Angle of the displacement vector in degrees
+
+    Note:
+    The 'direction' column contains angles in degrees, where:
+    - 0° points right (+x direction)
+    - 90° points up (+y direction)
+    - 180° or -180° points left (-x direction)
+    - -90° points down (-y direction)
+    Angles increase counterclockwise and range from -180° to 180°.
+    '''
+    # Ensure the required columns exist
+    required_columns = ['X_rel_skel_pos_centroid_corrected', 'Y_rel_skel_pos_centroid_corrected']
+    if not all(col in df_worm_parameter.columns for col in required_columns):
+        raise ValueError(f"DataFrame must contain columns: {required_columns}")
+
+    # Extract x and y coordinates
+    x = df_worm_parameter['X_rel_skel_pos_centroid_corrected'].values
+    y = df_worm_parameter['Y_rel_skel_pos_centroid_corrected'].values
+
+    # Calculate gradients
+    dx_dt = np.gradient(x)
+    dy_dt = np.gradient(y)
+
+    # Calculate direction
+    direction_radians = np.arctan2(dy_dt, dx_dt)
+    direction_degrees = np.degrees(direction_radians)
+
+    df_worm_parameter['displacement_vector_degrees'] = direction_degrees
+
+    return df_worm_parameter
+
+def calculate_curving_angle(df_worm_parameter, bearing_range=1):
+    '''
+    Calculate the change in bearing angle over a specified range of frames.
+
+    Parameters:
+    df_worm_parameter (pd.DataFrame): DataFrame with 'displacement_vector_degrees' column
+                                      (output of calculate_displacement_vector).
+    bearing_range (int): Number of frames to look back when calculating bearing change.
+
+    Returns:
+    pd.DataFrame: Original DataFrame with new 'bearing_change' column added.
+    '''
+    if 'displacement_vector_degrees' not in df_worm_parameter.columns:
+        raise ValueError(
+            "DataFrame must contain 'displacement_vector_degrees' column. Run calculate_displacement_vector first.")
+
+    displacement_vector_degrees = df_worm_parameter['displacement_vector_degrees'].values
+    bearing_change = np.zeros_like(displacement_vector_degrees)
+
+    for i in range(bearing_range, len(displacement_vector_degrees)):
+        change = displacement_vector_degrees[i] - displacement_vector_degrees[i - bearing_range]
+        # Ensure the change is in the range [-180, 180]
+        bearing_change[i] = (change + 180) % 360 - 180
+
+    df_worm_parameter['curving_angle_degrees'] = bearing_change
+
+    return df_worm_parameter
+
+def calculate_bearing_angle(df_worm_parameter, x_odor, y_odor):
+    '''
+    Calculate the bearing angle between the worm's displacement vector and the vector towards a defined odor source in 2D space.
+
+    Mathematical description:
+    1. Use two vectors:
+       a) Displacement vector of the worm (already provided in degrees)
+       b) Vector from worm to odor source (calculated)
+    2. Compute the angle between these vectors by subtracting the displacement vector angle from the angle to the odor source.
+    3. Normalize the resulting angle to be within the range [-180, 180] degrees.
+
+    Angle interpretation:
+    - The angle ranges from -180 to +180 degrees.
+    - Positive angle: The worm's trajectory is to the left of the vector pointing to the odor source.
+    - Negative angle: The worm's trajectory is to the right of the vector pointing to the odor source.
     - 0 degrees: The worm is moving directly towards the odor source.
-    - Positive angles (+1 to +180): The odor source is to the left of the worm's trajectory.
-    - Negative angles (-1 to -180): The odor source is to the right of the worm's trajectory.
-    - +180 or -180 degrees: The worm is moving directly away from the odor source.
+    - ±180 degrees: The worm is moving directly away from the odor source.
 
-    Curving angle: -180 to +180 degrees, where:
-    - 0 degrees: The worm is moving in a straight line.
-    - Positive angles (+1 to +180): The worm is turning to the left.
-    - Negative angles (-1 to -180): The worm is turning to the right.
-    - The magnitude of the angle indicates the sharpness of the turn.
-    """
-    # Smoothing window size, using fps as the window size
-    smoothing_window_size = 2
+    Parameters:
+    df_worm_parameter (pd.DataFrame): DataFrame with 'X_rel_skel_pos_centroid_corrected',
+                                      'Y_rel_skel_pos_centroid_corrected', and 'displacement_vector_degrees' columns.
+    x_odor (float): X-coordinate of the odor source.
+    y_odor (float): Y-coordinate of the odor source.
 
-    # Create a temporary DataFrame for smoothed positions
-    temp_df = pd.DataFrame()
-    temp_df['X_smooth'] = df['X_rel_skel_pos_centroid_corrected'].rolling(window=smoothing_window_size, min_periods=1).mean()
-    temp_df['Y_smooth'] = df['Y_rel_skel_pos_centroid_corrected'].rolling(window=smoothing_window_size, min_periods=1).mean()
+    Returns:
+    pd.DataFrame: Original DataFrame with new 'bearing_angle_degrees' column added.
+    '''
+    required_columns = ['X_rel_skel_pos_centroid_corrected', 'Y_rel_skel_pos_centroid_corrected', 'displacement_vector_degrees']
+    if not all(col in df_worm_parameter.columns for col in required_columns):
+        raise ValueError(f"DataFrame must contain the following columns: {', '.join(required_columns)}")
 
-    # Time shift for past and future positions
-    time_shifted_for_angles = int(fps * 2)  # 2 seconds in the past/future
+    # Calculate vector from worm to odor source
+    dx_to_odor = x_odor - df_worm_parameter['X_rel_skel_pos_centroid_corrected']
+    dy_to_odor = y_odor - df_worm_parameter['Y_rel_skel_pos_centroid_corrected']
 
-    # Calculate shifted positions in the temporary DataFrame
-    temp_df['X_shifted_negative'] = temp_df['X_smooth'].shift(-time_shifted_for_angles)
-    temp_df['Y_shifted_negative'] = temp_df['Y_smooth'].shift(-time_shifted_for_angles)
-    temp_df['X_shifted_positive'] = temp_df['X_smooth'].shift(time_shifted_for_angles)
-    temp_df['Y_shifted_positive'] = temp_df['Y_smooth'].shift(time_shifted_for_angles)
+    # Calculate angle to odor source
+    angle_to_odor = np.degrees(np.arctan2(dy_to_odor, dx_to_odor))
 
-    # Define the angle calculation function
-    def calculate_angle(x, y, n_x, n_y, o_x, o_y, angle_type):
-        a = (n_x, n_y)  # Past position
-        b = (x, y)      # Current position
-        c = (o_x, o_y)  # Future position or odor position
+    # Calculate bearing angle
+    bearing_angle = angle_to_odor - df_worm_parameter['displacement_vector_degrees']
 
-        # Calculate vectors
-        vector_past_to_current = (b[0] - a[0], b[1] - a[1])
-        vector_current_to_target = (c[0] - b[0], c[1] - b[1])
+    # Normalize angle to [-180, 180] range
+    bearing_angle = (bearing_angle + 180) % 360 - 180
 
-        # Calculate the angle using atan2
-        ang = math.degrees(math.atan2(vector_current_to_target[1], vector_current_to_target[0]) -
-                           math.atan2(vector_past_to_current[1], vector_past_to_current[0]))
+    df_worm_parameter['bearing_angle_degrees'] = bearing_angle
 
-        # Normalize the angle to be between -180 and 180 degrees
-        ang = (ang + 180) % 360 - 180
-
-        return ang
-
-    # Calculate bearing angle using the temporary DataFrame
-    df['bearing_angle'] = temp_df.apply(
-        lambda row: calculate_angle(
-            row['X_smooth'], row['Y_smooth'],
-            row['X_shifted_negative'], row['Y_shifted_negative'],
-            x_odor, y_odor, 'bearing_angle'), axis=1)
-
-    # Calculate curving angle using the temporary DataFrame
-    df['curving_angle'] = temp_df.apply(
-        lambda row: calculate_angle(
-            row['X_smooth'], row['Y_smooth'],
-            row['X_shifted_negative'], row['Y_shifted_negative'],
-            row['X_shifted_positive'], row['Y_shifted_positive'], 'curving_angle'), axis=1)
-
-    return df
+    return df_worm_parameter
 
 def calculate_speed(df, fps):
     '''

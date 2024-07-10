@@ -11,9 +11,11 @@ from chemotaxis_analysis_high_res.calculations import (
     calculate_distance,
     calculate_time_in_seconds,
     calculate_preceived_conc,
-    calculate_angles,
     calculate_speed,
     calculate_radial_speed,
+    calculate_displacement_vector,
+    calculate_curving_angle,
+    calculate_bearing_angle,
 )
 
 from chemotaxis_analysis_high_res.plotting_visualisation import (
@@ -457,8 +459,10 @@ def main(arg_list=None):
     After applying a shift of +2: [NaN, NaN, 1, 2, 3]
     
     '''
+    df_worm_parameter = calculate_displacement_vector(df_worm_parameter)
+    df_worm_parameter = calculate_curving_angle(df_worm_parameter, bearing_range=1)
+    df_worm_parameter = calculate_bearing_angle(df_worm_parameter, x_odor, y_odor)
 
-    df_worm_parameter = calculate_angles(df_worm_parameter, fps, x_odor, y_odor)
 
     # Print confirmation and first few rows of the DataFrame
     print("Angles calculated.")

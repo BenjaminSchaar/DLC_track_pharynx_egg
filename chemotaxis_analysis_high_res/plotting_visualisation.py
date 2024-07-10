@@ -100,8 +100,17 @@ def create_angle_animation(df, output_path, x_odor, y_odor, fps, file_name, nth_
         ax.clear()
 
         # Extract data for current frame
-        center_x_close = df.at[frame, 'X_rel']
-        center_y_close = df.at[frame, 'Y_rel']
+        center_x_close = df.at[frame, 'X_rel_skel_pos_centroid']
+        center_y_close = df.at[frame, 'Y_rel_skel_pos_centroid']
+
+        # Time shift for past and future positions
+        time = 1
+
+        # Calculate shifted positions in the temporary DataFrame
+        df['X_shifted_negative'] = df['X_rel_skel_pos_centroid'].shift(-time)
+        df['Y_shifted_negative'] = df['Y_rel_skel_pos_centroid'].shift(-time)
+        df['X_shifted_positive'] = df['X_rel_skel_pos_centroid'].shift(time)
+        df['Y_shifted_positive'] = df['Y_rel_skel_pos_centroid'].shift(time)
 
         # Plot points and lines for the current frame
         ax.scatter(df.at[frame, 'X_rel'], df.at[frame, 'Y_rel'], color='blue', s=5)
