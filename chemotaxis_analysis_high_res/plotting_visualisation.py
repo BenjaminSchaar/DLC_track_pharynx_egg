@@ -642,8 +642,8 @@ def plot_angles_binned(df, x_col, y_col, output_path, num_bins=10, file_name='pl
     fig.add_scatter(x=grouped_data[f'{x_col}_binned'], y=grouped_data['mean_value'], mode='markers', error_y=dict(type='data', array=grouped_data['SEM']))
 
     # Update axes titles and ranges
-    fig.update_xaxes(title_text=f'{x_col} Binned', range=[-180, 180])
-    fig.update_yaxes(title_text=f'Mean {y_col}', range=[-180, 180])
+    #fig.update_xaxes(title_text=f'{x_col} Binned', range=[-180, 180])
+    #fig.update_yaxes(title_text=f'Mean {y_col}', range=[-180, 180])
 
     # Update layout to ensure axes are centered at 0
     fig.update_layout(
