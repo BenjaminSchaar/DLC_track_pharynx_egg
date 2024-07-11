@@ -232,69 +232,36 @@ def create_angle_animation(df, output_path, x_odor, y_odor, fps, file_name, nth_
     out.release()
     plt.close(fig)  # Close the figure to free memory
 
-def plot_ethogram(df, output_path, file_name):
+def plot_ethogram(beh_annotation, output_path, file_name):
     '''
-    Inputs ethogram dataframe and plots it
-
-    :param df: Input dataframe containing ethogram data
-    :param output_path: Path to save the output plot
-    :param file_name: Name of the output file
-    :return: None
+    Inputs beh_annotation df and plots erhtogramm
+    :param beh_annotation:
+    :param output_path:
+    :return:
     '''
     try:
-        num_frames = len(df)
-
-        # Dynamically adjust number of rows and plot stretch
-        if num_frames < 10000:
-            num_lines = 1
-        elif num_frames < 20000:
-            num_lines = 2
-        elif num_frames < 30000:
-            num_lines = 3
-        else:
-            num_lines = 4
-
+        num_frames = len(beh_annotation)
+        num_lines = 4
         cut_frames = num_frames // num_lines
-        fig, axs = plt.subplots(num_lines, 1, dpi=400, figsize=(10, 1.5 * num_lines))
-
-        # Ensure axs is iterable by converting it to an array if it's not
-        if num_lines == 1:
-            axs = [axs]  # Make it a list if only one subplot
-
-        cmap = plt.get_cmap('seismic')
-        state_colors = {-1: cmap(0.0), 0: cmap(0.5), 1: cmap(1.0)}
-
+        fig, axs = plt.subplots(num_lines, 1, dpi=400, figsize=(10, 2 * num_lines))
         for i, ax in enumerate(axs):
             start_idx = i * cut_frames
             end_idx = start_idx + cut_frames
-            segment = df.iloc[start_idx:end_idx]
-
-            colors = [state_colors[state] for state in segment['behaviour_state']]
-            ax.bar(segment.index, height=1, width=1, color=colors)
+            ax.imshow(beh_annotation.iloc[start_idx:end_idx].T, origin="upper", cmap='seismic_r', aspect=20 * 100, vmin=-0.06,
+                      vmax=0.06)
             ax.set_xticks(np.linspace(0, cut_frames, 5))
-            ax.set_xticklabels(np.linspace(start_idx, end_idx, 5).astype(int), fontsize=6)
-            ax.set_yticks([])
+            ax.set_xticklabels(np.linspace(start_idx, end_idx, 5).astype(int))
             if i == num_lines - 1:
-                ax.set_xlabel('Frame', fontsize=6)
-            ax.set_ylabel('Behavior', fontsize=6)
-
-        # Add legend to the first subplot
-        for state, color in state_colors.items():
-            axs[0].bar(0, 0, color=color, label=f'State {state}')
-        axs[0].legend(title='Behavioral State', fontsize=6, title_fontsize=6)
-
+                ax.set_xlabel('Frame')
+            ax.set_ylabel('Behavioral State')
         # Save the plot to a file
-        plt.tight_layout()
-
         full_path = os.path.join(output_path, file_name)
         print("The full file path is:", full_path)
-
         plt.savefig(full_path)
-
         plt.clf()  # Clear the current figure after displaying the plot
-
     except Exception as e:
-        print(f'Problem plotting the data: {e}')
+        print(f'Problem plotting the ethogram: {e}')
+
 
 
 def plot_skeleton_spline(skeleton_spline, output_path, file_name):
