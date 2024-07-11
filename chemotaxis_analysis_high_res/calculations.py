@@ -160,6 +160,15 @@ def calculate_displacement_vector(df_worm_parameter):
     - 180° or -180° points left (-x direction)
     - -90° points down (-y direction)
     Angles increase counterclockwise and range from -180° to 180°.
+
+        90°
+       |
+       |
+    180° --- 0° (or 360°)
+       |
+       |
+     -90°
+
     '''
     # Ensure the required columns exist
     required_columns = ['X_rel_skel_pos_centroid_corrected', 'Y_rel_skel_pos_centroid_corrected']
@@ -177,6 +186,8 @@ def calculate_displacement_vector(df_worm_parameter):
     # Calculate direction
     direction_radians = np.arctan2(dy_dt, dx_dt)
     direction_degrees = np.degrees(direction_radians)
+
+    direction_degrees = (direction_degrees + 360) % 360  #normalize degrees
 
     df_worm_parameter['displacement_vector_degrees'] = direction_degrees
 
