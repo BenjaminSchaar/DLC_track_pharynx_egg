@@ -187,8 +187,6 @@ def calculate_displacement_vector(df_worm_parameter):
     direction_radians = np.arctan2(dy_dt, dx_dt)
     direction_degrees = np.degrees(direction_radians)
 
-    direction_degrees = (direction_degrees + 360) % 360  #normalize degrees
-
     df_worm_parameter['displacement_vector_degrees'] = direction_degrees
 
     return df_worm_parameter
@@ -241,7 +239,7 @@ def calculate_bearing_angle(df_worm_parameter, x_odor, y_odor):
 
     Parameters:
     df_worm_parameter (pd.DataFrame): DataFrame with 'X_rel_skel_pos_centroid_corrected',
-                                      'Y_rel_skel_pos_centroid_corrected', and 'displacement_vector_degrees' columns.
+    'Y_rel_skel_pos_centroid_corrected', and 'displacement_vector_degrees' columns.
     x_odor (float): X-coordinate of the odor source.
     y_odor (float): Y-coordinate of the odor source.
 
@@ -263,7 +261,7 @@ def calculate_bearing_angle(df_worm_parameter, x_odor, y_odor):
     bearing_angle = angle_to_odor - df_worm_parameter['displacement_vector_degrees']
 
     # Normalize angle to [-180, 180] range
-    bearing_angle = (bearing_angle + 180) % 360 - 180
+    #bearing_angle = (bearing_angle + 180) % 360 - 180
 
     df_worm_parameter['bearing_angle'] = bearing_angle
 
