@@ -246,8 +246,7 @@ def calculate_bearing_angle(df_worm_parameter, x_odor, y_odor):
     Returns:
     pd.DataFrame: Original DataFrame with new 'bearing_angle_degrees' column added.
     '''
-    required_columns = ['X_rel_skel_pos_centroid_corrected', 'Y_rel_skel_pos_centroid_corrected',
-                        'displacement_vector_degrees']
+    required_columns = ['X_rel_skel_pos_centroid_corrected', 'Y_rel_skel_pos_centroid_corrected', 'displacement_vector_degrees']
     if not all(col in df_worm_parameter.columns for col in required_columns):
         raise ValueError(f"DataFrame must contain the following columns: {', '.join(required_columns)}")
 
@@ -262,14 +261,9 @@ def calculate_bearing_angle(df_worm_parameter, x_odor, y_odor):
     bearing_angle = angle_to_odor - df_worm_parameter['displacement_vector_degrees']
 
     # Normalize angle to [-180, 180] range
-    def normalize_angle(angle):
-        while angle <= -180:
-            angle += 360
-        while angle > 180:
-            angle -= 360
-        return angle
+    #bearing_angle = (bearing_angle + 180) % 360 - 180
 
-    df_worm_parameter['bearing_angle'] = bearing_angle.apply(normalize_angle)
+    df_worm_parameter['bearing_angle'] = bearing_angle
 
     return df_worm_parameter
 
