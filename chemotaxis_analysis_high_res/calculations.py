@@ -261,7 +261,10 @@ def calculate_bearing_angle(df_worm_parameter, x_odor, y_odor):
     bearing_angle = angle_to_odor - df_worm_parameter['displacement_vector_degrees']
 
     # Normalize angle to [-180, 180] range
-    #bearing_angle = (bearing_angle + 180) % 360 - 180
+    bearing_angle = (bearing_angle + 180) % 360 - 180
+
+    # Convert -180 to +180
+    bearing_angle = np.where(bearing_angle == -180, 180, bearing_angle)
 
     df_worm_parameter['bearing_angle'] = bearing_angle
 
