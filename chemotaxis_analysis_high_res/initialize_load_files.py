@@ -363,6 +363,10 @@ def main(arg_list=None):
     print("relative y_odor:")
     print(y_odor)
 
+    # Add the new columns to the dataframe
+    df_worm_parameter['x_odor'] = x_odor
+    df_worm_parameter['y_odor'] = y_odor
+
     # Apply the conversion function to relative coordinates to each row, add x_rel and y_rel columns
     df_worm_parameter = df_worm_parameter.apply(lambda row: convert_coordinates(row, x_zero, y_zero), axis=1)
 
