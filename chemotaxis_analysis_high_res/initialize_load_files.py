@@ -313,7 +313,7 @@ def main(arg_list=None):
         worm_config = yaml.safe_load(config_file)
 
     # Assign the value from the loaded YAML file to the variable, with a default of 0 if the key doesn't exist
-    diffusion_time_offset = worm_config.get('diffusion_time_offset', 0)
+    diffusion_time_offset = worm_config.get('diffusion_time_offset', 3600)
 
     print('diffusion_time_offset:', diffusion_time_offset)
 
