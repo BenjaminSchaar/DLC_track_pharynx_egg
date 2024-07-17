@@ -584,7 +584,7 @@ def main(arg_list=None):
 
 
     # Saving param df to a CSV file
-    df_worm_parameter.to_csv(os.path.join(output_path, 'chemotaxis_params.csv'), index=False)
+    df_worm_parameter.to_csv(os.path.join(output_path, 'chemotaxis_params.csv'), index=True)
 
     #create animation of whole worm skelleton in arena
     # Assuming df_worm_parameter, spline_X, spline_Y, video_resolution_x, video_resolution_y, factor_px_to_mm are defined
