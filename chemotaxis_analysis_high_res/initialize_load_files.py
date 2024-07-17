@@ -248,7 +248,7 @@ def main(arg_list=None):
     parser.add_argument('--beh_annotation', help='Full path to the behavior annotation CSV file', required=True)
     parser.add_argument('--skeleton_spline', help='Full path to the skeleton spline CSV file', required=True)
     parser.add_argument('--worm_pos', help='Full path to the worm pos text file', required=True)
-    parser.add_argument('--stage_pos', help='Full path to the odor pos file', required=True)
+    parser.add_argument('--worm_config', help='Full path to the odor pos file', required=True)
     parser.add_argument('--skeleton_spline_X_coords', help='Full path to the skeleton_spline_X_coords CSV file', required=True)
     parser.add_argument('--skeleton_spline_Y_coords', help='Full path to the skeleton_spline_Y_coords CSV file', required=True)
     parser.add_argument('--factor_px_to_mm', help='conversion_facor px to mm',required=True)
@@ -267,7 +267,7 @@ def main(arg_list=None):
     turn_annotation_path = str(args.turn_annotation)
     skeleton_spline_path = args.skeleton_spline
     worm_pos_path = args.worm_pos
-    stage_pos_path = args.stage_pos
+    worm_config_path = args.worm_config
     spline_X_path = args.skeleton_spline_X_coords
     spline_Y_path = args.skeleton_spline_Y_coords
     factor_px_to_mm = float(args.factor_px_to_mm)
@@ -309,12 +309,17 @@ def main(arg_list=None):
 
 
     #-----------------load config file for odor and arena positions
-    with open(stage_pos_path, 'r') as config_file:
-        stage_pos = yaml.safe_load(config_file)
+    with open(worm_config_path, 'r') as config_file:
+        worm_config = yaml.safe_load(config_file)
+
+    # Assign the value from the loaded YAML file to the variable, with a default of 0 if the key doesn't exist
+    diffusion_time_offset = worm_config.get('diffusion_time_offset', 0)
+
+    print('diffusion_time_offset:', diffusion_time_offset)
 
     # Access the odor coordinates
-    x_odor, y_odor = extract_coords(stage_pos['odor_pos'])
-    x_zero, y_zero = extract_coords(stage_pos['top_left'])
+    x_odor, y_odor = extract_coords(worm_config['odor_pos'])
+    x_zero, y_zero = extract_coords(worm_config['top_left'])
 
     # Print the variables together
     print("Odor position: x =", x_odor, ", y =", y_odor)
@@ -431,11 +436,11 @@ def main(arg_list=None):
     # Apply the function to create the 'Conc' column
     df_worm_parameter[f'conc_at_centroid'] = df_worm_parameter.apply(
         lambda row: calculate_preceived_conc(
-            row[f'distance_to_odor_centroid'], row['time_seconds'], conc_gradient_array, distance_array),axis=1)
+            row[f'distance_to_odor_centroid'], row['time_seconds'], conc_gradient_array, distance_array, diffusion_time_offset),axis=1)
 
     df_worm_parameter[f'conc_at_{skel_pos_0}'] = df_worm_parameter.apply(
         lambda row: calculate_preceived_conc(
-            row[f'distance_to_odor_{skel_pos_0}'], row['time_seconds'], conc_gradient_array,distance_array),axis=1)
+            row[f'distance_to_odor_{skel_pos_0}'], row['time_seconds'], conc_gradient_array,distance_array, diffusion_time_offset),axis=1)
 
     # Calculate delta concentration across the time interval
     time_interval_dC_dT = int(fps)  #need to figure out how far back in the past to compare it to

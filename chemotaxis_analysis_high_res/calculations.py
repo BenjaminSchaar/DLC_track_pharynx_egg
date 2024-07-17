@@ -102,7 +102,7 @@ def calculate_time_in_seconds(df: pd.DataFrame, fps: int):
     return df
 
 
-def calculate_preceived_conc(distance: float, time_seconds: float, conc_array: np.ndarray, distance_array: np.ndarray) -> float:
+def calculate_preceived_conc(distance: float, time_seconds: float, conc_array: np.ndarray, distance_array: np.ndarray, diffusion_time_offset:int) -> float:
 
     # Type enforcement
     distance = float(distance)
@@ -110,11 +110,11 @@ def calculate_preceived_conc(distance: float, time_seconds: float, conc_array: n
     conc_array = np.asarray(conc_array)
     distance_array = np.asarray(distance_array)
 
-    # finds the proper frame of the sim, the sim runs in 10 second steps with 0.1 fps
-    sim_time = int(0)
-    sim_time = int(time_seconds // 10 * 10)  # finds the simulation time that is closest to the real time
+    # Convert time to array index, rounding to the nearest second
+    sim_time_array = round(time_seconds)
 
-    sim_time_array = int(sim_time / 10)
+    #offsets the diffusion simulation time if the assay startet later than 1 hour
+    sim_time_array = sim_time_array+diffusion_time_offset
 
     # Get all distance values in the chosen frame
     distances_in_frame = distance_array[sim_time_array]
