@@ -524,6 +524,7 @@ def main(arg_list=None):
     df_worm_parameter = calculate_radial_speed(df_worm_parameter, fps) # adds column radial speed to df
 
     # calculating column navigational index based on speed and radial speed
+    # NI: -1 (away) to 1 (towards), 0 (perpendicular/random); measures movement efficiency
 
     df_worm_parameter['NI'] = (df_worm_parameter['radial_speed'] / df_worm_parameter['speed'])
 
