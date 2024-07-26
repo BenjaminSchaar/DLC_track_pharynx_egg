@@ -38,6 +38,63 @@ from chemotaxis_analysis_high_res.data_smothing import (
     update_behaviour_based_on_speed,
 )
 
+
+class ImprovedCoordinateSystem:
+    def __init__(self, top_left_pos, odor_pos, factor_px_to_mm):
+        self.x_top_left, self.y_top_left = top_left_pos
+        self.x_odor, self.y_odor = odor_pos
+        self.factor_px_to_mm = factor_px_to_mm
+
+    def shift_to_positive_if_needed(self, df):
+        min_x = min(df['X'].min(), self.x_odor, self.x_top_left)
+        min_y = min(df['Y'].min(), self.y_odor, self.y_top_left)
+
+        shift_x = abs(min_x) if min_x < 0 else 0
+        shift_y = abs(min_y) if min_y < 0 else 0
+
+        df['X'] += shift_x
+        df['Y'] += shift_y
+        self.x_odor += shift_x
+        self.y_odor += shift_y
+        self.x_top_left += shift_x
+        self.y_top_left += shift_y
+
+        print(f"Applied X-shift: {shift_x}, Y-shift: {shift_y}")
+
+        df['X_rel'] = abs((df['X'] - self.x_top_left) * self.factor_px_to_mm)
+        df['Y_rel'] = abs((df['Y'] - self.y_top_left) * self.factor_px_to_mm)
+
+        self.x_odor_rel = abs((self.x_odor - self.x_top_left) * self.factor_px_to_mm)
+        self.y_odor_rel = abs((self.y_odor - self.y_top_left) * self.factor_px_to_mm)
+
+        print(f"Relative odor position: x = {self.x_odor_rel}, y = {self.y_odor_rel}")
+
+        return df
+
+    def rotate_coordinates(self, df):
+        df['X_rel'], df['Y_rel'] = df['Y_rel'], -df['X_rel']
+        df['X_rel'] = df['X_rel'].abs()
+        df['Y_rel'] = df['Y_rel'].abs()
+
+        self.x_odor_rel, self.y_odor_rel = self.y_odor_rel, -self.x_odor_rel
+        self.x_odor_rel = abs(self.x_odor_rel)
+        self.y_odor_rel = abs(self.y_odor_rel)
+
+        print(f"Rotated odor position: x = {self.x_odor_rel}, y = {self.y_odor_rel}")
+        return df
+
+    def rotate_coordinates(self, df):
+        df['X_rel_rotated'], df['Y_rel_rotated'] = df['Y_rel'], -df['X_rel']
+        df['X_rel_rotated'] = df['X_rel_rotated'].abs()
+        df['Y_rel_rotated'] = df['Y_rel_rotated'].abs()
+
+        self.x_odor_rotated, self.y_odor_rotated = self.y_odor_rel, -self.x_odor_rel
+        self.x_odor_rotated = abs(self.x_odor_rotated)
+        self.y_odor_rotated = abs(self.y_odor_rotated)
+
+        print(f"Rotated odor position: x = {self.x_odor_rotated}, y = {self.y_odor_rotated}")
+        return df
+
 def read_csv_files(beh_annotation_path:str, skeleton_spline_path:str, worm_pos_path:str, spline_X_path:str, spline_Y_path:str, turn_annotation_path:str):
     # Check if the file paths exist
     if not os.path.exists(beh_annotation_path):
@@ -141,13 +198,6 @@ def extract_coords(coord_string:str):
     y = float(y.strip().split('=')[1])
     return x, y
 
-# Define a function to convert X and Y values to the absolute grid
-def convert_coordinates(row: pd.Series, x_zero: float, y_zero: float) -> pd.Series:
-    row["X_rel"] = row["X"] - x_zero
-    row["Y_rel"] = row["Y"] - y_zero
-    return row
-
-
 def export_dataframe_to_csv(df: pd.DataFrame, output_path: str, file_name: str):
     """
     Export a pandas DataFrame to a CSV file.
@@ -242,79 +292,20 @@ def main(arg_list=None):
     top_left_tuple = extract_coords(args.top_left_pos)
     odor_pos_tuple = extract_coords(args.odor_pos)
 
-    # Access the odor coordinates
-    x_odor, y_odor = odor_pos_tuple
-    x_zero, y_zero = top_left_tuple
-
-    # Multiply with the variable: factor_px_to_mm
-    x_odor = x_odor * factor_px_to_mm
-    y_odor = y_odor * factor_px_to_mm
-    x_zero = x_zero * factor_px_to_mm
-    y_zero = y_zero * factor_px_to_mm
-
-    # Print the variables together
-    print("Odor position: x =", x_odor, ", y =", y_odor)
-    print("Top left position: x =", x_zero, ", y =", y_zero)
+    # Initialize the coordinate system
+    coord_system = ImprovedCoordinateSystem(
+        top_left_tuple,
+        odor_pos_tuple,
+        factor_px_to_mm
+    )
 
     # -------------shifts every value of x and y in the positive range, by addition of the lowest value to all values
-
-    # Find the minimum values in the X and Y columns
-    min_x = float(np.nanmin(df_worm_parameter['X']))
-    min_y = float(np.nanmin(df_worm_parameter['Y']))
-
-    # Determine the overall minimum values for x and y (including odor and zero points)
-    overall_min_x = min(min_x, x_odor, x_zero)
-    overall_min_y = min(min_y, y_odor, y_zero)
-
-    # Calculate the necessary shift for each column
-    shift_x = abs(overall_min_x) if overall_min_x < 0 else 0.0
-    shift_y = abs(overall_min_y) if overall_min_y < 0 else 0.0
-
-    # Apply the shift to the DataFrame and additional values if necessary
-    if shift_x > 0:
-        df_worm_parameter['X'] += shift_x
-        x_odor += shift_x
-        x_zero += shift_x
-
-    if shift_y > 0:
-        df_worm_parameter['Y'] += shift_y
-        y_odor += shift_y
-        y_zero += shift_y
-
-    print(f"Shift X: {shift_x}, Shift Y: {shift_y}")
-
-    print(f"Shift X: {shift_x}, Shift Y: {shift_y}")
-
-    print("\nWorm Pos DataFrame shifted:")
-    print(df_worm_parameter.head())
-
-    # adjust odor point to relative grid via reference point
-    x_odor = x_odor - x_zero
-    y_odor = y_odor - y_zero
-
-    x_odor = abs(x_odor)  # shift relative odor position to positive values
-
-    print("relative x_odor:")
-    print(x_odor)
-    print("relative y_odor:")
-    print(y_odor)
-
-    # Apply the conversion function to relative coordinates to each row, add x_rel and y_rel columns
-    df_worm_parameter = df_worm_parameter.apply(lambda row: convert_coordinates(row, x_zero, y_zero), axis=1)
-
-    df_worm_parameter['X_rel'] = df_worm_parameter['X_rel'].abs()  # shift relative stage position to positive values
-
-    # Applying the conversion factor to the columns
-    df_worm_parameter['X_rel'] = df_worm_parameter['X_rel'] * factor_px_to_mm
-    df_worm_parameter['Y_rel'] = df_worm_parameter['Y_rel'] * factor_px_to_mm
+    df_worm_parameter = coord_system.shift_to_positive_if_needed(df_worm_parameter)
 
     # Rotate coordinate system counterclockwise by 90 degrees
-    # Swap and invert coordinates for all relevant points
-    x_odor, y_odor = y_odor, -x_odor  # Rotate odor position
-    y_odor = abs(y_odor)  # Make y_odor positive
+    df_worm_parameter = coord_system.rotate_coordinates(df_worm_parameter)
 
-    # Apply the rotation function to each row
-    df_worm_parameter = df_worm_parameter.apply(rotate_coordinates, axis=1)
+    x_odor, y_odor = coord_system.x_odor_rel, coord_system.y_odor_rel
 
     print("After rotation:")
     print(f"Odor position: x ={x_odor}, y ={y_odor}")
