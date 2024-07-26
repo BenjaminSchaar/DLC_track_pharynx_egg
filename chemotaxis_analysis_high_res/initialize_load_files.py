@@ -49,17 +49,39 @@ class ConditionalPositiveCoordinateSystem:
         x, y = coord_string.split(',')
         return float(x.strip().split('=')[1]), float(y.strip().split('=')[1])
 
-    def shift_to_positive_if_needed(self, df):
-        # Calculate relative coordinates and use abs() to ensure they're positive
-        df['X_rel'] = abs(df['X'] - self.x_top_left)
-        df['Y_rel'] = abs(df['Y'] - self.y_top_left)
+    def shift_and_calculate_relative(self, df):
+        # Find the minimum values for X and Y, including odor and top-left positions
+        min_x = min(df['X'].min(), self.x_odor, self.x_top_left)
+        min_y = min(df['Y'].min(), self.y_odor, self.y_top_left)
+
+        # Calculate shifts to make all coordinates non-negative
+        shift_x = abs(min_x) if min_x < 0 else 0
+        shift_y = abs(min_y) if min_y < 0 else 0
+
+        # Apply shifts to ensure all absolute coordinates are non-negative
+        df['X_shifted'] = df['X'] + shift_x
+        df['Y_shifted'] = df['Y'] + shift_y
+        x_odor_shifted = self.x_odor + shift_x
+        y_odor_shifted = self.y_odor + shift_y
+        x_top_left_shifted = self.x_top_left + shift_x
+        y_top_left_shifted = self.y_top_left + shift_y
+
+        print(f"Applied X-shift: {shift_x}")
+        print(f"Applied Y-shift: {shift_y}")
+
+        # Calculate relative coordinates and apply abs() to ensure they're positive
+        df['X_rel'] = abs(df['X_shifted'] - x_top_left_shifted)
+        df['Y_rel'] = abs(df['Y_shifted'] - y_top_left_shifted)
 
         # Calculate relative odor position
-        x_odor_rel = abs(self.x_odor - self.x_top_left)
-        y_odor_rel = abs(self.y_odor - self.y_top_left)
+        x_odor_rel = abs(x_odor_shifted - x_top_left_shifted)
+        y_odor_rel = abs(y_odor_shifted - y_top_left_shifted)
 
+        print(f"Shifted odor position: x = {x_odor_shifted}, y = {y_odor_shifted}")
+        print(f"Shifted top-left position: x = {x_top_left_shifted}, y = {y_top_left_shifted}")
         print(f"Relative odor position: x = {x_odor_rel}, y = {y_odor_rel}")
-        print(f"Top left position (should be 0,0): x = 0, y = 0")
+        print(
+            f"Relative top-left position (should be 0,0): x = {abs(x_top_left_shifted - x_top_left_shifted)}, y = {abs(y_top_left_shifted - y_top_left_shifted)}")
 
         return df, x_odor_rel, y_odor_rel
 
