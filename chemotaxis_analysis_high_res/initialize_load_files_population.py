@@ -11,9 +11,11 @@ from chemotaxis_analysis_high_res.calculations import (
     calculate_distance,
     calculate_time_in_seconds,
     calculate_preceived_conc,
-    calculate_angles,
     calculate_speed,
     calculate_radial_speed,
+    calculate_displacement_vector,
+    calculate_curving_angle,
+    calculate_bearing_angle,
 )
 
 from chemotaxis_analysis_high_res.plotting_visualisation import (
@@ -26,7 +28,7 @@ from chemotaxis_analysis_high_res.plotting_visualisation import (
     plot_distance_to_odor,
     plot_NI,
     create_worm_animation,
-    plot_binned_data,
+    plot_angles_binned,
     plot_turns,
     plot_pumps,
 )
@@ -392,27 +394,27 @@ def main(arg_list=None):
     print("\nWorm  DataFrame wit Distance:")
     print(df_worm_parameter.head())
 
-
     '''
-    Add angle calculations for bearing and curving angle to the dataframe
-    
-    For the function to calculate the angles the averaged centroid positions(worms trajectory) of the present, the past and the future is needed!
-    How the function calculates the angle is explained in the function description!
-    
-    The shift in time is determined by variable n_shift and each integer reflects one frame of the video back
-    
-    What is counterintuitive is that the shift operation when positive shifts the whole df into the future meaning bringin 
-    past datapoints to the present so to compare a value with a past value the shift needs to be positive and vice versa
-    
-    Here's a simple example to illustrate:
+      Add angle calculations for bearing and curving angle to the dataframe
 
-    Original data: [1, 2, 3, 4, 5]
+      For the function to calculate the angles the averaged centroid positions(worms trajectory) of the present, the past and the future is needed!
+      How the function calculates the angle is explained in the function description!
 
-    After applying a shift of +2: [NaN, NaN, 1, 2, 3]
-    
-    '''
+      The shift in time is determined by variable n_shift and each integer reflects one frame of the video back
 
-    df_worm_parameter = calculate_angles(df_worm_parameter, fps, x_odor, y_odor)
+      What is counterintuitive is that the shift operation when positive shifts the whole df into the future meaning bringin 
+      past datapoints to the present so to compare a value with a past value the shift needs to be positive and vice versa
+
+      Here's a simple example to illustrate:
+
+      Original data: [1, 2, 3, 4, 5]
+
+      After applying a shift of +2: [NaN, NaN, 1, 2, 3]
+
+      '''
+    df_worm_parameter = calculate_displacement_vector(df_worm_parameter)
+    df_worm_parameter = calculate_curving_angle(df_worm_parameter, bearing_range=1)
+    df_worm_parameter = calculate_bearing_angle(df_worm_parameter, x_odor, y_odor)
 
     # Print confirmation and first few rows of the DataFrame
     print("Angles calculated.")

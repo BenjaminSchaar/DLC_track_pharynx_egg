@@ -38,6 +38,47 @@ from chemotaxis_analysis_high_res.data_smothing import (
     update_behaviour_based_on_speed,
 )
 
+
+class ConditionalPositiveCoordinateSystem:
+    def __init__(self, config):
+        self.x_odor, self.y_odor = self.extract_coords(config['odor_pos'])
+        self.x_top_left, self.y_top_left = self.extract_coords(config['top_left'])
+
+    @staticmethod
+    def extract_coords(coord_string):
+        x, y = coord_string.split(',')
+        return float(x.strip().split('=')[1]), float(y.strip().split('=')[1])
+
+    def shift_to_positive_if_needed(self, df):
+        min_x = min(df['X'].min(), self.x_odor, self.x_top_left)
+        min_y = min(df['Y'].min(), self.y_odor, self.y_top_left)
+
+        shift_x = abs(min_x) if min_x < 0 else 0.0
+        shift_y = abs(min_y) if min_y < 0 else 0.0
+
+        if shift_x > 0:
+            df['X'] += shift_x
+            self.x_odor += shift_x
+            self.x_top_left += shift_x
+            print(f"Applied X-shift: {shift_x}")
+
+        if shift_y > 0:
+            df['Y'] += shift_y
+            self.y_odor += shift_y
+            self.y_top_left += shift_y
+            print(f"Applied Y-shift: {shift_y}")
+
+        if shift_x == 0 and shift_y == 0:
+            print("No shift was necessary. All coordinates were already non-negative.")
+
+        df['X_rel'] = df['X'] - self.x_top_left
+        df['Y_rel'] = df['Y'] - self.y_top_left
+
+        df['x_odor'] = self.x_odor - self.x_top_left
+        df['y_odor'] = self.y_odor - self.y_top_left
+
+        return df
+
 def read_csv_files(beh_annotation_path:str, skeleton_spline_path:str, worm_pos_path:str, spline_X_path:str, spline_Y_path:str, turn_annotation_path:str):
     # Check if the file paths exist
     if not os.path.exists(beh_annotation_path):
@@ -209,21 +250,6 @@ def process_pharynx_pump_csv(file_path, fps):
 
     return distance_df
 
-
-# Define a function to extract the x and y values from the yaml file
-def extract_coords(coord_string:str):
-    x, y = coord_string.split(',')
-    x = float(x.strip().split('=')[1])
-    y = float(y.strip().split('=')[1])
-    return x, y
-
-# Define a function to convert X and Y values to the absolute grid
-def convert_coordinates(row: pd.Series, x_zero: float, y_zero: float) -> pd.Series:
-    row["X_rel"] = row["X"] - x_zero
-    row["Y_rel"] = row["Y"] - y_zero
-    return row
-
-
 def export_dataframe_to_csv(df: pd.DataFrame, output_path: str, file_name: str):
     """
     Export a pandas DataFrame to a CSV file.
@@ -317,67 +343,21 @@ def main(arg_list=None):
 
     print('diffusion_time_offset:', diffusion_time_offset)
 
-    # Access the odor coordinates
-    x_odor, y_odor = extract_coords(worm_config['odor_pos'])
-    x_zero, y_zero = extract_coords(worm_config['top_left'])
+    # Initialize the coordinate system
+    coord_system = ConditionalPositiveCoordinateSystem(worm_config)
 
-    # Print the variables together
+    # Apply the coordinate shift
+    df_worm_parameter = coord_system.shift_to_positive_if_needed(df_worm_parameter)
+
+    # Update x_odor and y_odor
+    x_odor = coord_system.x_odor - coord_system.x_top_left
+    y_odor = coord_system.y_odor - coord_system.y_top_left
+
     print("Odor position: x =", x_odor, ", y =", y_odor)
-    print("Top left position: x =", x_zero, ", y =", y_zero)
-
-    # -------------shifts every value of x and y in the positive range, by addition of the lowest value to all values
-
-    # Find the minimum values in the X and Y columns
-    min_x = float(np.nanmin(df_worm_parameter['X']))
-    min_y = float(np.nanmin(df_worm_parameter['Y']))
-
-    # Determine the overall minimum values for x and y (including odor and zero points)
-    overall_min_x = min(min_x, x_odor, x_zero)
-    overall_min_y = min(min_y, y_odor, y_zero)
-
-    # Calculate the necessary shift for each column
-    shift_x = abs(overall_min_x) if overall_min_x < 0 else 0.0
-    shift_y = abs(overall_min_y) if overall_min_y < 0 else 0.0
-
-    # Apply the shift to the DataFrame and additional values if necessary
-    if shift_x > 0:
-        df_worm_parameter['X'] += shift_x
-        x_odor += shift_x
-        x_zero += shift_x
-
-    if shift_y > 0:
-        df_worm_parameter['Y'] += shift_y
-        y_odor += shift_y
-        y_zero += shift_y
-
-    print(f"Shift X: {shift_x}, Shift Y: {shift_y}")
-
-    print(f"Shift X: {shift_x}, Shift Y: {shift_y}")
+    print("Top left position: x =", coord_system.x_top_left, ", y =", coord_system.y_top_left)
 
     print("\nWorm Pos DataFrame shifted:")
     print(df_worm_parameter.head())
-
-    # adjust odor point to relative grid via reference point
-    x_odor = x_odor - x_zero
-    y_odor = y_odor - y_zero
-
-    x_odor = abs(x_odor)  # shift relative odor position to positive values
-
-    print("relative x_odor:")
-    print(x_odor)
-    print("relative y_odor:")
-    print(y_odor)
-
-    # Add the new columns to the dataframe
-    df_worm_parameter['x_odor'] = x_odor
-    df_worm_parameter['y_odor'] = y_odor
-
-    # Apply the conversion function to relative coordinates to each row, add x_rel and y_rel columns
-    df_worm_parameter = df_worm_parameter.apply(lambda row: convert_coordinates(row, x_zero, y_zero), axis=1)
-
-    df_worm_parameter['X_rel'] = df_worm_parameter['X_rel'].abs()  # shift relative stage position to positive values
-
-    #finished initialisation and aligning
 
     # Create a copy of df_worm_parameter
     df_worm_movie = df_worm_parameter.copy()  # create copy of df_worm_parameter fo wormmovie later
