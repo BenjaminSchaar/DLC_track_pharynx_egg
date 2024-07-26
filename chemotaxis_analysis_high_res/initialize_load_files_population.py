@@ -264,7 +264,7 @@ def main(arg_list=None):
     video_resolution_x = int(args.video_resolution_x)
     video_resolution_y = int(args.video_resolution_y)
     fps = float(args.fps)
-    diffusion_time_offset = int(args.diffusion_offset)
+    diffusion_time_offset = int(args.diffusion_time_offset)
 
     # Load arrays from .npy files
     conc_gradient_array = np.load(args.conc_gradient_array)
