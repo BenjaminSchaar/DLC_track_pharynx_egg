@@ -50,36 +50,16 @@ class ConditionalPositiveCoordinateSystem:
         return float(x.strip().split('=')[1]), float(y.strip().split('=')[1])
 
     def shift_to_positive_if_needed(self, df):
-        # Find the minimum values for X and Y, including odor and top-left positions
-        min_x = min(df['X'].min(), self.x_odor, self.x_top_left)
-        min_y = min(df['Y'].min(), self.y_odor, self.y_top_left)
+        # Calculate relative coordinates and use abs() to ensure they're positive
+        df['X_rel'] = abs(df['X'] - self.x_top_left)
+        df['Y_rel'] = abs(df['Y'] - self.y_top_left)
 
-        # Calculate shifts to make all coordinates non-negative
-        shift_x = abs(min_x) if min_x < 0 else 0
-        shift_y = abs(min_y) if min_y < 0 else 0
-
-        # Apply shifts
-        df['X'] += shift_x
-        df['Y'] += shift_y
-        self.x_odor += shift_x
-        self.y_odor += shift_y
-        self.x_top_left += shift_x
-        self.y_top_left += shift_y
-
-        print(f"Applied X-shift: {shift_x}")
-        print(f"Applied Y-shift: {shift_y}")
-
-        # Calculate relative coordinates
-        df['X_rel'] = df['X'] - self.x_top_left
-        df['Y_rel'] = df['Y'] - self.y_top_left
-
-        # Ensure relative odor position is positive
-        x_odor_rel = self.x_odor - self.x_top_left
-        y_odor_rel = self.y_odor - self.y_top_left
+        # Calculate relative odor position
+        x_odor_rel = abs(self.x_odor - self.x_top_left)
+        y_odor_rel = abs(self.y_odor - self.y_top_left)
 
         print(f"Relative odor position: x = {x_odor_rel}, y = {y_odor_rel}")
-        print(
-            f"Top left position (should be 0,0): x = {self.x_top_left - self.x_top_left}, y = {self.y_top_left - self.y_top_left}")
+        print(f"Top left position (should be 0,0): x = 0, y = 0")
 
         return df, x_odor_rel, y_odor_rel
 
