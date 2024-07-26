@@ -352,8 +352,11 @@ def main(arg_list=None):
     # Initialize the coordinate system
     coord_system = ConditionalPositiveCoordinateSystem(worm_config)
 
-    # Initialize the coordinate system
-    coord_system = ConditionalPositiveCoordinateSystem(worm_config)
+    # Apply the coordinate shift and calculate relative coordinates
+    df_worm_parameter, x_odor_rel, y_odor_rel = coord_system.shift_and_calculate_relative(df_worm_parameter)
+
+    print("Relative odor position: x =", x_odor_rel, ", y =", y_odor_rel)
+    print("Relative top-left position: x = 0, y = 0")
 
     # Apply the coordinate shift
     df_worm_parameter, x_odor, y_odor = coord_system.shift_to_positive_if_needed(df_worm_parameter)
