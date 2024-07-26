@@ -249,7 +249,7 @@ def main(arg_list=None):
     parser.add_argument('--turn_annotation', help='Full path to the turn annotation CSV file', required=True)
     parser.add_argument('--top_left_pos', help='Tuple of x and y with top left arena position', required=True)
     parser.add_argument('--odor_pos', help='Tuple of x and y with odor position', required=True)
-    parser.add_argument('--diffusion_time_offset', help='offset in minutes for Diffusion simulation', type=int, required=False)
+    parser.add_argument('--diffusion_time_offset', help='offset in seconds for Diffusion simulation (default 1h = 3600 sec)', type=int, default=3600, required=False)
 
 
     args = parser.parse_args(arg_list)
