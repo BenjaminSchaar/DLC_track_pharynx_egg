@@ -50,34 +50,38 @@ class ConditionalPositiveCoordinateSystem:
         return float(x.strip().split('=')[1]), float(y.strip().split('=')[1])
 
     def shift_to_positive_if_needed(self, df):
+        # Find the minimum values for X and Y, including odor and top-left positions
         min_x = min(df['X'].min(), self.x_odor, self.x_top_left)
         min_y = min(df['Y'].min(), self.y_odor, self.y_top_left)
 
-        shift_x = abs(min_x) if min_x < 0 else 0.0
-        shift_y = abs(min_y) if min_y < 0 else 0.0
+        # Calculate shifts to make all coordinates non-negative
+        shift_x = abs(min_x) if min_x < 0 else 0
+        shift_y = abs(min_y) if min_y < 0 else 0
 
-        if shift_x > 0:
-            df['X'] += shift_x
-            self.x_odor += shift_x
-            self.x_top_left += shift_x
-            print(f"Applied X-shift: {shift_x}")
+        # Apply shifts
+        df['X'] += shift_x
+        df['Y'] += shift_y
+        self.x_odor += shift_x
+        self.y_odor += shift_y
+        self.x_top_left += shift_x
+        self.y_top_left += shift_y
 
-        if shift_y > 0:
-            df['Y'] += shift_y
-            self.y_odor += shift_y
-            self.y_top_left += shift_y
-            print(f"Applied Y-shift: {shift_y}")
+        print(f"Applied X-shift: {shift_x}")
+        print(f"Applied Y-shift: {shift_y}")
 
-        if shift_x == 0 and shift_y == 0:
-            print("No shift was necessary. All coordinates were already non-negative.")
-
+        # Calculate relative coordinates
         df['X_rel'] = df['X'] - self.x_top_left
         df['Y_rel'] = df['Y'] - self.y_top_left
 
-        df['x_odor'] = self.x_odor - self.x_top_left
-        df['y_odor'] = self.y_odor - self.y_top_left
+        # Ensure relative odor position is positive
+        x_odor_rel = self.x_odor - self.x_top_left
+        y_odor_rel = self.y_odor - self.y_top_left
 
-        return df
+        print(f"Relative odor position: x = {x_odor_rel}, y = {y_odor_rel}")
+        print(
+            f"Top left position (should be 0,0): x = {self.x_top_left - self.x_top_left}, y = {self.y_top_left - self.y_top_left}")
+
+        return df, x_odor_rel, y_odor_rel
 
 def read_csv_files(beh_annotation_path:str, skeleton_spline_path:str, worm_pos_path:str, spline_X_path:str, spline_Y_path:str, turn_annotation_path:str):
     # Check if the file paths exist
@@ -346,15 +350,15 @@ def main(arg_list=None):
     # Initialize the coordinate system
     coord_system = ConditionalPositiveCoordinateSystem(worm_config)
 
-    # Apply the coordinate shift
-    df_worm_parameter = coord_system.shift_to_positive_if_needed(df_worm_parameter)
+    # Initialize the coordinate system
+    coord_system = ConditionalPositiveCoordinateSystem(worm_config)
 
-    # Update x_odor and y_odor
-    x_odor = coord_system.x_odor - coord_system.x_top_left
-    y_odor = coord_system.y_odor - coord_system.y_top_left
+    # Apply the coordinate shift
+    df_worm_parameter, x_odor, y_odor = coord_system.shift_to_positive_if_needed(df_worm_parameter)
 
     print("Odor position: x =", x_odor, ", y =", y_odor)
-    print("Top left position: x =", coord_system.x_top_left, ", y =", coord_system.y_top_left)
+    print("Top left position: x = 0, y = 0")
+
 
     print("\nWorm Pos DataFrame shifted:")
     print(df_worm_parameter.head())
