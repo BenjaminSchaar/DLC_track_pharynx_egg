@@ -49,7 +49,7 @@ class ConditionalPositiveCoordinateSystem:
         x, y = coord_string.split(',')
         return float(x.strip().split('=')[1]), float(y.strip().split('=')[1])
 
-    def shift_and_calculate_relative(self, df):
+    def shift_to_positive_if_needed(self, df):
         # Find the minimum values for X and Y, including odor and top-left positions
         min_x = min(df['X'].min(), self.x_odor, self.x_top_left)
         min_y = min(df['Y'].min(), self.y_odor, self.y_top_left)
@@ -353,17 +353,7 @@ def main(arg_list=None):
     coord_system = ConditionalPositiveCoordinateSystem(worm_config)
 
     # Apply the coordinate shift and calculate relative coordinates
-    df_worm_parameter, x_odor_rel, y_odor_rel = coord_system.shift_and_calculate_relative(df_worm_parameter)
-
-    print("Relative odor position: x =", x_odor_rel, ", y =", y_odor_rel)
-    print("Relative top-left position: x = 0, y = 0")
-
-    # Apply the coordinate shift
-    df_worm_parameter, x_odor, y_odor = coord_system.shift_to_positive_if_needed(df_worm_parameter)
-
-    print("Odor position: x =", x_odor, ", y =", y_odor)
-    print("Top left position: x = 0, y = 0")
-
+    df_worm_parameter, x_odor_rel, y_odor_rel = coord_system.shift_to_positive_if_needed(df_worm_parameter)
 
     print("\nWorm Pos DataFrame shifted:")
     print(df_worm_parameter.head())
