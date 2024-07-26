@@ -249,6 +249,7 @@ def main(arg_list=None):
     parser.add_argument('--turn_annotation', help='Full path to the turn annotation CSV file', required=True)
     parser.add_argument('--top_left_pos', help='Tuple of x and y with top left arena position', required=True)
     parser.add_argument('--odor_pos', help='Tuple of x and y with odor position', required=True)
+    parser.add_argument('--diffusion_time_offset', help='offset in minutes for Diffusion simulation', type=int, required=False)
 
 
     args = parser.parse_args(arg_list)
@@ -263,6 +264,7 @@ def main(arg_list=None):
     video_resolution_x = int(args.video_resolution_x)
     video_resolution_y = int(args.video_resolution_y)
     fps = float(args.fps)
+    diffusion_time_offset = int(args.diffusion_offset)
 
     # Load arrays from .npy files
     conc_gradient_array = np.load(args.conc_gradient_array)
@@ -370,11 +372,11 @@ def main(arg_list=None):
     # Apply the function to create the 'Conc' column
     df_worm_parameter[f'conc_at_centroid'] = df_worm_parameter.apply(
         lambda row: calculate_preceived_conc(
-            row[f'distance_to_odor_centroid'], row['time_seconds'], conc_gradient_array, distance_array),axis=1)
+            row[f'distance_to_odor_centroid'], row['time_seconds'], conc_gradient_array, distance_array, diffusion_time_offset),axis=1)
 
     df_worm_parameter[f'conc_at_{skel_pos_0}'] = df_worm_parameter.apply(
         lambda row: calculate_preceived_conc(
-            row[f'distance_to_odor_{skel_pos_0}'], row['time_seconds'], conc_gradient_array,distance_array),axis=1)
+            row[f'distance_to_odor_{skel_pos_0}'], row['time_seconds'], conc_gradient_array,distance_array, diffusion_time_offset),axis=1)
 
     # Calculate delta concentration across the time interval
     time_interval_dC_dT = int(fps)  #need to figure out how far back in the past to compare it to
