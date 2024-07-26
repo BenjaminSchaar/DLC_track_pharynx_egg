@@ -84,9 +84,9 @@ class ImprovedCoordinateSystem:
         return df
 
     def rotate_coordinates(self, df):
-        df['X_rel_rotated'], df['Y_rel_rotated'] = df['Y_rel'], -df['X_rel']
-        df['X_rel_rotated'] = df['X_rel_rotated'].abs()
-        df['Y_rel_rotated'] = df['Y_rel_rotated'].abs()
+        df['X_rel'], df['Y_rel'] = df['Y_rel'], -df['X_rel']
+        df['X_rel'] = df['X_rel'].abs()
+        df['Y_rel'] = df['Y_rel'].abs()
 
         self.x_odor_rotated, self.y_odor_rotated = self.y_odor_rel, -self.x_odor_rel
         self.x_odor_rotated = abs(self.x_odor_rotated)
@@ -307,7 +307,7 @@ def main(arg_list=None):
     # Rotate coordinate system counterclockwise by 90 degrees
     df_worm_parameter = coord_system.rotate_coordinates(df_worm_parameter)
 
-    x_odor, y_odor = coord_system.x_odor_rel, coord_system.y_odor_rel
+    x_odor, y_odor = coord_system.x_odor_rotated, coord_system.y_odor_rotated
 
     print("After rotation:")
     print(f"Odor position: x ={x_odor}, y ={y_odor}")
