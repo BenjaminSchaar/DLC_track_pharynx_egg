@@ -232,33 +232,44 @@ def create_angle_animation(df, output_path, x_odor, y_odor, fps, file_name, nth_
     out.release()
     plt.close(fig)  # Close the figure to free memory
 
-def plot_ethogram(beh_annotation, output_path, file_name):
+
+def plot_binary_ethogram(beh_annotation, output_path, file_name):
     '''
-    Inputs beh_annotation df and plots erhtogramm
-    :param beh_annotation:
-    :param output_path:
-    :return:
+    Plots a simplified binary ethogram
+    :param beh_annotation: DataFrame containing binary behavioral annotation data
+    :param output_path: Path to save the output file
+    :param file_name: Name of the output file
+    :return: None
     '''
     try:
-        num_frames = len(beh_annotation)
-        num_lines = 4
-        cut_frames = num_frames // num_lines
-        fig, axs = plt.subplots(num_lines, 1, dpi=400, figsize=(10, 2 * num_lines))
-        for i, ax in enumerate(axs):
-            start_idx = i * cut_frames
-            end_idx = start_idx + cut_frames
-            ax.imshow(beh_annotation.iloc[start_idx:end_idx].T, origin="upper", cmap='seismic_r', aspect=20 * 100, vmin=-0.06,
-                      vmax=0.06)
-            ax.set_xticks(np.linspace(0, cut_frames, 5))
-            ax.set_xticklabels(np.linspace(start_idx, end_idx, 5).astype(int))
-            if i == num_lines - 1:
-                ax.set_xlabel('Frame')
-            ax.set_ylabel('Behavioral State')
-        # Save the plot to a file
+        # Convert DataFrame to numpy array
+        data = beh_annotation.values.T
+
+        fig, ax = plt.subplots(figsize=(12, 6), dpi=100)
+
+        # Plot the binary data
+        im = ax.imshow(data, aspect='auto', cmap='bwr', interpolation='nearest')
+
+        # Set labels and title
+        ax.set_xlabel('Frame')
+        ax.set_ylabel('Behavior')
+        ax.set_title('Binary Ethogram')
+
+        # Set y-ticks to behavior names
+        ax.set_yticks(range(len(beh_annotation.columns)))
+        ax.set_yticklabels(beh_annotation.columns)
+
+        # Create a custom colorbar/legend
+        cbar = fig.colorbar(im, ax=ax, ticks=[0, 1])
+        cbar.set_ticklabels(['Reversal', 'Forward'])
+
+        # Adjust layout and save
+        plt.tight_layout()
         full_path = os.path.join(output_path, file_name)
-        print("The full file path is:", full_path)
-        plt.savefig(full_path)
-        plt.clf()  # Clear the current figure after displaying the plot
+        plt.savefig(full_path, bbox_inches='tight')
+        print(f"Ethogram saved to: {full_path}")
+        plt.close(fig)
+
     except Exception as e:
         print(f'Problem plotting the ethogram: {e}')
 
