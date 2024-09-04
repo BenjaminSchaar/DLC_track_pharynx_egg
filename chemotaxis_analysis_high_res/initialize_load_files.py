@@ -22,7 +22,7 @@ from chemotaxis_analysis_high_res.plotting_visualisation import (
     plot_chemotaxis_overview,
     create_angle_animation,
     plot_ethogram,
-    plot_ethogram_simple,
+    plot_ethogramm_simple,
     plot_skeleton_spline,
     create_worm_animation,
     plot_angles_binned,
