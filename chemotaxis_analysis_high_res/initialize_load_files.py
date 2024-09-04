@@ -22,15 +22,13 @@ from chemotaxis_analysis_high_res.plotting_visualisation import (
     plot_chemotaxis_overview,
     create_angle_animation,
     plot_ethogram,
+    plot_ethogram_simple,
     plot_skeleton_spline,
-    plot_odor_concentration,
-    plot_speed,
-    plot_distance_to_odor,
-    plot_NI,
     create_worm_animation,
     plot_angles_binned,
     plot_turns,
     plot_pumps,
+    plot_dynamic_binned,
 )
 
 from chemotaxis_analysis_high_res.data_smothing import (
