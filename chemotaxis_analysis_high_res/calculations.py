@@ -140,7 +140,8 @@ def calculate_displacement_vector(df_worm_parameter):
 
     The function uses numpy.gradient to estimate the rate of change
     of x and y positions, then applies numpy.arctan2 to compute the
-    angle of the displacement vector.
+    angle of the displacement vector. Additionally, it calculates the
+    magnitude of the displacement vector using the Euclidean norm.
 
     Parameters:
     df_worm_parameter (pd.DataFrame): DataFrame with 'X_rel_skel_pos_centroid_corrected'
@@ -152,6 +153,7 @@ def calculate_displacement_vector(df_worm_parameter):
                   - 'dx_dt': Rate of change in x direction
                   - 'dy_dt': Rate of change in y direction
                   - 'direction': Angle of the displacement vector in degrees
+                  - 'displacement_magnitude': Length of the displacement vector
 
     Note:
     The 'direction' column contains angles in degrees, where:
@@ -170,6 +172,7 @@ def calculate_displacement_vector(df_worm_parameter):
      -90°
 
     '''
+
     # Ensure the required columns exist
     required_columns = ['X_rel_skel_pos_centroid_corrected', 'Y_rel_skel_pos_centroid_corrected']
     if not all(col in df_worm_parameter.columns for col in required_columns):
@@ -179,17 +182,23 @@ def calculate_displacement_vector(df_worm_parameter):
     x = df_worm_parameter['X_rel_skel_pos_centroid_corrected'].values
     y = df_worm_parameter['Y_rel_skel_pos_centroid_corrected'].values
 
-    # Calculate gradients
+    # Calculate gradients (dx/dt and dy/dt)
     dx_dt = np.gradient(x)
     dy_dt = np.gradient(y)
 
-    # Calculate direction
+    # Calculate direction in radians and then convert to degrees
     direction_radians = np.arctan2(dy_dt, dx_dt)
     direction_degrees = np.degrees(direction_radians)
 
+    # Calculate the displacement magnitude (Euclidean norm)
+    displacement_magnitude = np.sqrt(dx_dt**2 + dy_dt**2)
+
+    # Add new columns to the DataFrame
     df_worm_parameter['displacement_vector_degrees'] = direction_degrees
+    df_worm_parameter['displacement_magnitude'] = displacement_magnitude
 
     return df_worm_parameter
+
 
 def calculate_curving_angle(df_worm_parameter, bearing_range=1):
     '''
@@ -272,33 +281,27 @@ def calculate_bearing_angle(df_worm_parameter, x_odor, y_odor):
 
 def calculate_speed(df, fps):
     '''
-    This function calculates the speed per second of the centroid position and adds the column speed
-    :param df: pandas DataFrame with columns 'X_rel_skel_pos_centroid' and 'Y_rel_skel_pos_centroid'
+    This function calculates the speed per second using the displacement magnitude
+    and adds the column 'speed'.
+
+    :param df: pandas DataFrame with column 'displacement_magnitude'
     :param fps: frames per second of the video
     :return: DataFrame with an additional 'speed' column
     '''
-    # Smoothing window size for position, to reduce noise
-    position_smoothing_window = 2  # For averaging the latest 2 positions
 
-    # Apply rolling mean to smooth positions
-    df['X_smooth'] = df['X_rel_skel_pos_centroid'].rolling(window=position_smoothing_window, min_periods=1).mean()
-    df['Y_smooth'] = df['Y_rel_skel_pos_centroid'].rolling(window=position_smoothing_window, min_periods=1).mean()
+    # Ensure the required column exists
+    if 'displacement_magnitude' not in df.columns:
+        raise ValueError("DataFrame must contain 'displacement_magnitude' column")
 
-    # Calculate the difference between consecutive smoothed positions
-    df['X_diff'] = df['X_smooth'].diff()
-    df['Y_diff'] = df['Y_smooth'].diff()
-
-    # Calculate the speed (distance traveled per frame) and convert to per second
-    df['speed'] = ((df['X_diff'] ** 2 + df['Y_diff'] ** 2) ** 0.5) * fps
+    # Calculate the speed (displacement magnitude per frame) and convert it to per second by multiplying by fps
+    df['speed'] = df['displacement_magnitude'] * fps
 
     # Further smooth the 'speed' column to reduce variability
-    speed_smoothing_window_size = int(fps * 2)  # For a 2-second window
+    speed_smoothing_window_size = int(fps)  # For a 2-second window
     df['speed'] = df['speed'].rolling(window=speed_smoothing_window_size, min_periods=1).mean()
 
-    # Drop intermediate columns used for calculation
-    df.drop(columns=['X_smooth', 'Y_smooth', 'X_diff', 'Y_diff'], inplace=True)
-
     return df
+
 
 
 def calculate_radial_speed(df, fps):

@@ -490,7 +490,7 @@ def main(arg_list=None):
 
     plot_skeleton_spline(skeleton_spline, output_path, file_name = 'kymogram.png')
 
-    plot_odor_concentration(df_worm_parameter, output_path, file_name = 'perceived_conc.png')
+    plot_odor_concentration(df_worm_parameter, output_path, '', file_name = 'perceived_conc.png')
 
     plot_speed(df_worm_parameter, output_path, file_name = 'speed.png')
 

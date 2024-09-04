@@ -233,45 +233,88 @@ def create_angle_animation(df, output_path, x_odor, y_odor, fps, file_name, nth_
     plt.close(fig)  # Close the figure to free memory
 
 
-def plot_binary_ethogram(beh_annotation, output_path, file_name):
+def plot_ethogram(beh_annotation, output_path, file_name):
     '''
-    Plots a simplified binary ethogram
-    :param beh_annotation: DataFrame containing binary behavioral annotation data
+    Inputs beh_annotation df and plots ethogram
+    :param beh_annotation: DataFrame containing behavioral annotation data
     :param output_path: Path to save the output file
     :param file_name: Name of the output file
     :return: None
     '''
     try:
-        # Convert DataFrame to numpy array
-        data = beh_annotation.values.T
+        num_frames = len(beh_annotation)
+        num_lines = 4
+        cut_frames = num_frames // num_lines
+        fig, axs = plt.subplots(num_lines, 1, dpi=400, figsize=(10, 1 * num_lines))
 
-        fig, ax = plt.subplots(figsize=(12, 6), dpi=100)
+        for i, ax in enumerate(axs):
+            start_idx = i * cut_frames
+            end_idx = start_idx + cut_frames
+            im = ax.imshow(beh_annotation.iloc[start_idx:end_idx].T, origin="upper", cmap='seismic_r',
+                           aspect='auto', vmin=-0.06, vmax=0.06, interpolation='nearest')
+            ax.set_xticks(np.linspace(0, cut_frames, 5))
+            ax.set_xticklabels(np.linspace(start_idx, end_idx, 5).astype(int))
+            if i == num_lines - 1:
+                ax.set_xlabel('Frame')
 
-        # Plot the binary data
-        im = ax.imshow(data, aspect='auto', cmap='bwr', interpolation='nearest')
+            # Remove y-axis labels
+            ax.set_yticks([])
 
-        # Set labels and title
-        ax.set_xlabel('Frame')
-        ax.set_ylabel('Behavior')
-        ax.set_title('Binary Ethogram')
+            # Remove white space between subplots
+            ax.set_ylim(beh_annotation.shape[1] - 0.5, 0.5)
 
-        # Set y-ticks to behavior names
-        ax.set_yticks(range(len(beh_annotation.columns)))
-        ax.set_yticklabels(beh_annotation.columns)
+        # Adjust the layout to remove extra white space
+        plt.tight_layout(h_pad=0, w_pad=0)
 
-        # Create a custom colorbar/legend
-        cbar = fig.colorbar(im, ax=ax, ticks=[0, 1])
-        cbar.set_ticklabels(['Reversal', 'Forward'])
-
-        # Adjust layout and save
-        plt.tight_layout()
+        # Save the plot to a file
         full_path = os.path.join(output_path, file_name)
-        plt.savefig(full_path, bbox_inches='tight')
-        print(f"Ethogram saved to: {full_path}")
-        plt.close(fig)
+        print("The full file path is:", full_path)
+        plt.savefig(full_path, bbox_inches='tight', pad_inches=0.1)
+        plt.show()
+        plt.close(fig)  # Close the figure to free up memory
 
     except Exception as e:
         print(f'Problem plotting the ethogram: {e}')
+
+
+def plot_ethogramm_simple(df, output_path, file_name):
+    # Extract the behaviour_state column and convert it to a numpy array
+    behavior_data = df['behaviour_state'].values
+
+    # Reshape the data to a 2D array
+    behavior_data_2d = behavior_data.reshape(-1, 1)
+
+    # Create a figure and axis
+    fig, ax = plt.subplots(figsize=(16, 4))
+
+    # Plot the data using imshow
+    im = ax.imshow(behavior_data_2d.T, origin="upper", cmap='seismic_r',
+                   aspect='auto', interpolation='nearest')
+
+    # Remove y-axis ticks
+    ax.set_yticks([])
+
+    # Set labels and title
+    ax.set_xlabel('Time')
+    ax.set_ylabel('Behavior State')
+    ax.set_title('Worm Behavior State Over Time')
+
+    # Add a colorbar
+    plt.colorbar(im, label='Behavior State')
+
+    # Adjust layout to make room for the text
+    plt.tight_layout()
+
+    # Save the figure
+    full_path = os.path.join(output_path, file_name)
+    print("The full file path is:", full_path)
+    plt.savefig(full_path)
+
+    # Show the plot
+    plt.show()
+
+    # Clear the current figure
+    plt.clf()
 
 
 
@@ -327,165 +370,6 @@ def plot_skeleton_spline(skeleton_spline, output_path, file_name):
     except Exception as e:
         print(f'Problem plotting the data: {e}')
 
-
-def plot_odor_concentration(df, output_path, file_name):
-    # Define the figure size
-    plt.figure(figsize=(16, 4))
-
-    # Convert time from seconds to minutes
-    times = df['time_seconds'] / 60
-
-    # Creating the scatter plot with color based on time
-    scatter = plt.scatter(times, df['conc_at_centroid'], c=times, cmap='plasma', alpha=0.1)
-
-    # Plotting the line
-    plt.plot(times, df['conc_at_centroid'], alpha=0.5)  # Set lower alpha to make line less prominent
-
-    # Adding a color bar to understand the mapping from time to color
-    plt.colorbar(scatter, label='Time (minutes)')
-
-    # Set the title and labels
-    plt.title('Experienced Odor Concentration')
-    plt.xlabel('Time (minutes)')
-    plt.ylabel('C (mol/l)')
-
-    # Enable grid
-    plt.grid(True)
-
-    full_path = os.path.join(output_path, file_name)
-    print("The full file path is:", full_path)
-
-    plt.savefig(full_path)
-
-    plt.clf()  # Clear the current figure after displaying the plot
-
-def plot_speed(df, output_path, file_name):
-    # Define the figure size
-    plt.figure(figsize=(16, 4))
-
-    # Convert time from seconds to minutes
-    times = df['time_seconds'] / 60
-
-    # Creating the scatter plot with color based on time
-    scatter = plt.scatter(times, df['speed_s'], c=times, cmap='plasma', alpha=0.1)
-
-    # Plotting the line
-    plt.plot(times, df['speed_s'], alpha=0.5)  # Set lower alpha to make line less prominent
-
-    # Adding a color bar to understand the mapping from time to color
-    plt.colorbar(scatter, label='Time (minutes)')
-
-    # Set the title and labels
-    plt.title('Centroid Speed')
-    plt.xlabel('Time (minutes)')
-    plt.ylabel('mm/sec')
-
-    # Enable grid
-    plt.grid(True)
-
-    full_path = os.path.join(output_path, file_name)
-    print("The full file path is:", full_path)
-
-    plt.savefig(full_path)
-
-    plt.clf()  # Clear the current figure after displaying the plot
-
-
-def plot_NI(df, output_path, file_name):
-
-    # Define the figure size
-    plt.figure(figsize=(16, 4))
-
-    # Convert time from seconds to minutes
-    times = df['time_seconds'] / 60
-
-    # Creating the scatter plot with color based on time
-    scatter = plt.scatter(times, df['NI_s'], c=times, cmap='plasma', alpha=0.1)
-
-    # Plotting the line
-    plt.plot(times, df['NI_s'], alpha=0.5)  # Set lower alpha to make line less prominent
-
-    # Adding a color bar to understand the mapping from time to color
-    plt.colorbar(scatter, label='Time (minutes)')
-
-    # Set the title and labels
-    plt.title('Centroid NI')
-    plt.xlabel('Time (minutes)')
-    plt.ylabel('NI')
-
-    # Enable grid
-    plt.grid(True)
-
-    full_path = os.path.join(output_path, file_name)
-    print("The full file path is:", full_path)
-
-    plt.savefig(full_path)
-
-    plt.clf()  # Clear the current figure after displaying the plot
-
-def plot_distance_to_odor(df, output_path, file_name):
-    # Define the figure size
-    plt.figure(figsize=(16, 4))
-
-    # Convert time from seconds to minutes
-    times = df['time_seconds'] / 60
-
-    # Creating the scatter plot with color based on time
-    scatter = plt.scatter(times, df['distance_to_odor_centroid'], c=times, cmap='plasma', alpha=0.1)
-
-    # Plotting the line
-    plt.plot(times, df['distance_to_odor_centroid'], alpha=0.5)  # Set lower alpha to make line less prominent
-
-    # Adding a color bar to understand the mapping from time to color
-    plt.colorbar(scatter, label='Time (minutes)')
-
-    # Set the title and labels
-    plt.title('Centroid Distance to Odor')
-    plt.xlabel('Time (minutes)')
-    plt.ylabel('mm')
-
-    # Enable grid
-    plt.grid(True)
-
-    full_path = os.path.join(output_path, file_name)
-    print("The full file path is:", full_path)
-
-    plt.savefig(full_path)
-
-    plt.clf()  # Clear the current figure after displaying the plot
-
-def plot_reversal_frequency(df, output_path, file_name):
-    # Define the figure size
-    plt.figure(figsize=(16, 4))
-
-    # Convert time from seconds to minutes
-    times = df['time_seconds'] / 60
-
-    # Creating the scatter plot with color based on time
-    scatter = plt.scatter(times, df['reversal_frequency'], c=times, cmap='plasma', alpha=0.1)
-
-    # Plotting the line
-    plt.plot(times, df['reversal_frequency'], alpha=0.5)  # Set lower alpha to make line less prominent
-
-    # Adding a color bar to understand the mapping from time to color
-    plt.colorbar(scatter, label='Time (minutes)')
-
-    # Set the title and labels
-    plt.title('Reversal Frequency')
-    plt.xlabel('Time (minutes)')
-    plt.ylabel('events/min')
-
-    # Enable grid
-    plt.grid(True)
-
-    #saving part
-
-    full_path = os.path.join(output_path, file_name)
-    print("The full file path is:", full_path)
-
-    plt.savefig(full_path)
-
-    plt.clf()  # Clear the current figure after displaying the plot
 
 def create_worm_animation(df1, df2, output_path, x_odor, y_odor, fps, arena_min_x, arena_max_x, arena_min_y, arena_max_y, video_path, nth_frame, file_name):
     '''
@@ -699,4 +583,50 @@ def plot_pumps(df, output_path, file_name):
 
     plt.clf()  # Clear the current figure after displaying the plot
 
+
+def plot_dynamic_binned(df, y_column, output_path, file_name, hue_column=None, bin_count=100):
+    # Create a copy of the dataframe to avoid modifying the original
+    df_plot = df.copy()
+
+    # Define the figure size
+    plt.figure(figsize=(16, 6))
+
+    # Convert time from seconds to minutes
+    times = df_plot['time_seconds'] / 60
+
+    # Create bins for the time data
+    bin_size = (times.max() - times.min()) / bin_count
+    bins = np.arange(times.min(), times.max() + bin_size, bin_size)
+
+    # Bin the data
+    binned_data = df_plot.groupby(pd.cut(times, bins=bins))
+
+    # Calculate mean time and y_column for each bin
+    binned_times = binned_data['time_seconds'].mean() / 60  # Convert to minutes
+    binned_y = binned_data[y_column].mean()
+
+    # Creating the scatter plot
+    if hue_column:
+        binned_hue = binned_data[hue_column].mean()
+        scatter = plt.scatter(binned_times, binned_y, c=binned_hue, cmap='viridis', alpha=0.7)
+        plt.colorbar(scatter, label=hue_column)
+    else:
+        scatter = plt.scatter(binned_times, binned_y, cmap='plasma', alpha=0.7)
+
+    # Plotting the line
+    plt.plot(binned_times, binned_y, alpha=0.5)
+
+    # Set the title and labels
+    plt.title(f'Binned {y_column} over Time')
+    plt.xlabel('Time (minutes)')
+    plt.ylabel(y_column)
+
+    # Enable grid
+    plt.grid(True)
+
+    # Save the figure
+    full_path = os.path.join(output_path, file_name)
+    print("The full file path is:", full_path)
+    plt.savefig(full_path)
+    plt.clf()  # Clear the current figure
 
