@@ -317,6 +317,44 @@ def plot_ethogramm_simple(df, output_path, file_name):
     plt.clf()
 
 
+def plot_ethogramm_simple(df, output_path, file_name):
+    # Extract the behaviour_state column and convert it to a numpy array
+    behavior_data = df['behaviour_state'].values
+
+    # Reshape the data to a 2D array
+    behavior_data_2d = behavior_data.reshape(-1, 1)
+
+    # Create a figure and axis
+    fig, ax = plt.subplots(figsize=(16, 4))
+
+    # Plot the data using imshow
+    im = ax.imshow(behavior_data_2d.T, origin="upper", cmap='seismic_r',
+                   aspect='auto', interpolation='nearest')
+
+    # Remove y-axis ticks
+    ax.set_yticks([])
+
+    # Set labels and title
+    ax.set_xlabel('Time')
+    ax.set_ylabel('Behavior State')
+    ax.set_title('Worm Behavior State Over Time')
+
+    # Add a colorbar
+    plt.colorbar(im, label='Behavior State')
+
+    # Adjust layout to make room for the text
+    plt.tight_layout()
+
+    # Save the figure
+    full_path = os.path.join(output_path, file_name)
+    print("The full file path is:", full_path)
+    plt.savefig(full_path)
+
+    # Show the plot
+    plt.show()
+
+    # Clear the current figure
+    plt.clf()
 
 def plot_skeleton_spline(skeleton_spline, output_path, file_name):
     '''
