@@ -317,7 +317,7 @@ def plot_ethogramm_simple(df, output_path, file_name):
     plt.clf()
 
 
-def plot_ethogramm_simple(df, output_path, file_name):
+def plot_ethogram_simple(df, output_path, file_name):
     # Extract the behaviour_state column and convert it to a numpy array
     behavior_data = df['behaviour_state'].values
 
