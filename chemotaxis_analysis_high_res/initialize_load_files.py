@@ -542,7 +542,7 @@ def main(arg_list=None):
 
     plot_ethogram(beh_annotation, output_path, file_name = 'ehtogram.png')
 
-    plot_ethogram_simple(beh_annotation, output_path, file_name='ehtogram.png')
+    plot_ethogram_simple(beh_annotation, output_path, file_name='ehtogram_simple.png')
 
     plot_skeleton_spline(skeleton_spline, output_path, file_name = 'kymogram.png')
 
