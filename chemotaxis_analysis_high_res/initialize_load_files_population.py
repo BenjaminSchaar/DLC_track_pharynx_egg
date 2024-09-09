@@ -22,21 +22,20 @@ from chemotaxis_analysis_high_res.plotting_visualisation import (
     plot_chemotaxis_overview,
     create_angle_animation,
     plot_ethogram,
+    plot_ethogram_simple,
     plot_skeleton_spline,
-    plot_odor_concentration,
-    plot_speed,
-    plot_distance_to_odor,
-    plot_NI,
     create_worm_animation,
     plot_angles_binned,
     plot_turns,
     plot_pumps,
+    plot_dynamic_binned,
 )
 
 from chemotaxis_analysis_high_res.data_smothing import (
     replace_outliers_with_nan,
     update_behaviour_based_on_speed,
 )
+
 
 
 class ImprovedCoordinateSystem:
@@ -482,27 +481,39 @@ def main(arg_list=None):
 
     '''
     Plotting part
-    
+
     cals functions that create various visualisations
     '''
 
-    plot_ethogram(beh_annotation, output_path, file_name = 'ehtogram.png')
+    plot_ethogram(beh_annotation, output_path, file_name='ehtogram.png')
 
-    plot_skeleton_spline(skeleton_spline, output_path, file_name = 'kymogram.png')
+    plot_ethogram_simple(beh_annotation, output_path, file_name='ehtogram_simple.png')
 
-    plot_odor_concentration(df_worm_parameter, output_path, '', file_name = 'perceived_conc.png')
+    plot_skeleton_spline(skeleton_spline, output_path, file_name='kymogram.png')
 
-    plot_speed(df_worm_parameter, output_path, file_name = 'speed.png')
+    plot_dynamic_binned(df_worm_parameter, 'conc_at_centroid', output_path, 'conc_at_centroid_over_time.png',
+                        bin_count=100)
 
-    plot_NI(df_worm_parameter, output_path, file_name='NI.png')
+    plot_dynamic_binned(df_worm_parameter, 'reversal_frequency', output_path, 'reversal_frequency_over_time.png',
+                        bin_count=100)
 
-    plot_distance_to_odor(df_worm_parameter, output_path, file_name = 'distance_to_odor.png')
+    plot_dynamic_binned(df_worm_parameter, 'distance_to_odor_centroid', output_path,
+                        'distance_to_odor_centroid_over_time.png', bin_count=100)
 
-    plot_chemotaxis_overview(df_worm_parameter, output_path, x_odor, y_odor, arena_min_x, arena_max_x, arena_min_y, arena_max_y, fps, file_name="chemotaxis_overview.png")
+    plot_dynamic_binned(df_worm_parameter, 'NI_s', output_path, 'NI_over_time.png', bin_count=100)
 
-    #create_angle_animation(df_worm_parameter, output_path, x_odor, y_odor, fps, file_name ='angle_animation.avi')
+    plot_dynamic_binned(df_worm_parameter, 'speed_s', output_path, 'speed_over_time.png', bin_count=100)
 
-    plot_angles_binned(df_worm_parameter, 'bearing_angle_s', 'curving_angle_s', output_path,  num_bins=10, file_name='curving_angle_binned_plot.png')
+    plot_dynamic_binned(df_worm_parameter, 'NI_s', output_path, 'NI_over_time_with_speed_hue.png', hue_column='speed_s',
+                        bin_count=100)
+
+    plot_chemotaxis_overview(df_worm_parameter, output_path, x_odor, y_odor, arena_min_x, arena_max_x, arena_min_y,
+                             arena_max_y, fps, file_name="chemotaxis_overview.png")
+
+    # create_angle_animation(df_worm_parameter, output_path, x_odor, y_odor, fps, file_name='angle_animation.avi', nth_frame=1000)
+
+    plot_angles_binned(df_worm_parameter, 'bearing_angle_s', 'curving_angle_s', output_path, num_bins=20,
+                       file_name='curving_angle_binned_plot.png')
 
     plot_turns(df_worm_parameter, output_path, file_name='turns.png')
 
