@@ -517,8 +517,28 @@ def main(arg_list=None):
 
     plot_turns(df_worm_parameter, output_path, file_name='turns.png')
 
-    # Saving param df to a CSV file
-    df_worm_parameter.to_csv(os.path.join(output_path, 'chemotaxis_params.csv'), index=False)
+    '''
+        concatenate df_worm_parameter and Spline_K before final output
+    '''
+    # Concatenate the DataFrames horizontally
+    df_combined = pd.concat([df_worm_parameter, skeleton_spline], axis=1)
+
+    # Create MultiIndex columns
+    # For df_worm_parameter columns, the top level is 'chemotaxis_parameter'
+    chemotaxis_columns = pd.MultiIndex.from_product(
+        [['chemotaxis_parameter'], df_worm_parameter.columns]
+    )
+
+    # For df_skeleton_spline columns, the top level is 'Spline_K'
+    spline_columns = pd.MultiIndex.from_product(
+        [['Spline_K'], skeleton_spline.columns]
+    )
+
+    # **Assign the new MultiIndex columns directly to df_combined**
+    df_combined.columns = chemotaxis_columns.append(spline_columns)
+
+    # Save the combined DataFrame to a CSV file
+    df_combined.to_csv(os.path.join(output_path, 'chemotaxis_params.csv'), index=True)
 
     #create animation of whole worm skelleton in arena
     # Assuming df_worm_parameter, spline_X, spline_Y, video_resolution_x, video_resolution_y, factor_px_to_mm are defined

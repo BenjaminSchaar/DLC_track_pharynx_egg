@@ -225,6 +225,29 @@ def process_pharynx_pump_csv(file_path, fps):
 
     distance_df = pd.DataFrame({'distance': distance_series})
 
+    def clean_distance_df(df, distance_df, threshold):
+        '''
+        Filters DLC prediciton based on likelihood ans sets columns with low likelihood NAN
+        Sets rows in distance_df to NaN if the average likelihood in df is below the threshold.
+        '''
+
+        # Select all 'likelihood' columns in df
+        likelihood_columns = df.xs('likelihood', axis=1, level=1)
+
+        # Compute the mean likelihood per row
+        mean_likelihood = likelihood_columns.mean(axis=1)
+
+        # Create a boolean mask for rows where mean likelihood is below the threshold
+        mask = mean_likelihood < threshold
+
+        # Set corresponding rows in distance_df to NaN
+        distance_df.loc[mask, :] = np.nan
+
+        # Return the cleaned distance_df
+        return distance_df
+
+    distance_df = clean_distance_df(df, distance_df, 0.95)
+
     def binarize_data(column, lower_threshold, upper_threshold):
         return [1 if lower_threshold <= x <= upper_threshold else 0 for x in column]
 
@@ -571,9 +594,28 @@ def main(arg_list=None):
     else:
         print("analysis without pharynx pumping data")
 
+    '''
+        concatenate df_worm_parameter and Spline_K before final output
+    '''
+    # Concatenate the DataFrames horizontally
+    df_combined = pd.concat([df_worm_parameter, skeleton_spline], axis=1)
 
-    # Saving param df to a CSV file
-    df_worm_parameter.to_csv(os.path.join(output_path, 'chemotaxis_params.csv'), index=True)
+    # Create MultiIndex columns
+    # For df_worm_parameter columns, the top level is 'chemotaxis_parameter'
+    chemotaxis_columns = pd.MultiIndex.from_product(
+        [['chemotaxis_parameter'], df_worm_parameter.columns]
+    )
+
+    # For df_skeleton_spline columns, the top level is 'Spline_K'
+    spline_columns = pd.MultiIndex.from_product(
+        [['Spline_K'], skeleton_spline.columns]
+    )
+
+    # **Assign the new MultiIndex columns directly to df_combined**
+    df_combined.columns = chemotaxis_columns.append(spline_columns)
+
+    # Save the combined DataFrame to a CSV file
+    df_combined.to_csv(os.path.join(output_path, 'chemotaxis_params.csv'), index=True)
 
     #create animation of whole worm skelleton in arena
     # Assuming df_worm_parameter, spline_X, spline_Y, video_resolution_x, video_resolution_y, factor_px_to_mm are defined
