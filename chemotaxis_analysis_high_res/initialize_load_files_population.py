@@ -435,7 +435,7 @@ def main(arg_list=None):
     '''
     # Renaming the second column from 1 to 'behaviour_state'
     beh_annotation = beh_annotation.rename(columns={1: 'behaviour_state'})
-    turn_annotation = turn_annotation.drop(columns=[0])
+    beh_annotation = beh_annotation.drop(columns=[0])
 
     turn_annotation = turn_annotation.drop(columns=['Unnamed: 0'])
 
