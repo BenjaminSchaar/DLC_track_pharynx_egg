@@ -435,10 +435,10 @@ def main(arg_list=None):
     '''
     # Renaming the second column from 1 to 'behaviour_state'
     beh_annotation = beh_annotation.rename(columns={1: 'behaviour_state'})
-    beh_annotation = beh_annotation.drop(columns=['Unnamed: 0 '])
+    beh_annotation = beh_annotation.drop(columns=['Unnamed: 0'])
 
     coil_annotation = coil_annotation.rename(columns={1: 'coils'})
-    coil_annotation = coil_annotation.drop(columns=['Unnamed: 0 '])  # index colum from turn annotations
+    coil_annotation = coil_annotation.drop(columns=['Unnamed: 0'])  # index colum from turn annotations
 
     # Merge/join based on index
     df_worm_parameter = pd.merge(df_worm_parameter, beh_annotation, left_index=True, right_index=True, how='left')
