@@ -13,11 +13,12 @@ def correct_stage_pos_with_skeleton(
         skel_pos: int,
         video_resolution_x: int,
         video_resolution_y: int,
-        factor_px_to_mm: float
+        factor_px_to_mm: float,
+        video_origin: str = "video"
 ) -> pd.DataFrame:
     '''
     This function uses the relative stage position and the skeleton to calculate the real relative
-    worm position inside the arena!
+    worm position inside the arena.
 
     Parameters:
     worm_pos (pd.DataFrame): DataFrame containing the worm's position.
@@ -28,12 +29,13 @@ def correct_stage_pos_with_skeleton(
     video_resolution_x (int): Width of the video in pixels.
     video_resolution_y (int): Height of the video in pixels.
     factor_px_to_mm (float): Conversion factor from pixels to millimeters.
+    video_origin (str): Origin of the video. "video" for the original logic, "crop" for corrected logic.
 
     Returns:
     pd.DataFrame: Updated DataFrame with the worm's corrected position.
     '''
 
-    print("running func correct_stage_pos_with_skeleton for skel_pos:", skel_pos)
+    print("running func correct_stage_pos_with_skeleton for skel_pos:", skel_pos, "and video_origin:", video_origin)
 
     video_resolution_x = int(video_resolution_x)
     video_resolution_y = int(video_resolution_y)
@@ -43,7 +45,6 @@ def correct_stage_pos_with_skeleton(
     center_y = video_resolution_y / 2
 
     if skel_pos == 100:  # calculate centroid
-        # Calculate the mean of all columns for each row dynamically
         column_skel_pos_x = spline_X.mean(axis=1).to_numpy().astype(float)
         column_skel_pos_y = spline_Y.mean(axis=1).to_numpy().astype(float)
     else:
@@ -56,14 +57,25 @@ def correct_stage_pos_with_skeleton(
     difference_center_x_mm = difference_x_px * factor_px_to_mm
     difference_center_y_mm = difference_y_px * factor_px_to_mm
 
-    if skel_pos == 100:
-        worm_pos['X_rel_skel_pos_centroid'] = worm_pos['X_rel'] - difference_center_y_mm
-        worm_pos['Y_rel_skel_pos_centroid'] = worm_pos['Y_rel'] - difference_center_x_mm
-    else:
-        worm_pos[f'X_rel_skel_pos_{skel_pos}'] = worm_pos['X_rel'] - difference_center_y_mm
-        worm_pos[f'Y_rel_skel_pos_{skel_pos}'] = worm_pos['Y_rel'] - difference_center_x_mm
+    if video_origin == "video":
+        # Original logic with swapped axes
+        if skel_pos == 100:
+            worm_pos['X_rel_skel_pos_centroid'] = worm_pos['X_rel'] - difference_center_y_mm
+            worm_pos['Y_rel_skel_pos_centroid'] = worm_pos['Y_rel'] - difference_center_x_mm
+        else:
+            worm_pos[f'X_rel_skel_pos_{skel_pos}'] = worm_pos['X_rel'] - difference_center_y_mm
+            worm_pos[f'Y_rel_skel_pos_{skel_pos}'] = worm_pos['Y_rel'] - difference_center_x_mm
+    elif video_origin == "crop":
+        # Corrected logic without swapping axes
+        if skel_pos == 100:
+            worm_pos['X_rel_skel_pos_centroid'] = worm_pos['X_rel'] - difference_center_x_mm
+            worm_pos['Y_rel_skel_pos_centroid'] = worm_pos['Y_rel'] - difference_center_y_mm
+        else:
+            worm_pos[f'X_rel_skel_pos_{skel_pos}'] = worm_pos['X_rel'] - difference_center_x_mm
+            worm_pos[f'Y_rel_skel_pos_{skel_pos}'] = worm_pos['Y_rel'] - difference_center_y_mm
 
     return worm_pos
+
 
 
 

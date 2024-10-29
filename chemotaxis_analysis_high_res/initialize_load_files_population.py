@@ -334,16 +334,17 @@ def main(arg_list=None):
     # Create a copy of df_worm_parameter
     df_worm_movie = df_worm_parameter.copy()  # create copy of df_worm_parameter fo wormmovie later
 
-    # calculate corrected center position of the worm
+    # Calculate corrected center position of the worm
     skel_pos_centroid = 100
     df_worm_parameter = correct_stage_pos_with_skeleton(
         df_worm_parameter,
         spline_X,
         spline_Y,
-        skel_pos_centroid, #100 will calculate the centroid -> column name will be 'X/Y_rel_skel_pos_centroid'
+        skel_pos_centroid,  # 100 will calculate the centroid -> column name will be 'X/Y_rel_skel_pos_centroid'
         video_resolution_x,
         video_resolution_y,
-        0
+        factor_px_to_mm,
+        video_origin="crop"  # Set to "crop" for corrected logic
     )
 
     skel_pos_0 = 0
@@ -352,10 +353,11 @@ def main(arg_list=None):
         df_worm_parameter,
         spline_X,
         spline_Y,
-        skel_pos_0, # 0 reflects nose position
+        skel_pos_0,  # 0 reflects nose position
         video_resolution_x,
         video_resolution_y,
-        factor_px_to_mm
+        factor_px_to_mm,
+        video_origin="crop"  # Set to "crop" for corrected logic
     )
 
     #perform rolling mean on centroid columns to get the proper trajectory of the worm, window size can be defined
