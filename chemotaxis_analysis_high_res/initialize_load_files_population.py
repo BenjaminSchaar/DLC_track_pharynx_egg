@@ -119,6 +119,9 @@ def read_csv_files(beh_annotation_path:str, skeleton_spline_path:str, worm_pos_p
 
     worm_pos_df = pd.read_csv(worm_pos_path)
     worm_pos_df = worm_pos_df.drop(columns=['time'], errors='ignore')  # deletes old time column before interplation step
+    # Enforce integer type for 'frame' column if it exists
+    if ('frame' in worm_pos_df.columns):
+        worm_pos_df['frame'] = worm_pos_df['frame'].fillna(0).astype(int)
 
     spline_X_df = pd.read_csv(spline_X_path, header=None)
     spline_Y_df = pd.read_csv(spline_Y_path, header=None)
@@ -382,20 +385,27 @@ def main(arg_list=None):
 
     #calculate perceived concentration for nose and centroid position
 
-    # Apply the function to create the 'Conc' column
-    df_worm_parameter[f'conc_at_centroid'] = df_worm_parameter.apply(
+    # Apply the function to create the 'Conc' column and ensure float conversion
+    df_worm_parameter[f'conc_at_centroid'] = pd.to_numeric(df_worm_parameter.apply(
         lambda row: calculate_preceived_conc(
-            row[f'distance_to_odor_centroid'], row['time_seconds'], conc_gradient_array, distance_array, diffusion_time_offset),axis=1)
+            row[f'distance_to_odor_centroid'], row['time_seconds'], conc_gradient_array, distance_array,
+            diffusion_time_offset), axis=1), errors='coerce'
+    )
 
-    df_worm_parameter[f'conc_at_{skel_pos_0}'] = df_worm_parameter.apply(
+    df_worm_parameter[f'conc_at_{skel_pos_0}'] = pd.to_numeric(df_worm_parameter.apply(
         lambda row: calculate_preceived_conc(
-            row[f'distance_to_odor_{skel_pos_0}'], row['time_seconds'], conc_gradient_array,distance_array, diffusion_time_offset),axis=1)
+            row[f'distance_to_odor_{skel_pos_0}'], row['time_seconds'], conc_gradient_array, distance_array,
+            diffusion_time_offset), axis=1), errors='coerce'
+    )
 
     # Calculate delta concentration across the time interval
-    time_interval_dC_dT = int(fps)  #need to figure out how far back in the past to compare it to
+    time_interval_dC_dT = int(fps)  # Determine how far back in the past to compare
 
-    df_worm_parameter[f'dC_centroid'] = df_worm_parameter[f'conc_at_centroid'].diff(periods=time_interval_dC_dT)
-    df_worm_parameter[f'dC_{skel_pos_0}'] = df_worm_parameter[f'conc_at_{skel_pos_0}'].diff(periods=time_interval_dC_dT)
+    # Compute differences and enforce float for the result
+    df_worm_parameter[f'dC_centroid'] = df_worm_parameter[f'conc_at_centroid'].diff(periods=time_interval_dC_dT).astype(
+        float)
+    df_worm_parameter[f'dC_{skel_pos_0}'] = df_worm_parameter[f'conc_at_{skel_pos_0}'].diff(
+        periods=1).astype(float)
 
     print("\nWorm  DataFrame wit Distance:")
     print(df_worm_parameter.head())

@@ -102,8 +102,7 @@ def calculate_time_in_seconds(df: pd.DataFrame, fps: int):
     return df
 
 
-def calculate_preceived_conc(distance: float, time_seconds: float, conc_array: np.ndarray, distance_array: np.ndarray, diffusion_time_offset:int) -> float:
-
+def calculate_preceived_conc(distance: float, time_seconds: float, conc_array: np.ndarray, distance_array: np.ndarray, diffusion_time_offset: int) -> float:
     # Type enforcement
     distance = float(distance)
     time_seconds = float(time_seconds)
@@ -113,8 +112,8 @@ def calculate_preceived_conc(distance: float, time_seconds: float, conc_array: n
     # Convert time to array index, rounding to the nearest second
     sim_time_array = round(time_seconds)
 
-    #offsets the diffusion simulation time if the assay startet later than 1 hour
-    sim_time_array = sim_time_array+diffusion_time_offset
+    # Offset the diffusion simulation time if the assay started later than 1 hour
+    sim_time_array = sim_time_array + diffusion_time_offset
 
     # Get all distance values in the chosen frame
     distances_in_frame = distance_array[sim_time_array]
@@ -125,9 +124,11 @@ def calculate_preceived_conc(distance: float, time_seconds: float, conc_array: n
     # Finding the index of the closest value to closest_distance
     index_of_closest_distance = np.where(distances_in_frame == closest_distance)[0]
 
-    conc_value = conc_array[sim_time_array][index_of_closest_distance]
+    # Extract the concentration value as a scalar
+    conc_value = conc_array[sim_time_array][index_of_closest_distance][0]  # Take the first element if it's an array
 
     return conc_value
+
 
 def calculate_displacement_vector(df_worm_parameter):
     '''
