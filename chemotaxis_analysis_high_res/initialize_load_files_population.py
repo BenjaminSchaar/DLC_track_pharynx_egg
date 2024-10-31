@@ -323,7 +323,12 @@ def main(arg_list=None):
     # Rotate coordinate system counterclockwise by 90 degrees
     df_worm_parameter = coord_system.rotate_coordinates(df_worm_parameter)
 
+    #acces x_odor and y_odor attributes from intiialized class
     x_odor, y_odor = coord_system.x_odor_rotated, coord_system.y_odor_rotated
+
+    # Add constant columns for final shifted odor positions
+    df_worm_parameter['odor_x'] = x_odor
+    df_worm_parameter['odor_y'] = y_odor
 
     print("After rotation:")
     print(f"Odor position: x ={x_odor}, y ={y_odor}")
