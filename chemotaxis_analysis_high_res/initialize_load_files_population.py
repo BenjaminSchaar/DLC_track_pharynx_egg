@@ -36,35 +36,18 @@ from chemotaxis_analysis_high_res.data_smothing import (
     update_behaviour_based_on_speed,
 )
 
-
-
 class ImprovedCoordinateSystem:
     def __init__(self, top_left_pos, odor_pos, factor_px_to_mm):
         self.x_top_left, self.y_top_left = top_left_pos
         self.x_odor, self.y_odor = odor_pos
         self.factor_px_to_mm = factor_px_to_mm
 
-    def shift_to_positive_if_needed(self, df):
-        min_x = min(df['X'].min(), self.x_odor, self.x_top_left)
-        min_y = min(df['Y'].min(), self.y_odor, self.y_top_left)
+    def calculate_relative_coords(self, df):
+        df['X_rel'] = (df['X'] - self.x_top_left) * self.factor_px_to_mm
+        df['Y_rel'] = (df['Y'] - self.y_top_left) * self.factor_px_to_mm
 
-        shift_x = abs(min_x) if min_x < 0 else 0
-        shift_y = abs(min_y) if min_y < 0 else 0
-
-        df['X'] += shift_x
-        df['Y'] += shift_y
-        self.x_odor += shift_x
-        self.y_odor += shift_y
-        self.x_top_left += shift_x
-        self.y_top_left += shift_y
-
-        print(f"Applied X-shift: {shift_x}, Y-shift: {shift_y}")
-
-        df['X_rel'] = abs((df['X'] - self.x_top_left) * self.factor_px_to_mm)
-        df['Y_rel'] = abs((df['Y'] - self.y_top_left) * self.factor_px_to_mm)
-
-        self.x_odor_rel = abs((self.x_odor - self.x_top_left) * self.factor_px_to_mm)
-        self.y_odor_rel = abs((self.y_odor - self.y_top_left) * self.factor_px_to_mm)
+        self.x_odor_rel = (self.x_odor - self.x_top_left) * self.factor_px_to_mm
+        self.y_odor_rel = (self.y_odor - self.y_top_left) * self.factor_px_to_mm
 
         print(f"Relative odor position: x = {self.x_odor_rel}, y = {self.y_odor_rel}")
 
@@ -72,13 +55,12 @@ class ImprovedCoordinateSystem:
 
     def rotate_coordinates(self, df):
         df['X_rel'], df['Y_rel'] = df['Y_rel'], -df['X_rel']
-        df['X_rel'] = df['X_rel'].abs()
-        df['Y_rel'] = df['Y_rel'].abs()
+        # Rotate odor coordinates
+        self.x_odor_rotated = self.y_odor_rel
+        self.y_odor_rotated = -self.x_odor_rel
 
-        self.x_odor_rel = abs(self.x_odor_rel)
-        self.y_odor_rel = abs(self.y_odor_rel)
+        print(f"Rotated odor position: x = {self.x_odor_rotated}, y = {self.y_odor_rotated}")
 
-        print(f"Rotated odor position: x = {self.x_odor_rel}, y = {self.y_odor_rel}")
         return df
 
 def read_csv_files(beh_annotation_path:str, skeleton_spline_path:str, worm_pos_path:str, spline_X_path:str, spline_Y_path:str, turn_annotation_path:str, coil_annotation_path:str):
@@ -304,21 +286,21 @@ def main(arg_list=None):
         factor_px_to_mm
     )
 
-    # -------------shifts every value of x and y in the positive range, by addition of the lowest value to all values
-    df_worm_parameter = coord_system.shift_to_positive_if_needed(df_worm_parameter)
+    # Calculate relative coordinates to top_left without shifting
+    df_worm_parameter = coord_system.calculate_relative_coords(df_worm_parameter)
 
     # Rotate coordinate system counterclockwise by 90 degrees
     df_worm_parameter = coord_system.rotate_coordinates(df_worm_parameter)
 
-    #acces x_odor and y_odor attributes from intiialized class
+    # Access x_odor and y_odor attributes from the initialized class
     x_odor, y_odor = coord_system.x_odor_rotated, coord_system.y_odor_rotated
 
-    # Add constant columns for final shifted odor positions
+    # Add constant columns for the final rotated odor positions
     df_worm_parameter['odor_x'] = x_odor
     df_worm_parameter['odor_y'] = y_odor
 
     print("After rotation:")
-    print(f"Odor position: x ={x_odor}, y ={y_odor}")
+    print(f"Odor position: x = {x_odor}, y = {y_odor}")
     print(df_worm_parameter.head())
 
     #_--------------------coorinate system augmentation finished!
