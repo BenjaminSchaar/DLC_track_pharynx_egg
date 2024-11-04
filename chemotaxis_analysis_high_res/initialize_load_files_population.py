@@ -75,23 +75,10 @@ class ImprovedCoordinateSystem:
         df['X_rel'] = df['X_rel'].abs()
         df['Y_rel'] = df['Y_rel'].abs()
 
-        self.x_odor_rel, self.y_odor_rel = self.y_odor_rel, -self.x_odor_rel
         self.x_odor_rel = abs(self.x_odor_rel)
         self.y_odor_rel = abs(self.y_odor_rel)
 
         print(f"Rotated odor position: x = {self.x_odor_rel}, y = {self.y_odor_rel}")
-        return df
-
-    def rotate_coordinates(self, df):
-        df['X_rel'], df['Y_rel'] = df['Y_rel'], -df['X_rel']
-        df['X_rel'] = df['X_rel'].abs()
-        df['Y_rel'] = df['Y_rel'].abs()
-
-        self.x_odor_rotated, self.y_odor_rotated = self.y_odor_rel, -self.x_odor_rel
-        self.x_odor_rotated = abs(self.x_odor_rotated)
-        self.y_odor_rotated = abs(self.y_odor_rotated)
-
-        print(f"Rotated odor position: x = {self.x_odor_rotated}, y = {self.y_odor_rotated}")
         return df
 
 def read_csv_files(beh_annotation_path:str, skeleton_spline_path:str, worm_pos_path:str, spline_X_path:str, spline_Y_path:str, turn_annotation_path:str, coil_annotation_path:str):
