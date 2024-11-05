@@ -54,10 +54,19 @@ class ImprovedCoordinateSystem:
         return df
 
     def rotate_coordinates(self, df):
-        df['X_rel'], df['Y_rel'] = df['Y_rel'], -df['X_rel']
+        # Rotate the coordinates
+        df['X_rotated'] = df['Y_rel']
+        df['Y_rotated'] = -df['X_rel']
+
+        # Since Y values do not cross zero, take absolute values
+        df['Y_rotated'] = df['Y_rotated'].abs()
+
         # Rotate odor coordinates
         self.x_odor_rotated = self.y_odor_rel
         self.y_odor_rotated = -self.x_odor_rel
+
+        # Apply absolute value to odor Y coordinate
+        self.y_odor_rotated = abs(self.y_odor_rotated)
 
         print(f"Rotated odor position: x = {self.x_odor_rotated}, y = {self.y_odor_rotated}")
 
