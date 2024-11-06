@@ -57,7 +57,7 @@ class ImprovedCoordinateSystem:
         # Swap and negate coordinates as per required transformation
         df['X_rel'] = df['Y_rel']
         df['Y_rel'] = -df['X_rel']
-        df['Y_rel'] = df['Y_rotated'].abs()  # Ensure Y values are positive
+        df['Y_rel'] = df['Y_rel'].abs()  # Ensure Y values are positive
 
         # Add rotated odor coordinates explicitly to DataFrame
         df['odor_x'] = self.x_odor_rel
