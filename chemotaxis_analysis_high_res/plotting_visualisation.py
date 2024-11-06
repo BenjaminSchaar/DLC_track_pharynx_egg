@@ -29,7 +29,6 @@ def plot_chemotaxis_overview(df, output_path, x_odor, y_odor, arena_min_x, arena
 
     # Combine the output path and file name
     full_path = os.path.join(output_path, file_name)
-    print("The full file path is:", full_path)
 
     plt.figure(figsize=(160, 160))
 
