@@ -38,31 +38,30 @@ from chemotaxis_analysis_high_res.data_smothing import (
 
 class ImprovedCoordinateSystem:
     def __init__(self, top_left_pos, odor_pos, factor_px_to_mm):
+        # Initialize top-left corner, odor position, and conversion factor
         self.x_top_left, self.y_top_left = top_left_pos
         self.x_odor, self.y_odor = odor_pos
         self.factor_px_to_mm = factor_px_to_mm
 
-    def calculate_relative_coords(self, df):
-        # axis switched here since taken from different coordinate system  df['X_rel'] = (df['X'] - self.y_top_left) * self.factor_px_to_mm
-
-        df['X_rel'] = (df['X'] - self.y_top_left) * self.factor_px_to_mm
-        df['Y_rel'] = (df['Y'] - self.x_top_left) * self.factor_px_to_mm
-
+        # Calculate relative odor position and convert to millimeters
         self.x_odor_rel = (self.x_odor - self.x_top_left) * self.factor_px_to_mm
         self.y_odor_rel = (self.y_odor - self.y_top_left) * self.factor_px_to_mm
 
-        print(f"Relative odor position: x = {self.x_odor_rel}, y = {self.y_odor_rel}")
-
+    def calculate_relative_coords(self, df):
+        # Adjust coordinates relative to top-left corner and convert to millimeters
+        df['X_rel'] = (df['X'] - self.y_top_left) * self.factor_px_to_mm
+        df['Y_rel'] = (df['Y'] - self.x_top_left) * self.factor_px_to_mm
         return df
 
     def rotate_coordinates(self, df):
-        df['X_rel'], df['Y_rel'] = df['Y_rel'], -df['X_rel']
-        # Rotate the coordinates
+        # Swap and negate coordinates as per required transformation
         df['X_rotated'] = df['Y_rel']
         df['Y_rotated'] = -df['X_rel']
-        # Since Y values do not cross zero, take absolute values
-        df['Y_rotated'] = df['Y_rotated'].abs()
+        df['Y_rotated'] = df['Y_rotated'].abs()  # Ensure Y values are positive
 
+        # Add rotated odor coordinates explicitly to DataFrame
+        df['odor_x'] = self.x_odor_rel
+        df['odor_y'] = self.y_odor_rel
         return df
 
 
@@ -288,19 +287,14 @@ def main(arg_list=None):
         odor_pos_tuple,
         factor_px_to_mm
     )
-
-    # Calculate relative coordinates to top_left without shifting
+    
+    # Apply coordinate transformations
     df_worm_parameter = coord_system.calculate_relative_coords(df_worm_parameter)
-
-    # Apply the rotation to the DataFrame
     df_worm_parameter = coord_system.rotate_coordinates(df_worm_parameter)
 
-    # Access x_odor and y_odor attributes from the initialized class
-    x_odor, y_odor = coord_system.x_odor_rel, coord_system.y_odor_rel
-
-    # Add constant columns for the final rotated odor positions
-    df_worm_parameter['odor_x'] = x_odor
-    df_worm_parameter['odor_y'] = y_odor
+    # Access final odor position in rotated coordinates for downstream calculations
+    x_odor = coord_system.x_odor_rel
+    y_odor = coord_system.y_odor_rel
 
     print("After rotation:")
     print(f"Odor position: x = {x_odor}, y = {y_odor}")
