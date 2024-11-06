@@ -43,8 +43,10 @@ class ImprovedCoordinateSystem:
         self.factor_px_to_mm = factor_px_to_mm
 
     def calculate_relative_coords(self, df):
-        df['X_rel'] = (df['X'] - self.x_top_left) * self.factor_px_to_mm
-        df['Y_rel'] = (df['Y'] - self.y_top_left) * self.factor_px_to_mm
+        # axis switched here since taken from different coordinate system  df['X_rel'] = (df['X'] - self.y_top_left) * self.factor_px_to_mm
+
+        df['X_rel'] = (df['X'] - self.y_top_left) * self.factor_px_to_mm
+        df['Y_rel'] = (df['Y'] - self.x_top_left) * self.factor_px_to_mm
 
         self.x_odor_rel = (self.x_odor - self.x_top_left) * self.factor_px_to_mm
         self.y_odor_rel = (self.y_odor - self.y_top_left) * self.factor_px_to_mm
@@ -52,6 +54,17 @@ class ImprovedCoordinateSystem:
         print(f"Relative odor position: x = {self.x_odor_rel}, y = {self.y_odor_rel}")
 
         return df
+
+    def rotate_coordinates(self, df):
+        df['X_rel'], df['Y_rel'] = df['Y_rel'], -df['X_rel']
+        # Rotate the coordinates
+        df['X_rotated'] = df['Y_rel']
+        df['Y_rotated'] = -df['X_rel']
+        # Since Y values do not cross zero, take absolute values
+        df['Y_rotated'] = df['Y_rotated'].abs()
+
+        return df
+
 
 def read_csv_files(beh_annotation_path:str, skeleton_spline_path:str, worm_pos_path:str, spline_X_path:str, spline_Y_path:str, turn_annotation_path:str, coil_annotation_path:str):
     # Check if the file paths exist
@@ -278,6 +291,9 @@ def main(arg_list=None):
 
     # Calculate relative coordinates to top_left without shifting
     df_worm_parameter = coord_system.calculate_relative_coords(df_worm_parameter)
+
+    # Apply the rotation to the DataFrame
+    df_worm_parameter = coord_system.rotate_coordinates(df_worm_parameter)
 
     # Access x_odor and y_odor attributes from the initialized class
     x_odor, y_odor = coord_system.x_odor_rel, coord_system.y_odor_rel
