@@ -519,14 +519,13 @@ def main(arg_list=None):
 
     plot_dynamic_binned(df_worm_parameter, 'speed_s', output_path, 'speed_over_time.png', bin_count=100)
 
-    plot_dynamic_binned(df_worm_parameter, 'NI_s', output_path, 'NI_over_time_with_speed_hue.png', hue_column='speed_s',
-                        bin_count=100)
+    plot_dynamic_binned(df_worm_parameter, 'NI_s', output_path, 'NI_over_time_with_speed_hue.png', hue_column='speed_s', bin_count=100)
+
+    plot_turns(df_worm_parameter, output_path, file_name='turns.png')
 
     plot_chemotaxis_overview(df_worm_parameter, output_path, x_odor, y_odor, arena_min_x, arena_max_x, arena_min_y, arena_max_y, fps, file_name="chemotaxis_overview.png")
 
     #plot_angles_binned(df_worm_parameter, 'bearing_angle_s', 'curving_angle_s', output_path, num_bins=20, file_name='curving_angle_binned_plot.png')
-
-    plot_turns(df_worm_parameter, output_path, file_name='turns.png')
 
     '''
         concatenate df_worm_parameter and Spline_K before final output
