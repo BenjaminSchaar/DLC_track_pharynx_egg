@@ -68,6 +68,10 @@ class CoordinateSystem:
         # Remove intermediate columns
         df = df.drop(['X_mm', 'Y_mm'], axis=1)
 
+        # Add rotated odor coordinates explicitly to DataFrame
+        df['odor_x'] = self.odor_x_mm
+        df['odor_y'] = self.odor_y_mm
+
         return df
 
 def read_csv_files(beh_annotation_path:str, skeleton_spline_path:str, worm_pos_path:str, spline_X_path:str, spline_Y_path:str, turn_annotation_path:str, coil_annotation_path:str):
@@ -288,8 +292,11 @@ def main(arg_list=None):
     # Transform the coordinates
     df_worm_parameter = coord_system.transform_coordinates(df_worm_parameter)
 
+    x_odor = coord_system.odor_x_mm
+    y_odor = coord_system.odor_y_mm
+
     # Access transformed odor positions if needed
-    print(f"Odor position (mm): x={coord_system.odor_x_mm}, y={coord_system.odor_y_mm}")
+    print(f"Odor position (mm): x={x_odor}, y={y_odor}")
     print(df_worm_parameter.head())
 
     #_--------------------coorinate system augmentation finished!
