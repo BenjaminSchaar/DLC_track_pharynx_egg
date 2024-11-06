@@ -55,9 +55,9 @@ class ImprovedCoordinateSystem:
 
     def rotate_coordinates(self, df):
         # Swap and negate coordinates as per required transformation
-        df['X_rotated'] = df['Y_rel']
-        df['Y_rotated'] = -df['X_rel']
-        df['Y_rotated'] = df['Y_rotated'].abs()  # Ensure Y values are positive
+        df['X_rel'] = df['Y_rel']
+        df['Y_rel'] = -df['X_rel']
+        df['Y_rel'] = df['Y_rotated'].abs()  # Ensure Y values are positive
 
         # Add rotated odor coordinates explicitly to DataFrame
         df['odor_x'] = self.x_odor_rel
@@ -210,14 +210,6 @@ def extract_coords(pos_string):
     # Convert to integers and return as tuple
     return int(x_str.strip()), int(y_str.strip())
 
-# Function to rotate coordinates
-def rotate_coordinates(row):
-    x_rel, y_rel = row["X_rel"], row["Y_rel"]
-    row["X_rel"] = y_rel
-    row["Y_rel"] = -x_rel
-    row["Y_rel"] = abs(row["Y_rel"])  # Make Y_rel positive
-    return row
-
 def main(arg_list=None):
     parser = argparse.ArgumentParser(description='Read CSV files and plot data')
     parser.add_argument('--beh_annotation', help='Full path to the behavior annotation CSV file', required=True)
@@ -287,7 +279,7 @@ def main(arg_list=None):
         odor_pos_tuple,
         factor_px_to_mm
     )
-    
+
     # Apply coordinate transformations
     df_worm_parameter = coord_system.calculate_relative_coords(df_worm_parameter)
     df_worm_parameter = coord_system.rotate_coordinates(df_worm_parameter)
