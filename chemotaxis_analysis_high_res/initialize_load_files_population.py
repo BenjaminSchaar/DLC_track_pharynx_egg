@@ -59,14 +59,16 @@ class CoordinateSystem:
         df['Y_mm'] = (df['Y'] - self.top_left_x) * self.factor_px_to_mm
 
         # Step 2: Rotate X_mm and Y_mm by 90 degrees counterclockwise
-        df['X_mm_rotated'] = -df['Y_mm']
-        df['Y_mm_rotated'] = df['X_mm']
+        df['X_rel'] = -df['Y_mm']
+        df['Y_rel'] = df['X_mm']
 
         # Step 3: Make X_mm_rotated positive
-        df['X_mm_rotated'] = df['X_mm_rotated'].abs()
+        df['X_rel'] = df['X_rel'].abs()
+
+        # Remove intermediate columns
+        df = df.drop(['X_mm', 'Y_mm'], axis=1)
 
         return df
-
 
 def read_csv_files(beh_annotation_path:str, skeleton_spline_path:str, worm_pos_path:str, spline_X_path:str, spline_Y_path:str, turn_annotation_path:str, coil_annotation_path:str):
     # Check if the file paths exist
