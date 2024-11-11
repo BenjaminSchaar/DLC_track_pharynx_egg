@@ -141,57 +141,30 @@ def calculate_preceived_conc(distance: float, time_seconds: float, conc_array: n
 
     return conc_value
 
-
 def calculate_displacement_vector(df_worm_parameter):
     '''
     Calculate and add the displacement vector components to the DataFrame.
-
-    This function computes the components of the displacement vector
-    for each time point in the worm's movement data. It approximates
-    the instantaneous velocity vector, which represents the rate of
-    change of position with respect to time.
-
-    The function uses numpy.gradient to estimate the rate of change
-    of x and y positions, then applies numpy.arctan2 to compute the
-    angle of the displacement vector. Additionally, it calculates the
-    magnitude of the displacement vector using the Euclidean norm.
-
     Parameters:
-    df_worm_parameter (pd.DataFrame): DataFrame with 'X_rel_skel_pos_centroid_corrected'
-                                      and 'Y_rel_skel_pos_centroid_corrected' columns
-                                      representing worm positions over time.
-
+    df_worm_parameter (pd.DataFrame): DataFrame containing columns:
+                                     'X_rel_skel_pos_centroid_corrected' and
+                                     'Y_rel_skel_pos_centroid_corrected'
     Returns:
     pd.DataFrame: Original DataFrame with new columns added:
                   - 'dx_dt': Rate of change in x direction
                   - 'dy_dt': Rate of change in y direction
-                  - 'direction': Angle of the displacement vector in degrees
+                  - 'displacement_vector_degrees': Angle of the displacement vector in degrees
                   - 'displacement_magnitude': Length of the displacement vector
-
-    Note:
-    The 'direction' column contains angles in degrees, where:
-    - 0° points right (+x direction)
-    - 90° points up (+y direction)
-    - 180° or -180° points left (-x direction)
-    - -90° points down (-y direction)
-    Angles increase counterclockwise and range from -180° to 180°.
-
-        90°
-       |
-       |
-    +-180° --- 0° (or 360°)
-       |
-       |
-     -90°
-
     '''
+    # Update required columns for single-level index
+    required_columns = [
+        'X_rel_skel_pos_centroid_corrected',
+        'Y_rel_skel_pos_centroid_corrected'
+    ]
+    missing_columns = [col for col in required_columns if col not in df_worm_parameter.columns]
+    if missing_columns:
+        raise ValueError(f"DataFrame must contain columns: {missing_columns}")
 
-    # Ensure the required columns exist
-    required_columns = ['X_rel_skel_pos_centroid_corrected', 'Y_rel_skel_pos_centroid_corrected']
-    if not all(col in df_worm_parameter.columns for col in required_columns):
-        raise ValueError(f"DataFrame must contain columns: {required_columns}")
-
-    # Extract x and y coordinates
+    # Extract x and y coordinates using single-level column names
     x = df_worm_parameter['X_rel_skel_pos_centroid_corrected'].values
     y = df_worm_parameter['Y_rel_skel_pos_centroid_corrected'].values
 
@@ -206,14 +179,16 @@ def calculate_displacement_vector(df_worm_parameter):
     # Calculate the displacement magnitude (Euclidean norm)
     displacement_magnitude = np.sqrt(dx_dt**2 + dy_dt**2)
 
-    # Add new columns to the DataFrame
-    df_worm_parameter['displacement_vector_degrees'] = direction_degrees
-    df_worm_parameter['displacement_magnitude'] = displacement_magnitude
+    # Add new columns to the DataFrame with single-level indexing
+    df_worm_parameter['centroid_dx_dt'] = dx_dt
+    df_worm_parameter['centroid_dy_dt'] = dy_dt
+    df_worm_parameter['centroid_displacement_vector_degrees'] = direction_degrees
+    df_worm_parameter['centroid_displacement_magnitude'] = displacement_magnitude
 
     return df_worm_parameter
 
 
-def calculate_curving_angle(df_worm_parameter, bearing_range=1):
+def calculate_curving_angle(df_worm_parameter, window_size=1):
     '''
     Calculate the change in bearing angle over a specified range of frames.
 
@@ -232,8 +207,8 @@ def calculate_curving_angle(df_worm_parameter, bearing_range=1):
     displacement_vector_degrees = df_worm_parameter['displacement_vector_degrees'].values
     bearing_change = np.zeros_like(displacement_vector_degrees)
 
-    for i in range(bearing_range, len(displacement_vector_degrees)):
-        change = displacement_vector_degrees[i] - displacement_vector_degrees[i - bearing_range]
+    for i in range(window_size, len(displacement_vector_degrees)):
+        change = displacement_vector_degrees[i] - displacement_vector_degrees[i - window_size]
         # Ensure the change is in the range [-180, 180]
         bearing_change[i] = (change + 180) % 360 - 180
 
@@ -241,56 +216,59 @@ def calculate_curving_angle(df_worm_parameter, bearing_range=1):
 
     return df_worm_parameter
 
-def calculate_bearing_angle(df_worm_parameter, x_odor, y_odor):
-    '''
-    Calculate the bearing angle between the worm's displacement vector and the vector towards a defined odor source in 2D space.
 
-    Mathematical description:
-    1. Use two vectors:
-       a) Displacement vector of the worm (already provided in degrees)
-       b) Vector from worm to odor source (calculated)
-    2. Compute the angle between these vectors by subtracting the displacement vector angle from the angle to the odor source.
-    3. Normalize the resulting angle to be within the range [-180, 180] degrees.
+def calculate_bearing_angle(df, window_size):
+    """
+    Calculate the bearing angle between the worm's smoothed movement direction and the direction to the odor source.
 
-    Angle interpretation:
-    - The angle ranges from -180 to +180 degrees.
-    - Positive angle: The worm's trajectory is to the left of the vector pointing to the odor source.
-    - Negative angle: The worm's trajectory is to the right of the vector pointing to the odor source.
-    - 0 degrees: The worm is moving directly towards the odor source.
-    - ±180 degrees: The worm is moving directly away from the odor source.
+    Mathematical concepts:
+    1. Complex number averaging: Used for circular data (angles) where simple arithmetic mean fails
+       - Converting angles to complex numbers (e^(iθ)) preserves circular nature
+       - Points on unit circle ensure equal weighting in averaging
+    2. Bearing calculation:
+       - Vector from current position to odor source: (odor_x - current_x, odor_y - current_y)
+       - Bearing = difference between movement direction and direction to target
+       - Normalized to [-180,180] then [0,180] for standard representation
 
     Parameters:
-    df_worm_parameter (pd.DataFrame): DataFrame with 'X_rel_skel_pos_centroid_corrected',
-    'Y_rel_skel_pos_centroid_corrected', and 'displacement_vector_degrees' columns.
-    x_odor (float): X-coordinate of the odor source.
-    y_odor (float): Y-coordinate of the odor source.
-
+    df (pd.DataFrame): DataFrame containing required parameters
+    window_size (int): Number of frames to use for calculating average movement direction
     Returns:
-    pd.DataFrame: Original DataFrame with new 'bearing_angle_degrees' column added.
-    '''
-    required_columns = ['X_rel_skel_pos_centroid_corrected', 'Y_rel_skel_pos_centroid_corrected', 'displacement_vector_degrees']
-    if not all(col in df_worm_parameter.columns for col in required_columns):
-        raise ValueError(f"DataFrame must contain the following columns: {', '.join(required_columns)}")
+    pd.DataFrame: Original DataFrame with new bearing_angle_degrees column added
+    """
+    # Convert angles to complex numbers (e^(iθ)) for proper circular averaging
+    # This prevents issues like averaging 359° and 1° to 180° instead of 0°
+    movement_angle = df['centroid_displacement_vector_degrees']
+    complex_angles = np.exp(1j * np.radians(movement_angle))
 
-    # Calculate vector from worm to odor source
-    dx_to_odor = x_odor - df_worm_parameter['X_rel_skel_pos_centroid_corrected']
-    dy_to_odor = y_odor - df_worm_parameter['Y_rel_skel_pos_centroid_corrected']
+    # Rolling average in complex space preserves circular nature of angles
+    # Result is still on unit circle but represents average direction
+    smoothed_complex = complex_angles.rolling(window=window_size, center=True, min_periods=1).mean()
 
-    # Calculate angle to odor source
-    angle_to_odor = np.degrees(np.arctan2(dy_to_odor, dx_to_odor))
+    # Convert back from complex to angles in degrees
+    smoothed_movement_angle = np.degrees(np.angle(smoothed_complex))
 
-    # Calculate bearing angle
-    bearing_angle = angle_to_odor - df_worm_parameter['displacement_vector_degrees']
+    # Calculate vector components to odor source (target - current position)
+    x_to_odor = df['odor_x'] - df['X_rel_skel_pos_centroid_corrected']
+    y_to_odor = df['odor_y'] - df['Y_rel_skel_pos_centroid_corrected']
 
-    # Normalize angle to [-180, 180] range
-    bearing_angle = (bearing_angle + 180) % 360 - 180
+    # arctan2 gives angle of vector to odor, handling all quadrants correctly
+    angle_to_odor = np.degrees(np.arctan2(y_to_odor, x_to_odor))
 
-    # Convert -180 to +180
-    bearing_angle = np.where(bearing_angle == -180, 180, bearing_angle)
+    # Calculate bearing angle (difference between direction of travel and direction to odor)
+    bearing_angle = angle_to_odor - smoothed_movement_angle
 
-    df_worm_parameter['bearing_angle'] = bearing_angle
+    # Normalize to [-180, 180] range
+    # First add 180 to shift range, then modulo 360 to wrap around, then subtract 180 to center
+    bearing_angle = ((bearing_angle + 180) % 360) - 180
 
-    return df_worm_parameter
+    # Convert to [0, 180] range by taking absolute value
+    # This treats leftward and rightward deviations as equivalent
+    bearing_angle = bearing_angle.abs()
+
+    df['bearing_angle'] = bearing_angle
+
+    return df
 
 def calculate_speed(df, fps):
     '''

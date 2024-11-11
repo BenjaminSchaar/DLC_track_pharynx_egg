@@ -401,8 +401,8 @@ def main(arg_list=None):
 
       '''
     df_worm_parameter = calculate_displacement_vector(df_worm_parameter)
-    df_worm_parameter = calculate_curving_angle(df_worm_parameter, bearing_range=1)
-    df_worm_parameter = calculate_bearing_angle(df_worm_parameter, x_odor, y_odor)
+    df_worm_parameter = calculate_curving_angle(df_worm_parameter, window_size=1)
+    df_worm_parameter = calculate_bearing_angle(df_worm_parameter, fps)
 
     # Print confirmation and first few rows of the DataFrame
     print("Angles calculated.")
