@@ -281,11 +281,11 @@ def calculate_speed(df, fps):
     '''
 
     # Ensure the required column exists
-    if 'displacement_magnitude' not in df.columns:
-        raise ValueError("DataFrame must contain 'displacement_magnitude' column")
+    if 'centroid_displacement_magnitude' not in df.columns:
+        raise ValueError("DataFrame must contain 'centroid_displacement_magnitude' column")
 
     # Calculate the speed (displacement magnitude per frame) and convert it to per second by multiplying by fps
-    df['speed'] = df['displacement_magnitude'] * fps
+    df['speed'] = df['centroid_displacement_magnitude'] * fps
 
     # Further smooth the 'speed' column to reduce variability
     speed_smoothing_window_size = int(fps)  # For a 2-second window
