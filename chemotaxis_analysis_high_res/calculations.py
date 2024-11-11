@@ -200,9 +200,9 @@ def calculate_curving_angle(df_worm_parameter, window_size=1):
     Returns:
     pd.DataFrame: Original DataFrame with new 'bearing_change' column added.
     '''
-    if 'displacement_vector_degrees' not in df_worm_parameter.columns:
+    if 'centroid_displacement_vector_degrees' not in df_worm_parameter.columns:
         raise ValueError(
-            "DataFrame must contain 'displacement_vector_degrees' column. Run calculate_displacement_vector first.")
+            "DataFrame must contain 'centroid_displacement_vector_degrees' column. Run calculate_displacement_vector first.")
 
     displacement_vector_degrees = df_worm_parameter['centroid_displacement_vector_degrees'].values
     bearing_change = np.zeros_like(displacement_vector_degrees)
