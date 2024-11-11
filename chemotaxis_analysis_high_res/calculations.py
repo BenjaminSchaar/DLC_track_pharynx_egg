@@ -217,56 +217,38 @@ def calculate_curving_angle(df_worm_parameter, window_size=1):
     return df_worm_parameter
 
 
-def calculate_bearing_angle(df, window_size):
+def calculate_bearing_angle(df):
     """
-    Calculate the bearing angle between the worm's smoothed movement direction and the direction to the odor source.
+    Calculate the bearing angle between the worm's movement direction and the direction to the odor source.
 
-    Mathematical concepts:
-    1. Complex number averaging: Used for circular data (angles) where simple arithmetic mean fails
-       - Converting angles to complex numbers (e^(iθ)) preserves circular nature
-       - Points on unit circle ensure equal weighting in averaging
-    2. Bearing calculation:
-       - Vector from current position to odor source: (odor_x - current_x, odor_y - current_y)
-       - Bearing = difference between movement direction and direction to target
-       - Normalized to [-180,180] then [0,180] for standard representation
+    The bearing angle is defined as the angle between:
+    1. The vector of recent movement (from centroid displacement vector)
+    2. The vector pointing from current position to odor position
 
     Parameters:
-    df (pd.DataFrame): DataFrame containing required parameters
-    window_size (int): Number of frames to use for calculating average movement direction
+    df (pd.DataFrame): DataFrame containing required parameters with single-index columns
+
     Returns:
     pd.DataFrame: Original DataFrame with new bearing_angle_degrees column added
     """
-    # Convert angles to complex numbers (e^(iθ)) for proper circular averaging
-    # This prevents issues like averaging 359° and 1° to 180° instead of 0°
+    # Get movement direction (already calculated)
     movement_angle = df['centroid_displacement_vector_degrees']
-    complex_angles = np.exp(1j * np.radians(movement_angle))
 
-    # Rolling average in complex space preserves circular nature of angles
-    # Result is still on unit circle but represents average direction
-    smoothed_complex = complex_angles.rolling(window=window_size, center=True, min_periods=1).mean()
-
-    # Convert back from complex to angles in degrees
-    smoothed_movement_angle = np.degrees(np.angle(smoothed_complex))
-
-    # Calculate vector components to odor source (target - current position)
+    # Calculate vector to odor source
     x_to_odor = df['odor_x'] - df['X_rel_skel_pos_centroid_corrected']
     y_to_odor = df['odor_y'] - df['Y_rel_skel_pos_centroid_corrected']
 
-    # arctan2 gives angle of vector to odor, handling all quadrants correctly
+    # Calculate angle to odor (in degrees)
     angle_to_odor = np.degrees(np.arctan2(y_to_odor, x_to_odor))
 
-    # Calculate bearing angle (difference between direction of travel and direction to odor)
-    bearing_angle = angle_to_odor - smoothed_movement_angle
+    # Calculate bearing angle (difference between movement direction and angle to odor)
+    bearing_angle = angle_to_odor - movement_angle
 
-    # Normalize to [-180, 180] range
-    # First add 180 to shift range, then modulo 360 to wrap around, then subtract 180 to center
+    # Normalize angle to be between -180 and 180 degrees
     bearing_angle = ((bearing_angle + 180) % 360) - 180
 
-    # Convert to [0, 180] range by taking absolute value
-    # This treats leftward and rightward deviations as equivalent
-    bearing_angle = bearing_angle.abs()
-
-    df['bearing_angle'] = bearing_angle
+    # Add to DataFrame
+    df['bearing_angle_degrees'] = bearing_angle
 
     return df
 
