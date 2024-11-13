@@ -276,36 +276,20 @@ def calculate_speed(df, fps):
     return df
 
 
-
-def calculate_radial_speed(df, fps):
+def calculate_radial_speed_improved(df, fps):
     '''
-    Calculates radial speed (speed towards the odor source) by using the change in distance to the odor over time
-    in mm/second and adds the column radial_speed.
+    Calculates radial speed (speed towards/away from the odor source) using change in distance over time.
+    Positive values indicate movement toward the odor source, negative values indicate movement away.
 
-    :param df: pandas DataFrame with column 'distance_to_odor_centroid'
-    :param fps: frames per second of the video
-    :return: DataFrame with an additional 'radial_speed' column
+    Parameters:
+    df (pd.DataFrame): DataFrame containing distance_to_odor_centroid column
+    fps (float): Frames per second of the video
+
+    Returns:
+    pd.DataFrame: Original DataFrame with new 'radial_speed' column added
     '''
-    temp_df = df[['distance_to_odor_centroid']].copy()
-
-    # Smoothing window size for distance, to reduce noise
-    distance_smoothing_window = 2  # For averaging the latest 2 distances
-
-    # Apply rolling mean to smooth distances
-    temp_df['distance_smooth'] = temp_df['distance_to_odor_centroid'].rolling(window=distance_smoothing_window,
-                                                                              min_periods=1).mean()
-
-    # Calculate the difference between consecutive smoothed distances
-    temp_df['distance_diff'] = temp_df['distance_smooth'].diff()
-
-    # Calculate the radial speed (change in distance per frame) and convert to per second
-    temp_df['radial_speed'] = temp_df['distance_diff'] * fps
-
-    # Further smooth the 'radial_speed' column to reduce variability
-    speed_smoothing_window_size = int(fps * 2)  # For a 2-second window
-    temp_df['radial_speed'] = temp_df['radial_speed'].rolling(window=speed_smoothing_window_size, min_periods=1).mean()
-
-    # Add the radial speed column to the original DataFrame
-    df['radial_speed'] = temp_df['radial_speed']
+    # Calculate radial speed using gradient of distance
+    # Negative sign makes positive values mean moving toward odor
+    df['radial_speed'] = -np.gradient(df['distance_to_odor_centroid']) * fps
 
     return df
