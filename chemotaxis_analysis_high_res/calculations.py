@@ -276,7 +276,7 @@ def calculate_speed(df, fps):
     return df
 
 
-def calculate_radial_speed_improved(df, fps):
+def calculate_radial_speed(df, fps):
     '''
     Calculates radial speed (speed towards/away from the odor source) using change in distance over time.
     Positive values indicate movement toward the odor source, negative values indicate movement away.
