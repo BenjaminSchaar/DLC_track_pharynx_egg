@@ -88,14 +88,11 @@ def read_csv_files(beh_annotation_path:str, skeleton_spline_path:str, worm_pos_p
         raise FileNotFoundError(f"The file '{spline_Y_path}' does not exist.")
     if not os.path.exists(turn_annotation_path):
         raise FileNotFoundError(f"The file '{turn_annotation_path}' does not exist.")
-    if not os.path.exists(coil_annotation_path):
-        raise FileNotFoundError(f"The file '{coil_annotation_path}' does not exist.")
 
     # Read CSV files into separate dataframes
     beh_annotation_df = pd.read_csv(beh_annotation_path, header=None)
     skeleton_spline_df = pd.read_csv(skeleton_spline_path, header=None)
     turn_annotation_df = pd.read_csv(turn_annotation_path)
-    coil_annotation_df = pd.read_csv(coil_annotation_path)
 
     worm_pos_df = pd.read_csv(worm_pos_path)
     worm_pos_df = worm_pos_df.drop(columns=['time'], errors='ignore')  # deletes old time column before interplation step
@@ -112,9 +109,6 @@ def read_csv_files(beh_annotation_path:str, skeleton_spline_path:str, worm_pos_p
 
     print("Turn Annotation DataFrame:")
     print(turn_annotation_df.head())
-
-    print("Coil Annotation DataFrame:")
-    print(coil_annotation_df.head())
 
     print("\nSkeleton Spline DataFrame:")
     print(skeleton_spline_df.head())
@@ -163,7 +157,6 @@ def read_csv_files(beh_annotation_path:str, skeleton_spline_path:str, worm_pos_p
 
     print("Number of rows in beh_annotation_df:", len(beh_annotation_df))
     print("Number of rows in turn_annotation_df:", len(turn_annotation_df))
-    print("Number of rows in coil_annotation_df:", len(coil_annotation_df))
     print("Number of rows in skeleton_spline_df:", len(skeleton_spline_df))
     print("Number of rows in worm_pos_df:", len(worm_pos_df))
     print("Number of rows in spline_X_df:", len(spline_X_df))
@@ -233,7 +226,6 @@ def main(arg_list=None):
     parser.add_argument('--conc_gradient_array', help='exportet concentration_gradient.npy file for the odor used', required=True)
     parser.add_argument('--distance_array', help='exportet distance_array.npy file for the odor used', required=True)
     parser.add_argument('--turn_annotation', help='Full path to the turn annotation CSV file', required=True)
-    parser.add_argument('--coil_annotation', help='Full path to the coil annotation CSV file', required=True)
     parser.add_argument('--top_left_pos', help='Tuple of x and y with top left arena position', required=True)
     parser.add_argument('--odor_pos', help='Tuple of x and y with odor position', required=True)
     parser.add_argument('--diffusion_time_offset', help='offset in seconds for Diffusion simulation (default 1h = 3600 sec)', type=int, default=3600, required=False)
@@ -243,7 +235,6 @@ def main(arg_list=None):
 
     beh_annotation_path = args.beh_annotation
     turn_annotation_path = str(args.turn_annotation)
-    coil_annotation_path = str(args.coil_annotation)
     skeleton_spline_path = args.skeleton_spline
     worm_pos_path = args.worm_pos
     spline_X_path = args.skeleton_spline_X_coords
@@ -302,7 +293,7 @@ def main(arg_list=None):
     #_--------------------coorinate system augmentation finished!
 
     # Create a copy of df_worm_parameter
-    df_worm_movie = df_worm_parameter.copy()  # create copy of df_worm_parameter fo wormmovie later
+    df_skel_pos_abs = df_worm_parameter.copy()  # create copy of df_worm_parameter fo wormmovie later
 
     # Calculate corrected center position of the worm
     skel_pos_centroid = 100
@@ -419,12 +410,6 @@ def main(arg_list=None):
     beh_annotation = beh_annotation.rename(columns={1: 'behaviour_state'})
     beh_annotation = beh_annotation.drop(columns=[0])
 
-    turn_annotation = turn_annotation.drop(columns=['Unnamed: 0'])
-
-    coil_annotation = coil_annotation.rename(columns={'behavior': 'coils'})
-    coil_annotation = coil_annotation.drop(columns=['Unnamed: 0'])
-    coil_annotation = coil_annotation.drop(columns=['circularity'])
-
     # Merge/join based on index
     df_worm_parameter = pd.merge(df_worm_parameter, beh_annotation, left_index=True, right_index=True, how='left')
     df_worm_parameter = pd.merge(df_worm_parameter, turn_annotation, left_index=True, right_index=True, how='left')
@@ -505,49 +490,57 @@ def main(arg_list=None):
     '''
         concatenate df_worm_parameter and Spline_K before final output
     '''
-    # Concatenate the DataFrames horizontally
+
+    # Initial concatenation of worm parameter and skeleton spline data
     df_combined = pd.concat([df_worm_parameter, skeleton_spline], axis=1)
 
-    # Create MultiIndex columns
-    # For df_worm_parameter columns, the top level is 'chemotaxis_parameter'
+    # Create MultiIndex columns for initial data
     chemotaxis_columns = pd.MultiIndex.from_product(
         [['chemotaxis_parameter'], df_worm_parameter.columns]
     )
 
-    # For df_skeleton_spline columns, the top level is 'Spline_K'
     spline_columns = pd.MultiIndex.from_product(
         [['Spline_K'], skeleton_spline.columns]
     )
 
-    # **Assign the new MultiIndex columns directly to df_combined**
+    # Assign initial MultiIndex columns
     df_combined.columns = chemotaxis_columns.append(spline_columns)
 
-    # Save the combined DataFrame to a CSV file
-    df_combined.to_csv(os.path.join(output_path, 'chemotaxis_params.csv'), index=True)
+    # Create animation of whole worm skeleton in arena
+    df_skel_pos_abs = pd.DataFrame()  # Initialize empty DataFrame for skeleton positions
 
-    #create animation of whole worm skelleton in arena
-    # Assuming df_worm_parameter, spline_X, spline_Y, video_resolution_x, video_resolution_y, factor_px_to_mm are defined
-    '''
-    # Define skel_pos_0
-    skel_pos_movie = 0
-    
-    # Iterate over skeleton positions from 0 to 100 inclusive
-    for skel_pos_movie in range(101):
-        print(skel_pos_movie)
-        df_worm_movie = correct_stage_pos_with_skeleton(
-            df_worm_movie,
+    # Iterate over skeleton positions
+    for skel_pos_abs in range(101):
+        print(skel_pos_abs)
+        df_skel_pos_abs = correct_stage_pos_with_skeleton(
+            df_skel_pos_abs,
             spline_X,
             spline_Y,
-            skel_pos_movie,
+            skel_pos_abs,
             video_resolution_x,
             video_resolution_y,
             factor_px_to_mm
         )
 
-    print('Worm Animation DF:', df_worm_movie.head())
+    print('Worm Animation DF:', df_skel_pos_abs.head())
 
-    create_worm_animation(df_worm_movie, df_worm_parameter, output_path, x_odor, y_odor, fps, arena_min_x, arena_max_x, arena_min_y, arena_max_y, file_name='worm_movie.avi')
-    '''
+    # Create MultiIndex columns for skeleton positions
+    skel_pos_columns = pd.MultiIndex.from_product(
+        [['skel_pos_abs'], df_skel_pos_abs.columns]
+    )
+
+    # Add skeleton position data to combined DataFrame
+    df_combined = pd.concat([df_combined, df_skel_pos_abs], axis=1)
+
+    # Combine all column hierarchies
+    all_columns = chemotaxis_columns.append(spline_columns).append(skel_pos_columns)
+    df_combined.columns = all_columns
+
+    # Save final DataFrame
+    df_combined.to_csv(os.path.join(output_path, 'chemotaxis_params.csv'), index=True)
+
+    #create_worm_animation(df_skel_pos_abs, df_worm_parameter, output_path, x_odor, y_odor, fps, arena_min_x, arena_max_x, arena_min_y, arena_max_y, file_name='worm_movie.avi')
+
 
 if __name__ == "__main__":
 
