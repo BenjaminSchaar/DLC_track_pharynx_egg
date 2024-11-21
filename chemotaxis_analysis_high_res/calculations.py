@@ -269,10 +269,6 @@ def calculate_speed(df, fps):
     # Calculate the speed (displacement magnitude per frame) and convert it to per second by multiplying by fps
     df['speed'] = df['centroid_displacement_magnitude'] * fps
 
-    # Further smooth the 'speed' column to reduce variability
-    speed_smoothing_window_size = int(fps)  # For a 2-second window
-    df['speed'] = df['speed'].rolling(window=speed_smoothing_window_size, min_periods=1).mean()
-
     return df
 
 
@@ -289,7 +285,7 @@ def calculate_radial_speed(df, fps):
     pd.DataFrame: Original DataFrame with new 'radial_speed' column added
     '''
     # Calculate radial speed using gradient of distance
-    # Negative sign makes positive values mean moving toward odor
-    df['radial_speed'] = -np.gradient(df['distance_to_odor_centroid']) * fps
+    #e.g Speed is 2 mm/frame × 10 frames/second = 20 mm/second 2mm/frame×10frames/second=20mm/second.
+    df['radial_speed'] = np.gradient(df['distance_to_odor_centroid']) * fps
 
     return df
