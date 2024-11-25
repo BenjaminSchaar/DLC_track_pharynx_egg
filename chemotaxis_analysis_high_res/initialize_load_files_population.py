@@ -316,14 +316,6 @@ def main(arg_list=None):
         video_origin="crop"  # Set to "crop" for corrected logic
     )
 
-    #perform rolling mean on centroid columns to get the proper trajectory of the worm, window size can be defined
-
-    centroid_rolling_mean_window_size = int(fps)
-
-    # Calculate the rolling mean for the 'X_rel_skel_pos_centroid' column
-    df_worm_parameter['X_rel_skel_pos_centroid_corrected'] = df_worm_parameter['X_rel_skel_pos_centroid'].rolling(window=centroid_rolling_mean_window_size).mean()
-    df_worm_parameter['Y_rel_skel_pos_centroid_corrected'] = df_worm_parameter['Y_rel_skel_pos_centroid'].rolling(window=centroid_rolling_mean_window_size).mean()
-
     print("added relative worm position:", df_worm_parameter)
 
     # calculate distances for stage, skeletton position 0 (nose) and 49 (center)
@@ -401,9 +393,9 @@ def main(arg_list=None):
     - calculates reversal start and end
     - calculates reversal frequency per minute
     '''
+    print(reversal_annotation.head())
     # Renaming the second column from 1 to 'behaviour_state'
-    reversal_annotation = reversal_annotation.rename(columns={1: 'behaviour_state'})
-    reversal_annotation = reversal_annotation.drop(columns=[0])
+    reversal_annotation = reversal_annotation.rename(columns={0: 'behaviour_state'})
 
     # Merge/join based on index
     df_worm_parameter = pd.merge(df_worm_parameter, reversal_annotation, left_index=True, right_index=True, how='left')
