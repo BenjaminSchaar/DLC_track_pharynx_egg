@@ -264,6 +264,8 @@ def main(arg_list=None):
     #-------------loading necessary files
     reversal_annotation, skeleton_spline, df_worm_parameter, spline_X, spline_Y, turn_annotation = read_csv_files(reversal_annotation_path, skeleton_spline_path, worm_pos_path, spline_X_path, spline_Y_path, turn_annotation_path)
 
+    df_skel_all = df_worm_parameter.copy()
+
     # Convert the position strings to tuples
     top_left_tuple = extract_coords(args.top_left_pos)
     odor_pos_tuple = extract_coords(args.odor_pos)
@@ -498,7 +500,7 @@ def main(arg_list=None):
     # Iterate over skeleton positions
     for skel_pos_abs in range(19):
         df_skel_pos_abs = correct_stage_pos_with_skeleton(
-            df_worm_parameter,
+            df_skel_all,
             spline_X,
             spline_Y,
             skel_pos_abs,  # 100 will calculate the centroid -> column name will be 'X/Y_rel_skel_pos_centroid'
