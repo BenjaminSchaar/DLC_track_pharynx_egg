@@ -171,7 +171,7 @@ def read_csv_files(beh_annotation_path:str, skeleton_spline_path:str, worm_pos_p
         print("Stage Position Dataframe head after interpolation:", worm_pos_df.head())
         print("Frame lenght of recorded video:", len(spline_X_df))
 
-    return beh_annotation_df, skeleton_spline_df, worm_pos_df, spline_X_df, spline_Y_df, turn_annotation_df, coil_annotation_df
+    return beh_annotation_df, skeleton_spline_df, worm_pos_df, spline_X_df, spline_Y_df, turn_annotation_df
 
 # Define a function to extract the x and y values from the yaml file
 def extract_coords(coord_string:str):
