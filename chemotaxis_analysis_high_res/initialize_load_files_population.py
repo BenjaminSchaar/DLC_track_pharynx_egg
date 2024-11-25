@@ -264,6 +264,9 @@ def main(arg_list=None):
     #-------------loading necessary files
     reversal_annotation, skeleton_spline, df_worm_parameter, spline_X, spline_Y, turn_annotation = read_csv_files(reversal_annotation_path, skeleton_spline_path, worm_pos_path, spline_X_path, spline_Y_path, turn_annotation_path)
 
+    # Basic conversion to integer
+    df['frame'] = df['frame'].astype(int)
+
     # Convert the position strings to tuples
     top_left_tuple = extract_coords(args.top_left_pos)
     odor_pos_tuple = extract_coords(args.odor_pos)
@@ -496,7 +499,7 @@ def main(arg_list=None):
     df_combined.columns = chemotaxis_columns.append(spline_columns)
 
     # Iterate over skeleton positions
-    for skel_pos_abs in range(19):
+    for skel_pos_abs in range(20):
         df_skel_pos_abs = correct_stage_pos_with_skeleton(
             df_skel_all,
             spline_X,
@@ -509,6 +512,8 @@ def main(arg_list=None):
         )
 
     print('Worm Animation DF:', df_skel_pos_abs.head())
+
+    df_skel_pos_abs.drop(['frame', 'X', 'Y', 'time_imputed_seconds', 'X_rel', 'Y_rel', 'odor_x', 'odor_y'], axis=1, inplace=True)
 
     # Create MultiIndex columns for skeleton positions
     skel_pos_columns = pd.MultiIndex.from_product(
