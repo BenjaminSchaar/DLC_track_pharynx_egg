@@ -138,10 +138,6 @@ def read_csv_files(beh_annotation_path:str, skeleton_spline_path:str, worm_pos_p
     print("Turn Annotation DataFrame:")
     print(turn_annotation_df.head())
 
-    # Print the head of each dataframe
-    print("Coil Annotation DataFrame:")
-    print(coil_annotation_df.head())
-
     print("\nSkeleton Spline DataFrame:")
     print(skeleton_spline_df.head())
 
