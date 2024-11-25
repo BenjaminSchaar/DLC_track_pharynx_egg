@@ -395,7 +395,10 @@ def main(arg_list=None):
     '''
     print(reversal_annotation.head())
     # Renaming the second column from 1 to 'behaviour_state'
-    reversal_annotation = reversal_annotation.rename(columns={0: 'behaviour_state'})
+    reversal_annotation = reversal_annotation.rename(columns={1: 'behaviour_state'})
+    reversal_annotation = reversal_annotation.drop(0, axis=1)
+
+    turn_annotation = turn_annotation.drop('Unnamed: 0', axis=1)
 
     # Merge/join based on index
     df_worm_parameter = pd.merge(df_worm_parameter, reversal_annotation, left_index=True, right_index=True, how='left')
