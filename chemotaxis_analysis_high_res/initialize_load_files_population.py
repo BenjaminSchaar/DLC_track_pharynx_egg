@@ -495,17 +495,13 @@ def main(arg_list=None):
     # Assign initial MultiIndex columns
     df_combined.columns = chemotaxis_columns.append(spline_columns)
 
-    # Create animation of whole worm skeleton in arena
-    df_skel_pos_abs = pd.DataFrame()  # Initialize empty DataFrame for skeleton positions
-
     # Iterate over skeleton positions
     for skel_pos_abs in range(101):
-        print(skel_pos_abs)
         df_skel_pos_abs = correct_stage_pos_with_skeleton(
             df_worm_parameter,
             spline_X,
             spline_Y,
-            skel_pos_centroid,  # 100 will calculate the centroid -> column name will be 'X/Y_rel_skel_pos_centroid'
+            skel_pos_abs,  # 100 will calculate the centroid -> column name will be 'X/Y_rel_skel_pos_centroid'
             video_resolution_x,
             video_resolution_y,
             factor_px_to_mm,

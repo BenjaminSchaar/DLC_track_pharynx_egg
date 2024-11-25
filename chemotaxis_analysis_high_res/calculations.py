@@ -287,5 +287,6 @@ def calculate_radial_speed(df, fps):
     # Calculate radial speed using gradient of distance
     #e.g Speed is 2 mm/frame × 10 frames/second = 20 mm/second 2mm/frame×10frames/second=20mm/second.
     df['radial_speed'] = np.gradient(df['distance_to_odor_centroid']) * fps
+    df['radial_speed'] = -df['radial_speed']
 
     return df
