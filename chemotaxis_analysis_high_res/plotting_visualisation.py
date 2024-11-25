@@ -33,7 +33,7 @@ def plot_chemotaxis_overview(df, output_path, x_odor, y_odor, arena_min_x, arena
     plt.figure(figsize=(160, 160))
 
     # Create a scatter plot for the corrected tracks
-    plt.scatter(df['X_rel_skel_pos_centroid_corrected'], df['Y_rel_skel_pos_centroid_corrected'], label='Tracks_centroid', s=1, c=(df['time_seconds'] / 60), cmap='plasma')
+    plt.scatter(df['X_rel_skel_pos_centroid'], df['Y_rel_skel_pos_centroid'], label='Tracks_centroid', s=1, c=(df['time_seconds'] / 60), cmap='plasma')
     plt.colorbar(label='Time(min)')
 
     # Create a scatter plot for the nose tracks
