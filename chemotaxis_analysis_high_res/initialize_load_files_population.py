@@ -233,7 +233,7 @@ def main(arg_list=None):
 
     args = parser.parse_args(arg_list)
 
-    reversal_annotation_path = args.beh_annotation
+    reversal_annotation_path = args.reversal_annotation
     turn_annotation_path = str(args.turn_annotation)
     skeleton_spline_path = args.skeleton_spline
     worm_pos_path = args.worm_pos
