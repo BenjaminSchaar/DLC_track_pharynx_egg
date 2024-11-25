@@ -214,7 +214,7 @@ def extract_coords(pos_string):
 
 def main(arg_list=None):
     parser = argparse.ArgumentParser(description='Read CSV files and plot data')
-    parser.add_argument('--beh_annotation', help='Full path to the behavior annotation CSV file', required=True)
+    parser.add_argument('--reversal_annotation', help='Full path to the reversal annotation CSV file', required=True)
     parser.add_argument('--skeleton_spline', help='Full path to the skeleton spline CSV file', required=True)
     parser.add_argument('--worm_pos', help='Full path to the worm pos text file', required=True)
     parser.add_argument('--skeleton_spline_X_coords', help='Full path to the skeleton_spline_X_coords CSV file', required=True)
@@ -233,7 +233,7 @@ def main(arg_list=None):
 
     args = parser.parse_args(arg_list)
 
-    beh_annotation_path = args.beh_annotation
+    reversal_annotation_path = args.beh_annotation
     turn_annotation_path = str(args.turn_annotation)
     skeleton_spline_path = args.skeleton_spline
     worm_pos_path = args.worm_pos
@@ -264,10 +264,10 @@ def main(arg_list=None):
     arena_max_y = 40.5
 
     # Extracting the directory path and saving it to a new variable
-    output_path = os.path.dirname(beh_annotation_path)
+    output_path = os.path.dirname(reversal_annotation_path)
 
     #-------------loading necessary files
-    beh_annotation, skeleton_spline, df_worm_parameter, spline_X, spline_Y, turn_annotation, coil_annotation = read_csv_files(beh_annotation_path, skeleton_spline_path, worm_pos_path, spline_X_path, spline_Y_path, turn_annotation_path, coil_annotation_path)
+    reversal_annotation, skeleton_spline, df_worm_parameter, spline_X, spline_Y, turn_annotation = read_csv_files(reversal_annotation_path, skeleton_spline_path, worm_pos_path, spline_X_path, spline_Y_path, turn_annotation_path)
 
     # Convert the position strings to tuples
     top_left_tuple = extract_coords(args.top_left_pos)
@@ -407,11 +407,11 @@ def main(arg_list=None):
     - calculates reversal frequency per minute
     '''
     # Renaming the second column from 1 to 'behaviour_state'
-    beh_annotation = beh_annotation.rename(columns={1: 'behaviour_state'})
-    beh_annotation = beh_annotation.drop(columns=[0])
+    reversal_annotation = reversal_annotation.rename(columns={1: 'behaviour_state'})
+    reversal_annotation = reversal_annotation.drop(columns=[0])
 
     # Merge/join based on index
-    df_worm_parameter = pd.merge(df_worm_parameter, beh_annotation, left_index=True, right_index=True, how='left')
+    df_worm_parameter = pd.merge(df_worm_parameter, reversal_annotation, left_index=True, right_index=True, how='left')
     df_worm_parameter = pd.merge(df_worm_parameter, turn_annotation, left_index=True, right_index=True, how='left')
     df_worm_parameter = pd.merge(df_worm_parameter, coil_annotation, left_index=True, right_index=True, how='left')
 
@@ -461,9 +461,9 @@ def main(arg_list=None):
     cals functions that create various visualisations
     '''
 
-    plot_ethogram(beh_annotation, output_path, file_name='ehtogram.png')
+    plot_ethogram(reversal_annotation, output_path, file_name='ehtogram.png')
 
-    plot_ethogram_simple(beh_annotation, output_path, file_name='ehtogram_simple.png')
+    plot_ethogram_simple(reversal_annotation, output_path, file_name='ehtogram_simple.png')
 
     plot_skeleton_spline(skeleton_spline, output_path, file_name='kymogram.png')
 
