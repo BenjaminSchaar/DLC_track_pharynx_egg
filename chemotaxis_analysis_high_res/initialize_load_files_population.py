@@ -502,7 +502,7 @@ def main(arg_list=None):
     for skel_pos_abs in range(101):
         print(skel_pos_abs)
         df_skel_pos_abs = correct_stage_pos_with_skeleton(
-            df_skel_pos_abs,
+            df_worm_parameter,
             spline_X,
             spline_Y,
             skel_pos_centroid,  # 100 will calculate the centroid -> column name will be 'X/Y_rel_skel_pos_centroid'
