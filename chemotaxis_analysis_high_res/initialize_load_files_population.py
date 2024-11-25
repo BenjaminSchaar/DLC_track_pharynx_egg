@@ -265,7 +265,7 @@ def main(arg_list=None):
     reversal_annotation, skeleton_spline, df_worm_parameter, spline_X, spline_Y, turn_annotation = read_csv_files(reversal_annotation_path, skeleton_spline_path, worm_pos_path, spline_X_path, spline_Y_path, turn_annotation_path)
 
     # Basic conversion to integer
-    df['frame'] = df['frame'].astype(int)
+    df_worm_parameter['frame'] = df_worm_parameter['frame'].astype(int)
 
     # Convert the position strings to tuples
     top_left_tuple = extract_coords(args.top_left_pos)
