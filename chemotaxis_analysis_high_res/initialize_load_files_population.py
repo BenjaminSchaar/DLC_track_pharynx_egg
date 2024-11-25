@@ -505,10 +505,11 @@ def main(arg_list=None):
             df_skel_pos_abs,
             spline_X,
             spline_Y,
-            skel_pos_abs,
+            skel_pos_centroid,  # 100 will calculate the centroid -> column name will be 'X/Y_rel_skel_pos_centroid'
             video_resolution_x,
             video_resolution_y,
-            factor_px_to_mm
+            factor_px_to_mm,
+            video_origin="crop"  # Set to "crop" for corrected logic
         )
 
     print('Worm Animation DF:', df_skel_pos_abs.head())
