@@ -400,7 +400,6 @@ def main(arg_list=None):
     # Merge/join based on index
     df_worm_parameter = pd.merge(df_worm_parameter, reversal_annotation, left_index=True, right_index=True, how='left')
     df_worm_parameter = pd.merge(df_worm_parameter, turn_annotation, left_index=True, right_index=True, how='left')
-    df_worm_parameter = pd.merge(df_worm_parameter, coil_annotation, left_index=True, right_index=True, how='left')
 
     # Show the head of the merged DataFrame
     print(df_worm_parameter.head())
