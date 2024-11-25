@@ -264,8 +264,6 @@ def main(arg_list=None):
     #-------------loading necessary files
     reversal_annotation, skeleton_spline, df_worm_parameter, spline_X, spline_Y, turn_annotation = read_csv_files(reversal_annotation_path, skeleton_spline_path, worm_pos_path, spline_X_path, spline_Y_path, turn_annotation_path)
 
-    df_skel_all = df_worm_parameter.copy()
-
     # Convert the position strings to tuples
     top_left_tuple = extract_coords(args.top_left_pos)
     odor_pos_tuple = extract_coords(args.odor_pos)
@@ -290,7 +288,7 @@ def main(arg_list=None):
     #_--------------------coorinate system augmentation finished!
 
     # Create a copy of df_worm_parameter
-    df_skel_pos_abs = df_worm_parameter.copy()  # create copy of df_worm_parameter fo wormmovie later
+    df_skel_all = df_worm_parameter.copy()  # create copy of df_worm_parameter fo wormmovie later
 
     # Calculate corrected center position of the worm
     skel_pos_centroid = 100
