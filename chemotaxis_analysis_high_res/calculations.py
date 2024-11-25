@@ -157,16 +157,16 @@ def calculate_displacement_vector(df_worm_parameter):
     '''
     # Update required columns for single-level index
     required_columns = [
-        'X_rel_skel_pos_centroid_corrected',
-        'Y_rel_skel_pos_centroid_corrected'
+        'X_rel_skel_pos_centroid',
+        'Y_rel_skel_pos_centroid'
     ]
     missing_columns = [col for col in required_columns if col not in df_worm_parameter.columns]
     if missing_columns:
         raise ValueError(f"DataFrame must contain columns: {missing_columns}")
 
     # Extract x and y coordinates using single-level column names
-    x = df_worm_parameter['X_rel_skel_pos_centroid_corrected'].values
-    y = df_worm_parameter['Y_rel_skel_pos_centroid_corrected'].values
+    x = df_worm_parameter['X_rel_skel_pos_centroid'].values
+    y = df_worm_parameter['Y_rel_skel_pos_centroid'].values
 
     # Calculate gradients (dx/dt and dy/dt)
     dx_dt = np.gradient(x)
