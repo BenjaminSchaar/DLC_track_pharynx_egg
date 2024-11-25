@@ -235,8 +235,8 @@ def calculate_bearing_angle(df):
     movement_angle = df['centroid_displacement_vector_degrees']
 
     # Calculate vector to odor source
-    x_to_odor = df['odor_x'] - df['X_rel_skel_pos_centroid_corrected']
-    y_to_odor = df['odor_y'] - df['Y_rel_skel_pos_centroid_corrected']
+    x_to_odor = df['odor_x'] - df['X_rel_skel_pos_centroid']
+    y_to_odor = df['odor_y'] - df['Y_rel_skel_pos_centroid']
 
     # Calculate angle to odor (in degrees)
     angle_to_odor = np.degrees(np.arctan2(y_to_odor, x_to_odor))
