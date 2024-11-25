@@ -125,7 +125,6 @@ def read_csv_files(beh_annotation_path:str, skeleton_spline_path:str, worm_pos_p
     # Convert all columns to numeric, if possible
     beh_annotation_df = beh_annotation_df.apply(pd.to_numeric, errors='coerce')
     turn_annotation_df = turn_annotation_df.apply(pd.to_numeric, errors='coerce')
-    coil_annotation_df = coil_annotation_df.apply(pd.to_numeric, errors='coerce')
     skeleton_spline_df = skeleton_spline_df.apply(pd.to_numeric, errors='coerce')
     worm_pos_df = worm_pos_df.apply(pd.to_numeric, errors='coerce')
     spline_X_df = spline_X_df.apply(pd.to_numeric, errors='coerce')
