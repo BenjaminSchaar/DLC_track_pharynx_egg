@@ -99,20 +99,25 @@ def calculate_distance(row: pd.Series, x_col: str, y_col: str, x_odor: float, y_
 
 def calculate_time_in_seconds(df: pd.DataFrame, fps: int):
     '''
-    calculates new column with time in seconds passed from column index (1 frame) and fps
-    :param df:
-    :param fps: fps of recording
-    :return:
+    Calculates a new column with time in seconds passed from the "frame" column (if it exists) or from the index, depending on the structure of the DataFrame.
+    :param df: The DataFrame containing tracking data
+    :param fps: FPS (frames per second) of the recording
+    :return: DataFrame with a new 'time_seconds' column
     '''
     print('calc time in seconds for:', df.head())
     fps = float(fps)
-    # Convert index to numeric if necessary (this assumes index should be integer frame numbers)
-    if not pd.api.types.is_numeric_dtype(df.index):
-        df.index = pd.to_numeric(df.index, errors='coerce')  # 'coerce' turns invalid values into NaNs, adjust as needed
 
-    df['time_seconds'] = df.index.to_series().astype(float) / fps
+    if "frame" in df.columns:
+        # If "frame" column exists, use it to calculate time in seconds
+        df['time_seconds'] = df['frame'].astype(float) / fps
+    else:
+        # If no "frame" column, use index to calculate time in seconds
+        if not pd.api.types.is_numeric_dtype(df.index):
+            df.index = pd.to_numeric(df.index,
+                                     errors='coerce')  # 'coerce' turns invalid values into NaNs, adjust as needed
+        df['time_seconds'] = df.index.to_series().astype(float) / fps
+
     return df
-
 
 def calculate_preceived_conc(distance: float, time_seconds: float, conc_array: np.ndarray, distance_array: np.ndarray, diffusion_time_offset: int) -> float:
     # Type enforcement
