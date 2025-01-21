@@ -33,7 +33,7 @@ from chemotaxis_analysis_high_res.plotting_visualisation import (
 
 from chemotaxis_analysis_high_res.data_smothing import (
     replace_outliers_with_nan,
-    update_behaviour_based_on_speed,
+    apply_smoothing,
 )
 
 
@@ -348,6 +348,8 @@ def main(arg_list=None):
             diffusion_time_offset), axis=1), errors='coerce'
     )
 
+
+
     df_worm_parameter[f'conc_at_{skel_pos_0}'] = pd.to_numeric(df_worm_parameter.apply(
         lambda row: calculate_preceived_conc(
             row[f'distance_to_odor_{skel_pos_0}'], row['time_seconds'], conc_gradient_array, distance_array,
@@ -442,11 +444,20 @@ def main(arg_list=None):
 
     cals functions that smoothen and clean the data
     '''
-    replace_outliers_with_nan(df_worm_parameter, 'speed', 2)
-    replace_outliers_with_nan(df_worm_parameter, 'radial_speed', 2)
-    replace_outliers_with_nan(df_worm_parameter, 'NI', 2)
+    replace_outliers_with_nan(df_worm_parameter, 'speed',  2.576 )
+    replace_outliers_with_nan(df_worm_parameter, 'radial_speed',  2.576 )
+    replace_outliers_with_nan(df_worm_parameter, 'NI',  2.576 )
 
-    #-------------------------------
+    #-------------------------------data smoothing and cleaning
+
+    df_worm_parameter = replace_outliers_with_nan(df_worm_parameter,
+                                             ['speed', 'radial_speed', 'reversal_frequency', 'bearing_angle', 'NI',
+                                              'curving_angle', 'distance_to_odor_centroid', 'conc_at_centroid',
+                                              'conc_at_0', 'dC_centroid', 'dC_0'], threshold=2.576)
+
+    df_worm_parameter = apply_smoothing(df_worm_parameter, ['speed', 'radial_speed', 'reversal_frequency', 'bearing_angle', 'NI',
+                                                  'curving_angle', 'distance_to_odor_centroid', 'conc_at_centroid',
+                                                  'conc_at_0', 'dC_centroid', 'dC_0'])
 
     '''
     Plotting part
