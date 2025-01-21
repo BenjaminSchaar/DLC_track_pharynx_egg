@@ -77,8 +77,6 @@ def correct_stage_pos_with_skeleton(
     return worm_pos
 
 
-
-
 # Define a function to calculate distance while handling NaN
 def calculate_distance(row: pd.Series, x_col: str, y_col: str, x_odor: float, y_odor: float) -> float:
     '''
@@ -119,7 +117,13 @@ def calculate_time_in_seconds(df: pd.DataFrame, fps: int):
 
     return df
 
-def calculate_preceived_conc(distance: float, time_seconds: float, conc_array: np.ndarray, distance_array: np.ndarray, diffusion_time_offset: int) -> float:
+
+def calculate_preceived_conc(distance: float, time_seconds: float, conc_array: np.ndarray, distance_array: np.ndarray,
+                             diffusion_time_offset: int) -> float:
+    # Check for NaN distance first
+    if np.isnan(distance):
+        return np.nan
+
     # Type enforcement
     distance = float(distance)
     time_seconds = float(time_seconds)
@@ -141,8 +145,9 @@ def calculate_preceived_conc(distance: float, time_seconds: float, conc_array: n
     # Finding the index of the closest value to closest_distance
     index_of_closest_distance = np.where(distances_in_frame == closest_distance)[0]
 
-    # Extract the concentration value as a scalar
-    conc_value = conc_array[sim_time_array][index_of_closest_distance][0]  # Take the first element if it's an array
+    # Extract the concentration value as a scalar and force to float
+    conc_value = float(
+        conc_array[sim_time_array][index_of_closest_distance][0])  # Take the first element if it's an array
 
     return conc_value
 

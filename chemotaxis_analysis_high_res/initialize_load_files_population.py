@@ -321,6 +321,9 @@ def main(arg_list=None):
 
     print("added relative worm position:", df_worm_parameter)
 
+    #imputing missing data of centroid position
+    df[('chemotaxis_parameter', ['X_rel_skel_pos_centroid', 'Y_rel_skel_pos_centroid'])] = df[('chemotaxis_parameter', ['X_rel_skel_pos_centroid', 'Y_rel_skel_pos_centroid'])].interpolate(method='linear')
+
     # calculate distances for stage, skeletton position 0 (nose) and 49 (center)
     df_worm_parameter['distance_to_odor_stage'] = df_worm_parameter.apply(lambda row: calculate_distance(row, 'X_rel', 'Y_rel', x_odor, y_odor), axis=1)
     df_worm_parameter[f'distance_to_odor_centroid'] = df_worm_parameter.apply(lambda row: calculate_distance(row, 'X_rel_skel_pos_centroid', 'Y_rel_skel_pos_centroid', x_odor, y_odor), axis=1)
@@ -412,12 +415,12 @@ def main(arg_list=None):
 
     # create column reversal onset and reversal end
     # Shift the 'behaviour_state' column by one to check the prior value
-    prior_state = df_worm_parameter['behaviour_state'].shift(periods=-1, fill_value=0)
+    prior_state_behavior = df_worm_parameter['behaviour_state'].shift(periods=-1, fill_value=0)
 
     # Check the conditions and assign values to the new column 'reversal_onset'
-    df_worm_parameter['reversal_onset'] = ((prior_state != -1) & (df_worm_parameter['behaviour_state'] == -1)).astype(int)
+    df_worm_parameter['reversal_onset'] = ((prior_state_behavior != -1) & (df_worm_parameter['behaviour_state'] == -1)).astype(int)
 
-    df_worm_parameter['reversal_end'] = ((prior_state == -1) & (df_worm_parameter['behaviour_state'] != -1)).astype(int)
+    df_worm_parameter['reversal_end'] = ((prior_state_behavior == -1) & (df_worm_parameter['behaviour_state'] != -1)).astype(int)
 
     # Calculate the reversal frequenzy
     window_size = int(fps * 60)  # reversal frequenzy per minute
@@ -444,8 +447,6 @@ def main(arg_list=None):
     replace_outliers_with_nan(df_worm_parameter, 'NI', 2)
 
     #-------------------------------
-    #usses speed to update behavior state column
-    update_behaviour_based_on_speed(df_worm_parameter, threshold=0.04)
 
     '''
     Plotting part
@@ -531,7 +532,6 @@ def main(arg_list=None):
     df_combined.to_csv(os.path.join(output_path, 'chemotaxis_params.csv'), index=True)
 
     #create_worm_animation(df_skel_pos_abs, df_worm_parameter, output_path, x_odor, y_odor, fps, arena_min_x, arena_max_x, arena_min_y, arena_max_y, file_name='worm_movie.avi')
-
 
 if __name__ == "__main__":
 
