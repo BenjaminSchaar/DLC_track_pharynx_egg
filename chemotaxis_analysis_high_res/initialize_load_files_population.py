@@ -34,6 +34,7 @@ from chemotaxis_analysis_high_res.plotting_visualisation import (
 from chemotaxis_analysis_high_res.data_smothing import (
     replace_outliers_with_nan,
     apply_smoothing,
+    process_bearing_angles,
 )
 
 
@@ -321,8 +322,7 @@ def main(arg_list=None):
 
     print("added relative worm position:", df_worm_parameter)
 
-    #imputing missing data of centroid position
-    df[('chemotaxis_parameter', ['X_rel_skel_pos_centroid', 'Y_rel_skel_pos_centroid'])] = df[('chemotaxis_parameter', ['X_rel_skel_pos_centroid', 'Y_rel_skel_pos_centroid'])].interpolate(method='linear')
+    df[('chemotaxis_parameter', ['X_rel_skel_pos_centroid', 'Y_rel_skel_pos_centroid'])] = df[('chemotaxis_parameter', ['X_rel_skel_pos_centroid', 'Y_rel_skel_pos_centroid'])].ffill()
 
     # calculate distances for stage, skeletton position 0 (nose) and 49 (center)
     df_worm_parameter['distance_to_odor_stage'] = df_worm_parameter.apply(lambda row: calculate_distance(row, 'X_rel', 'Y_rel', x_odor, y_odor), axis=1)
@@ -390,6 +390,8 @@ def main(arg_list=None):
     df_worm_parameter = calculate_curving_angle(df_worm_parameter, window_size=1)
     df_worm_parameter = calculate_bearing_angle(df_worm_parameter)
 
+    df_worm_parameter = process_bearing_angles(df_worm_parameter, window_size=50)
+
     # Print confirmation and first few rows of the DataFrame
     print("Angles calculated.")
     print(df_worm_parameter.head())
@@ -428,6 +430,9 @@ def main(arg_list=None):
     window_size = int(fps * 60)  # reversal frequenzy per minute
 
     df_worm_parameter['reversal_frequency'] = df_worm_parameter['reversal_onset'].rolling(window=window_size).sum()
+
+    #calculate reorientations based on DBearing
+    df_worm_parameter = add_reorientation_columns(df_worm_parameter, bearing_threshold=8, time_threshold=13, fps=fps)
 
     #Speed, radial Speed, NI
 

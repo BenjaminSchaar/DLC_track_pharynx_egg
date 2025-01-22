@@ -300,3 +300,83 @@ def calculate_radial_speed(df, fps):
     df['radial_speed'] = -df['radial_speed']
 
     return df
+
+
+def process_bearing_angles(df, window_size=50):
+    """
+    Process bearing angles in a DataFrame by adding new analytical columns.
+
+    Parameters:
+    df (pd.DataFrame): DataFrame containing a 'bearing_angle' column
+    window_size (int): Size of the rolling window for smoothing, default 50
+
+    Returns:
+    pd.DataFrame: Original DataFrame with new columns:
+        - bearing_angle_abs: Absolute value of bearing angles
+        - bearing_delta: Change in bearing angle between consecutive rows
+    """
+    # Create a copy to avoid modifying the original DataFrame
+    result_df = df.copy()
+
+    # Calculate absolute bearing angles
+    result_df['bearing_angle_abs'] = result_df['bearing_angle'].abs()
+
+    # Temporary smoothed bearing angles for delta calculation
+    temp_smooth = result_df['bearing_angle'].rolling(
+        window=window_size,
+        center=True,
+        min_periods=1
+    ).mean()
+
+    # Calculate change in bearing angle using the smoothed values
+    result_df['bearing_delta'] = temp_smooth.diff()
+
+    return result_df
+
+
+def calc_reorientation_columns(df, bearing_threshold=8, time_threshold=13, fps=10):
+    """
+    Add reorientation and reorientation event group columns based on bearing delta.
+
+    Parameters:
+    df (pd.DataFrame): DataFrame containing 'bearing_delta' column
+    bearing_threshold (float): Threshold for absolute bearing delta to be considered a reorientation
+    time_threshold (float): Time threshold in seconds to group reorientations
+    fps (int): Frames per second for conversion
+
+    Returns:
+    pd.DataFrame: DataFrame with new columns:
+        - reorientation: Binary column indicating reorientation events
+        - reorientation_events: Column grouping reorientations within time threshold
+    """
+    # Create a copy to avoid modifying the original DataFrame
+    result_df = df.copy()
+
+    # Add reorientation column
+    result_df['reorientation'] = (np.abs(result_df['bearing_delta']) >= bearing_threshold).astype(int)
+
+    # Convert time threshold to frames
+    frame_threshold = int(time_threshold * fps)
+
+    # Initialize reorientation_events column with zeros
+    result_df['reorientation_events'] = 0
+
+    # Get indices where reorientations occur
+    reorientation_indices = result_df[result_df['reorientation'] == 1].index
+
+    if len(reorientation_indices) > 0:
+        # Initialize the first event
+        current_event_start = reorientation_indices[0]
+        result_df.loc[current_event_start, 'reorientation_events'] = 1
+
+        # Process subsequent reorientations
+        for idx in reorientation_indices[1:]:
+            # Calculate frame distance to last event start
+            frame_distance = idx - current_event_start
+
+            # If beyond threshold, start new event
+            if frame_distance > frame_threshold:
+                current_event_start = idx
+                result_df.loc[idx, 'reorientation_events'] = 1
+
+    return result_df
