@@ -323,7 +323,7 @@ def main(arg_list=None):
 
     print("added relative worm position:", df_worm_parameter)
 
-    df[('chemotaxis_parameter', ['X_rel_skel_pos_centroid', 'Y_rel_skel_pos_centroid'])] = df[('chemotaxis_parameter', ['X_rel_skel_pos_centroid', 'Y_rel_skel_pos_centroid'])].ffill()
+    df_worm_parameter[('chemotaxis_parameter', ['X_rel_skel_pos_centroid', 'Y_rel_skel_pos_centroid'])] = df_worm_parameter[('chemotaxis_parameter', ['X_rel_skel_pos_centroid', 'Y_rel_skel_pos_centroid'])].ffill()
 
     # calculate distances for stage, skeletton position 0 (nose) and 49 (center)
     df_worm_parameter['distance_to_odor_stage'] = df_worm_parameter.apply(lambda row: calculate_distance(row, 'X_rel', 'Y_rel', x_odor, y_odor), axis=1)

@@ -72,5 +72,3 @@ def apply_smoothing(df, columns):
 
     return df
 
-
-
