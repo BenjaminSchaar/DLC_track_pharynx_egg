@@ -334,49 +334,32 @@ def process_bearing_angles(df, window_size=50):
     return result_df
 
 
-def calc_reorientation_columns(df, bearing_threshold=8, time_threshold=13, fps=10):
+def calc_reorientation_columns(df, bearing_threshold=8, time_threshold=13, fps=10, frames_per_min=600):
     """
-    Add reorientation and reorientation event group columns based on bearing delta.
-
-    Parameters:
-    df (pd.DataFrame): DataFrame containing 'bearing_delta' column
-    bearing_threshold (float): Threshold for absolute bearing delta to be considered a reorientation
-    time_threshold (float): Time threshold in seconds to group reorientations
-    fps (int): Frames per second for conversion
-
-    Returns:
-    pd.DataFrame: DataFrame with new columns:
-        - reorientation: Binary column indicating reorientation events
-        - reorientation_events: Column grouping reorientations within time threshold
+    frames_per_min (int): Number of frames per minute (e.g. 10 fps * 60 sec = 600)
     """
-    # Create a copy to avoid modifying the original DataFrame
     result_df = df.copy()
 
-    # Add reorientation column
     result_df['reorientation'] = (np.abs(result_df['bearing_delta']) >= bearing_threshold).astype(int)
-
-    # Convert time threshold to frames
     frame_threshold = int(time_threshold * fps)
-
-    # Initialize reorientation_events column with zeros
     result_df['reorientation_events'] = 0
 
-    # Get indices where reorientations occur
     reorientation_indices = result_df[result_df['reorientation'] == 1].index
 
     if len(reorientation_indices) > 0:
-        # Initialize the first event
         current_event_start = reorientation_indices[0]
         result_df.loc[current_event_start, 'reorientation_events'] = 1
 
-        # Process subsequent reorientations
         for idx in reorientation_indices[1:]:
-            # Calculate frame distance to last event start
-            frame_distance = idx - current_event_start
-
-            # If beyond threshold, start new event
-            if frame_distance > frame_threshold:
+            if idx - current_event_start > frame_threshold:
                 current_event_start = idx
                 result_df.loc[idx, 'reorientation_events'] = 1
+
+    # Calculate per minute frequency using frames_per_min window
+    result_df['reorientation_frequency'] = result_df['reorientation_events'].rolling(
+        window=frames_per_min,
+        min_periods=1,
+        center=True
+    ).sum()
 
     return result_df
