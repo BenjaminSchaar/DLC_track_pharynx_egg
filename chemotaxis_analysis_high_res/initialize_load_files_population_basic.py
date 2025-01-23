@@ -62,6 +62,10 @@ class CoordinateSystem:
         # Remove intermediate columns
         df = df.drop(['X_mm', 'Y_mm'], axis=1)
 
+        # Add rotated odor coordinates explicitly to DataFrame
+        df['odor_x'] = self.top_left_x * self.factor_px_to_mm
+        df['odor_y'] = self.top_left_y * self.factor_px_to_mm
+
         return df
 
 def read_csv_files(beh_annotation_path:str, skeleton_spline_path:str, worm_pos_path:str, spline_X_path:str, spline_Y_path:str, turn_annotation_path:str):
@@ -265,6 +269,8 @@ def main(arg_list=None):
     df_worm_parameter = apply_smoothing(df_worm_parameter,
         ['speed', 'radial_speed', 'reversal_frequency', 'bearing_angle', 'NI',
          'curving_angle'])
+
+    df_worm_parameter.drop(['odor_x', 'odor_y'], axis=1, inplace=True)
 
     # Plotting
     plot_ethogram(reversal_annotation, output_path, file_name='ehtogram.png')
