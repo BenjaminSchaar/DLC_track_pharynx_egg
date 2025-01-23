@@ -16,6 +16,8 @@ from chemotaxis_analysis_high_res.calculations import (
     calculate_displacement_vector,
     calculate_curving_angle,
     calculate_bearing_angle,
+    process_bearing_angles,
+    calc_reorientation_columns,
 )
 
 from chemotaxis_analysis_high_res.plotting_visualisation import (
@@ -34,7 +36,6 @@ from chemotaxis_analysis_high_res.plotting_visualisation import (
 from chemotaxis_analysis_high_res.data_smothing import (
     replace_outliers_with_nan,
     apply_smoothing,
-    process_bearing_angles,
 )
 
 
