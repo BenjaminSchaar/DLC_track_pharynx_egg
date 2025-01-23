@@ -324,7 +324,7 @@ def main(arg_list=None):
     print("added relative worm position:", df_worm_parameter)
 
     #forward fill NAN where skelleton is NAN which equals a selftouch turn which equals same position
-    
+
     df_worm_parameter['X_rel_skel_pos_centroid'] = df_worm_parameter['X_rel_skel_pos_centroid'].ffill()
     df_worm_parameter['Y_rel_skel_pos_centroid'] = df_worm_parameter['Y_rel_skel_pos_centroid'].ffill()
 
@@ -436,7 +436,7 @@ def main(arg_list=None):
     df_worm_parameter['reversal_frequency'] = df_worm_parameter['reversal_onset'].rolling(window=window_size).sum()
 
     #calculate reorientations based on DBearing
-    df_worm_parameter = add_reorientation_columns(df_worm_parameter, bearing_threshold=8, time_threshold=13, fps=fps)
+    df_worm_parameter = calc_reorientation_columns(df_worm_parameter, bearing_threshold=8, time_threshold=13, fps=fps)
 
     #Speed, radial Speed, NI
 
