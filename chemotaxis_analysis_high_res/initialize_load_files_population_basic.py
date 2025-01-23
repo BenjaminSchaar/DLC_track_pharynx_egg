@@ -320,7 +320,7 @@ def main(arg_list=None):
     all_columns = chemotaxis_columns.append(spline_columns).append(skel_pos_columns)
     df_combined.columns = all_columns
 
-    df_combined.to_csv(os.path.join(output_path, 'chemotaxis_params.csv'), index=True)
+    df_combined.to_csv(os.path.join(output_path, 'basic_params.csv'), index=True)
 
 if __name__ == "__main__":
     print("Shell commands passed:", sys.argv)
