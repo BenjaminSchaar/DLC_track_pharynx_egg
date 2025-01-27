@@ -436,7 +436,7 @@ def main(arg_list=None):
     df_worm_parameter['reversal_frequency'] = df_worm_parameter['reversal_onset'].rolling(window=window_size).sum()
 
     #calculate reorientations based on DBearing
-    df_worm_parameter = calc_reorientation_columns(df_worm_parameter, bearing_threshold=8, time_threshold=13, fps=fps, frames_per_min=(6*fps))
+    df_worm_parameter = calc_reorientation_columns(df_worm_parameter, bearing_threshold=8, time_threshold=13, fps=fps, frames_per_min=int((6*fps)))
 
     #Speed, radial Speed, NI
 

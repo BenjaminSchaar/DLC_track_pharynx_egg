@@ -338,6 +338,7 @@ def calc_reorientation_columns(df, bearing_threshold=8, time_threshold=13, fps=1
     """
     frames_per_min (int): Number of frames per minute (e.g. 10 fps * 60 sec = 600)
     """
+    print("frames per min:", frames_per_min)
     result_df = df.copy()
 
     result_df['reorientation'] = (np.abs(result_df['bearing_delta']) >= bearing_threshold).astype(int)
