@@ -254,8 +254,6 @@ def main(arg_list=None):
 
     # Calculate speed and related metrics
     df_worm_parameter = calculate_speed(df_worm_parameter, fps)
-    df_worm_parameter = calculate_radial_speed(df_worm_parameter, fps)
-    df_worm_parameter['NI'] = (df_worm_parameter['radial_speed'] / df_worm_parameter['speed'])
 
     # Data smoothing and cleaning
     replace_outliers_with_nan(df_worm_parameter, 'speed',  2.576)
