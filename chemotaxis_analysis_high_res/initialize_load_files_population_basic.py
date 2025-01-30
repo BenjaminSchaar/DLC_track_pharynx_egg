@@ -257,16 +257,10 @@ def main(arg_list=None):
 
     # Data smoothing and cleaning
     replace_outliers_with_nan(df_worm_parameter, 'speed',  2.576)
-    replace_outliers_with_nan(df_worm_parameter, 'radial_speed',  2.576)
-    replace_outliers_with_nan(df_worm_parameter, 'NI',  2.576)
 
-    df_worm_parameter = replace_outliers_with_nan(df_worm_parameter,
-        ['speed', 'radial_speed', 'reversal_frequency', 'bearing_angle', 'NI',
-         'curving_angle'], threshold=2.576)
+    df_worm_parameter = replace_outliers_with_nan(df_worm_parameter,['speed', 'reversal_frequency', 'curving_angle'], threshold=2.576)
 
-    df_worm_parameter = apply_smoothing(df_worm_parameter,
-        ['speed', 'radial_speed', 'reversal_frequency', 'bearing_angle', 'NI',
-         'curving_angle'])
+    df_worm_parameter = apply_smoothing(df_worm_parameter,['speed', 'reversal_frequency', 'curving_angle'])
 
     df_worm_parameter.drop(['odor_x', 'odor_y'], axis=1, inplace=True)
 
