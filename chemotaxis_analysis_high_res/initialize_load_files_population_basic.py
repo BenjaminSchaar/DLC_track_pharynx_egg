@@ -279,7 +279,7 @@ def main(arg_list=None):
     df_combined = pd.concat([df_worm_parameter, skeleton_spline], axis=1)
 
     chemotaxis_columns = pd.MultiIndex.from_product(
-        [['chemotaxis_parameter'], df_worm_parameter.columns]
+        [['basic_parameter'], df_worm_parameter.columns]
     )
 
     spline_columns = pd.MultiIndex.from_product(
