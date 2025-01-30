@@ -274,11 +274,7 @@ def main(arg_list=None):
     plot_dynamic_binned(df_worm_parameter, 'reversal_frequency', output_path, 'reversal_frequency_over_time.png',
                         bin_count=100)
 
-    plot_dynamic_binned(df_worm_parameter, 'NI', output_path, 'NI_over_time.png', bin_count=100)
-
     plot_dynamic_binned(df_worm_parameter, 'speed', output_path, 'speed_over_time.png', bin_count=100)
-
-    plot_dynamic_binned(df_worm_parameter, 'NI', output_path, 'NI_over_time_with_speed_hue.png', hue_column='speed', bin_count=100)
 
     plot_turns(df_worm_parameter, output_path, file_name='turns.png')
 
