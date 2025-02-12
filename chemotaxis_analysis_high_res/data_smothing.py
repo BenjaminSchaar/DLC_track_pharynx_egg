@@ -71,7 +71,7 @@ def apply_smoothing(df, columns):
             raise ValueError(f"Column '{column}' is not in the smoothing dictionary.")
 
     return df
-def smooth_trajectory_column(df_column, window_length=11, poly_order=3):
+def smooth_trajectory_column(df_column, window_length=10, poly_order=3):
     """
     Smooth a DataFrame column using Savitzky-Golay filter with NaN handling.
 
