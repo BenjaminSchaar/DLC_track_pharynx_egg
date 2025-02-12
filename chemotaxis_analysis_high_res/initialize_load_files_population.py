@@ -325,8 +325,16 @@ def main(arg_list=None):
 
     #forward fill NAN where skelleton is NAN which equals a selftouch turn which equals same position
 
-    df_worm_parameter['X_rel_skel_pos_centroid'] = df_worm_parameter['X_rel_skel_pos_centroid'].ffill()
-    df_worm_parameter['Y_rel_skel_pos_centroid'] = df_worm_parameter['Y_rel_skel_pos_centroid'].ffill()
+    # Save original data to 'raw' columns
+    df_worm_parameter[('chemotaxis_parameter', 'X_rel_skel_pos_centroid_raw')] = df_worm_parameter[('chemotaxis_parameter', 'X_rel_skel_pos_centroid')]
+    df_worm_parameter[('chemotaxis_parameter', 'Y_rel_skel_pos_centroid_raw')] = df_worm_parameter[('chemotaxis_parameter', 'Y_rel_skel_pos_centroid')]
+
+    # Overwrite original columns with smoothed data
+    df_worm_parameter[('chemotaxis_parameter', 'X_rel_skel_pos_centroid')] = smooth_trajectory_column(df_worm_parameter[('chemotaxis_parameter', 'X_rel_skel_pos_centroid')])
+    df_worm_parameter[('chemotaxis_parameter', 'Y_rel_skel_pos_centroid')] = smooth_trajectory_column(df_worm_parameter[('chemotaxis_parameter', 'Y_rel_skel_pos_centroid')])
+
+    df_worm_parameter['X_rel_skel_pos_centroid'] = df_worm_parameter['X_rel_skel_pos_centroid'].interpolate(method='linear')
+    df_worm_parameter['Y_rel_skel_pos_centroid'] = df_worm_parameter['Y_rel_skel_pos_centroid'].interpolate(method='linear')
 
     # calculate distances for stage, skeletton position 0 (nose) and 49 (center)
     df_worm_parameter['distance_to_odor_stage'] = df_worm_parameter.apply(lambda row: calculate_distance(row, 'X_rel', 'Y_rel', x_odor, y_odor), axis=1)

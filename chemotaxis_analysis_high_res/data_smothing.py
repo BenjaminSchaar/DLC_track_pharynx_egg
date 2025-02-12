@@ -71,4 +71,40 @@ def apply_smoothing(df, columns):
             raise ValueError(f"Column '{column}' is not in the smoothing dictionary.")
 
     return df
+def smooth_trajectory_column(df_column, window_length=11, poly_order=3):
+    """
+    Smooth a DataFrame column using Savitzky-Golay filter with NaN handling.
+
+    Parameters:
+    -----------
+    df_column : pandas.Series
+        DataFrame column containing trajectory data
+    window_length : int
+        Window length for Savitzky-Golay filter (must be odd)
+    poly_order : int
+        Polynomial order for the filter (must be < window_length)
+
+    Returns:
+    --------
+    smoothed_column : pandas.Series
+        Smoothed version of input column with same index
+    """
+    from scipy.signal import savgol_filter
+    import numpy as np
+
+    # Forward fill NaN values
+    filled_data = df_column.ffill()
+
+    # Validate smoothing parameters
+    if window_length % 2 == 0:
+        window_length += 1  # Ensure window length is odd
+    if poly_order >= window_length:
+        poly_order = window_length - 1
+
+    # Apply Savitzky-Golay smoothing
+    smoothed_data = savgol_filter(filled_data, window_length, poly_order)
+
+    # Return as pandas Series with original index
+    return pd.Series(smoothed_data, index=df_column.index)
+
 
