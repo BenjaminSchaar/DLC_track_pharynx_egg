@@ -324,6 +324,9 @@ def main(arg_list=None):
 
     print("added relative worm position:", df_worm_parameter)
 
+    df_worm_parameter['X_rel_skel_pos_centroid'] = df_worm_parameter['X_rel_skel_pos_centroid'].interpolate(method='linear')
+    df_worm_parameter['Y_rel_skel_pos_centroid'] = df_worm_parameter['Y_rel_skel_pos_centroid'].interpolate(method='linear')
+
     # Change these lines:
     df_worm_parameter['X_rel_skel_pos_centroid_raw'] = df_worm_parameter['X_rel_skel_pos_centroid']
     df_worm_parameter['Y_rel_skel_pos_centroid_raw'] = df_worm_parameter['Y_rel_skel_pos_centroid']
@@ -337,9 +340,6 @@ def main(arg_list=None):
         df_worm_parameter['Y_rel_skel_pos_centroid'],
         window_length=fps
     )
-
-    df_worm_parameter['X_rel_skel_pos_centroid'] = df_worm_parameter['X_rel_skel_pos_centroid'].interpolate(method='linear')
-    df_worm_parameter['Y_rel_skel_pos_centroid'] = df_worm_parameter['Y_rel_skel_pos_centroid'].interpolate(method='linear')
 
     # calculate distances for stage, skeletton position 0 (nose) and 49 (center)
     df_worm_parameter['distance_to_odor_stage'] = df_worm_parameter.apply(lambda row: calculate_distance(row, 'X_rel', 'Y_rel', x_odor, y_odor), axis=1)

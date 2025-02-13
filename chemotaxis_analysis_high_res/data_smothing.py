@@ -71,16 +71,17 @@ def apply_smoothing(df, columns):
             raise ValueError(f"Column '{column}' is not in the smoothing dictionary.")
 
     return df
-def smooth_trajectory_savitzky_golay_filter(df_column, window_length=10, poly_order=3):
+
+def smooth_trajectory_savitzky_golay_filter(df_column, window_length=11, poly_order=3):
     """
-    Smooth a DataFrame column using Savitzky-Golay filter with NaN handling.
+    Smooth a DataFrame column using Savitzky-Golay filter with linear interpolation for any NaN values.
 
     Parameters:
     -----------
     df_column : pandas.Series
         DataFrame column containing trajectory data
     window_length : int
-        Window length for Savitzky-Golay filter (must be odd)
+        Window length for Savitzky-Golay filter (will be made odd if even)
     poly_order : int
         Polynomial order for the filter (must be < window_length)
 
@@ -92,19 +93,29 @@ def smooth_trajectory_savitzky_golay_filter(df_column, window_length=10, poly_or
     from scipy.signal import savgol_filter
     import numpy as np
 
-    # Forward fill NaN values
-    filled_data = df_column.ffill()
+    # Check for NaN values and interpolate if any exist
+    nan_count = df_column.isna().sum()
+    if nan_count > 0:
+        print(f"Found {nan_count} NaN values. Applying linear interpolation.")
+        filled_data = df_column.interpolate(method='linear')
+        # Handle edge cases if they exist
+        filled_data = filled_data.fillna(method='bfill').fillna(method='ffill')
+    else:
+        filled_data = df_column
 
-    # Validate smoothing parameters
+    # Check if window_length is odd, if not make it odd
     if window_length % 2 == 0:
-        window_length += 1  # Ensure window length is odd
+        window_length += 1
+        print(f"Window length was even, adjusted to {window_length}")
+
+    # Validate poly_order is less than window_length
     if poly_order >= window_length:
         poly_order = window_length - 1
+        print(f"Polynomial order was too high, adjusted to {poly_order}")
 
     # Apply Savitzky-Golay smoothing
     smoothed_data = savgol_filter(filled_data, window_length, poly_order)
 
     # Return as pandas Series with original index
     return pd.Series(smoothed_data, index=df_column.index)
-
 
