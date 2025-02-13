@@ -1,4 +1,6 @@
+import pandas as pd
 import numpy as np
+from scipy.signal import savgol_filter
 def replace_outliers_with_nan(dataframe, columns, threshold):
     """
     Replaces outliers in specified columns of a DataFrame with NaN. Outliers are defined as
@@ -72,6 +74,10 @@ def apply_smoothing(df, columns):
 
     return df
 
+import pandas as pd
+import numpy as np
+from scipy.signal import savgol_filter
+
 def smooth_trajectory_savitzky_golay_filter(df_column, window_length=11, poly_order=3):
     """
     Smooth a DataFrame column using Savitzky-Golay filter with linear interpolation for any NaN values.
@@ -90,8 +96,9 @@ def smooth_trajectory_savitzky_golay_filter(df_column, window_length=11, poly_or
     smoothed_column : pandas.Series
         Smoothed version of input column with same index
     """
-    from scipy.signal import savgol_filter
-    import numpy as np
+    # Convert window_length to integer explicitly
+    window_length = int(window_length)
+    poly_order = int(poly_order)
 
     # Check for NaN values and interpolate if any exist
     nan_count = df_column.isna().sum()
@@ -118,4 +125,3 @@ def smooth_trajectory_savitzky_golay_filter(df_column, window_length=11, poly_or
 
     # Return as pandas Series with original index
     return pd.Series(smoothed_data, index=df_column.index)
-
