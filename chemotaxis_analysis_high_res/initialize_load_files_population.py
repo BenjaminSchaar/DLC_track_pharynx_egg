@@ -36,6 +36,7 @@ from chemotaxis_analysis_high_res.plotting_visualisation import (
 from chemotaxis_analysis_high_res.data_smothing import (
     replace_outliers_with_nan,
     apply_smoothing,
+    smooth_trajectory_savitzky_golay_filter,
 )
 
 
@@ -328,11 +329,11 @@ def main(arg_list=None):
     df_worm_parameter['Y_rel_skel_pos_centroid_raw'] = df_worm_parameter['Y_rel_skel_pos_centroid']
 
     # Then modify the smoothing:
-    df_worm_parameter['X_rel_skel_pos_centroid'] = smooth_trajectory_column(
+    df_worm_parameter['X_rel_skel_pos_centroid'] = smooth_trajectory_savitzky_golay_filter(
         df_worm_parameter['X_rel_skel_pos_centroid'],
         window_length=fps
     )
-    df_worm_parameter['Y_rel_skel_pos_centroid'] = smooth_trajectory_column(
+    df_worm_parameter['Y_rel_skel_pos_centroid'] = smooth_trajectory_savitzky_golay_filter(
         df_worm_parameter['Y_rel_skel_pos_centroid'],
         window_length=fps
     )
