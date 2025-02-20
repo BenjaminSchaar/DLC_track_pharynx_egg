@@ -533,7 +533,7 @@ def main(arg_list=None):
     df_combined.columns = chemotaxis_columns.append(spline_columns)
 
     # Iterate over skeleton positions
-    for skel_pos_abs in range(20):
+    for skel_pos_abs in range(spline_X.shape[1]):
         df_skel_pos_abs = correct_stage_pos_with_skeleton(
             df_skel_all,
             spline_X,
