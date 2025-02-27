@@ -46,7 +46,8 @@ def apply_smoothing(df, columns):
     """
     # Default smoothing parameters
     smoothing_params = {
-        'speed': 10,
+        'speed_centroid': 10,
+        re.compile(r'speed_center_\d+'): 10,  # This will match any 'speed_center_' followed by digits
         'radial_speed': 10,
         'reversal_frequency': 10,
         'bearing_angle': 10,
