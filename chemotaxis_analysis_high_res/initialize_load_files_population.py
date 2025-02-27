@@ -309,6 +309,8 @@ def main(arg_list=None):
         video_origin="crop"  # Set to "crop" for corrected logic
     )
 
+    skel_pos_0 = 0
+
     df_worm_parameter = correct_stage_pos_with_skeleton(
         df_worm_parameter,
         spline_X,
