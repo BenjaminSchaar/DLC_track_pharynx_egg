@@ -46,16 +46,16 @@ def apply_smoothing(df, columns):
     """
     # Default smoothing parameters
     smoothing_params = {
-        'speed': 50,
-        'radial_speed': 50,
-        'reversal_frequency': 50,
-        'bearing_angle': 50,
-        'NI': 50,
-        'curving_angle': 50,
-        'distance_to_odor_centroid': 50,
-        'conc_at_centroid': 50,
+        'speed': 10,
+        'radial_speed': 10,
+        'reversal_frequency': 10,
+        'bearing_angle': 10,
+        'NI': 10,
+        'curving_angle': 10,
+        'distance_to_odor_centroid': 10,
+        'conc_at_centroid': 10,
         'conc_at_0': 10,
-        'dC_centroid': 50,
+        'dC_centroid': 10,
         'dC_0': 10,
     }
 

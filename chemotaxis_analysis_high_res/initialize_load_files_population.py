@@ -11,7 +11,8 @@ from chemotaxis_analysis_high_res.calculations import (
     calculate_distance,
     calculate_time_in_seconds,
     calculate_preceived_conc,
-    calculate_speed,
+    calculate_centroid_speed,
+    calculate_center_speed,
     calculate_radial_speed,
     calculate_displacement_vector,
     calculate_curving_angle,
@@ -296,26 +297,35 @@ def main(arg_list=None):
     # Create a copy of df_worm_parameter
     df_skel_all = df_worm_parameter.copy()  # create copy of df_worm_parameter fo wormmovie later
 
-    # Calculate corrected center position of the worm
-    skel_pos_centroid = 100
+    # Calculate corrected centroid position of the worm
     df_worm_parameter = correct_stage_pos_with_skeleton(
         df_worm_parameter,
         spline_X,
         spline_Y,
-        skel_pos_centroid,  # 100 will calculate the centroid -> column name will be 'X/Y_rel_skel_pos_centroid'
+        999,  # 999 will calculate the centroid -> column name will be 'X/Y_rel_skel_pos_centroid'
         video_resolution_x,
         video_resolution_y,
         factor_px_to_mm,
         video_origin="crop"  # Set to "crop" for corrected logic
     )
 
-    skel_pos_0 = 0
-
     df_worm_parameter = correct_stage_pos_with_skeleton(
         df_worm_parameter,
         spline_X,
         spline_Y,
-        skel_pos_0,  # 0 reflects nose position
+        0,  # 0 reflects nose position
+        video_resolution_x,
+        video_resolution_y,
+        factor_px_to_mm,
+        video_origin="crop"  # Set to "crop" for corrected logic
+    )
+
+    #center spline point to calculate body speed
+    df_worm_parameter = correct_stage_pos_with_skeleton(
+        df_worm_parameter,
+        spline_X,
+        spline_Y,
+        int((len(spline_X.columns)/2)),  # uses center spline point and calculates abs positions
         video_resolution_x,
         video_resolution_y,
         factor_px_to_mm,
@@ -453,7 +463,9 @@ def main(arg_list=None):
 
     #Speed, radial Speed, NI
 
-    df_worm_parameter = calculate_speed(df_worm_parameter, fps) #adds column speed to df
+    df_worm_parameter = calculate_centroid_speed(df_worm_parameter, fps) #adds column centroid speed to df
+
+    df_worm_parameter = calculate_center_speed(df_worm_parameter, fps, int((len(spline_X.columns)/2)))  # adds column center speed to df
 
     df_worm_parameter = calculate_radial_speed(df_worm_parameter, fps) # adds column radial speed to df
 

@@ -25,7 +25,7 @@ def correct_stage_pos_with_skeleton(
     spline_X (pd.DataFrame): DataFrame with X coordinates of the worm's spline.
     spline_Y (pd.DataFrame): DataFrame with Y coordinates of the worm's spline.
     skel_pos (int): Index of the skeleton position (0-99) to use for correction.
-                    -> if position = 100 , centroid is calculated as average of all positions (1-99)
+                    -> if position = 999 , centroid is calculated as average of all positions (1-99)
     video_resolution_x (int): Width of the video in pixels.
     video_resolution_y (int): Height of the video in pixels.
     factor_px_to_mm (float): Conversion factor from pixels to millimeters.
@@ -44,7 +44,7 @@ def correct_stage_pos_with_skeleton(
     center_x = video_resolution_x / 2
     center_y = video_resolution_y / 2
 
-    if skel_pos == 100:  # calculate centroid
+    if skel_pos == 999:  # calculate centroid
         column_skel_pos_x = spline_X.mean(axis=1).to_numpy().astype(float)
         column_skel_pos_y = spline_Y.mean(axis=1).to_numpy().astype(float)
     else:
@@ -59,7 +59,7 @@ def correct_stage_pos_with_skeleton(
 
     if video_origin == "video":
         # Original logic with swapped axes
-        if skel_pos == 100:
+        if skel_pos == 999:
             worm_pos['X_rel_skel_pos_centroid'] = worm_pos['X_rel'] - difference_center_y_mm
             worm_pos['Y_rel_skel_pos_centroid'] = worm_pos['Y_rel'] - difference_center_x_mm
         else:
@@ -67,7 +67,7 @@ def correct_stage_pos_with_skeleton(
             worm_pos[f'Y_rel_skel_pos_{skel_pos}'] = worm_pos['Y_rel'] - difference_center_x_mm
     elif video_origin == "crop":
         # Corrected logic without swapping axes
-        if skel_pos == 100:
+        if skel_pos == 999:
             worm_pos['X_rel_skel_pos_centroid'] = worm_pos['X_rel'] - difference_center_x_mm
             worm_pos['Y_rel_skel_pos_centroid'] = worm_pos['Y_rel'] - difference_center_y_mm
         else:
@@ -262,7 +262,7 @@ def calculate_bearing_angle(df):
 
     return df
 
-def calculate_speed(df, fps):
+def calculate_centroid_speed(df, fps):
     '''
     This function calculates the speed per second using the displacement magnitude
     and adds the column 'speed'.
@@ -277,7 +277,43 @@ def calculate_speed(df, fps):
         raise ValueError("DataFrame must contain 'centroid_displacement_magnitude' column")
 
     # Calculate the speed (displacement magnitude per frame) and convert it to per second by multiplying by fps
-    df['speed'] = df['centroid_displacement_magnitude'] * fps
+    df['speed_centroid'] = df['centroid_displacement_magnitude'] * fps
+
+    return df
+
+def calculate_center_speed(df, fps, center_point):
+    '''
+    This function calculates the speed per second using the displacement magnitude
+    and adds the column 'speed'.
+
+    :param df: pandas DataFrame with columns for X and Y positions
+    :param fps: frames per second of the video
+    :param center_point: the name of the center point (e.g., 'centroid', 'head')
+    :return: DataFrame with additional columns for displacement vector and speed
+    '''
+    # Extract x and y coordinates
+    x = df[f'X_rel_skel_pos_{center_point}'].values
+    y = df[f'Y_rel_skel_pos_{center_point}'].values
+
+    # Calculate gradients (dx/dt and dy/dt)
+    dx_dt = np.gradient(x)
+    dy_dt = np.gradient(y)
+
+    # Calculate direction in radians and then convert to degrees
+    direction_radians = np.arctan2(dy_dt, dx_dt)
+    direction_degrees = np.degrees(direction_radians)
+
+    # Calculate the displacement magnitude (Euclidean norm)
+    displacement_magnitude = np.sqrt(dx_dt**2 + dy_dt**2)
+
+    # Add new columns to the DataFrame
+    df[f'{center_point}_dx_dt'] = dx_dt
+    df[f'{center_point}_dy_dt'] = dy_dt
+    df[f'{center_point}_displacement_vector_degrees'] = direction_degrees
+    df[f'{center_point}_displacement_magnitude'] = displacement_magnitude
+
+    # Calculate the speed (displacement magnitude per frame) and convert it to per second by multiplying by fps
+    df[f'speed_{center_point}'] = df[f'{center_point}_displacement_magnitude'] * fps
 
     return df
 
