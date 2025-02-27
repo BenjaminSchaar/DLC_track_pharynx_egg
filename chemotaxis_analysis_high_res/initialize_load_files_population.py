@@ -500,9 +500,9 @@ def main(arg_list=None):
                              arena_max_y, fps, file_name="chemotaxis_overview.png")
 
     plot_time_series(df_worm_parameter,
-                     ['speed_centroid', f'speed_center_{center_point}', 'radial_speed', 'reversal_frequency', 'bearing_angle', 'NI',
-                      'curving_angle', 'distance_to_odor_centroid', 'conc_at_centroid', 'conc_at_0', 'dC_centroid',
-                      'dC_0'], fps, output_path, 12, figsize=(15, 20), save_suffix='chemotaxis_time_series')
+                     ['speed_centroid_smoothed', f'speed_center_{center_point}_smoothed', 'radial_speed_smoothed', 'reversal_frequency_smoothed', 'bearing_angle_smoothed', 'NI_smoothed',
+                      'curving_angle_smoothed', 'distance_to_odor_centroid_smoothed', 'conc_at_centroid_smoothed', 'conc_at_0_smoothed', 'dC_centroid_smoothed',
+                      'dC_0_smoothed'], fps, output_path, 12, figsize=(15, 20), save_suffix='chemotaxis_time_series_smoothed')
 
     # --------------------------------------------------
     # 14. DATA EXPORT & FINALIZATION
