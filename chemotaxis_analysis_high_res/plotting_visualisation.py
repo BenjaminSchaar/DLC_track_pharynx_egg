@@ -67,6 +67,98 @@ def plot_chemotaxis_overview(df, output_path, x_odor, y_odor, arena_min_x, arena
     plt.savefig(full_path)
     plt.close()  # Close the plot to free memory
 
+
+def plot_time_series(df, column_names, fps, output_path, rows_per_plot=3, figsize=(15, 10),
+                     dpi=100, line_color='blue', grid=True, save_suffix='time_series'):
+    """
+    Plot multiple columns of a dataframe as time series, converting frames to minutes.
+
+    Parameters:
+    -----------
+    df : pandas.DataFrame
+        The dataframe containing the data to plot
+    column_names : list
+        List of column names to plot as separate time series
+    fps : float
+        Frames per second, used to convert frame numbers to minutes
+    output_path : str
+        Directory path where to save the plots
+    rows_per_plot : int, default=3
+        Number of subplots per figure
+    figsize : tuple, default=(15, 10)
+        Figure size (width, height) in inches
+    dpi : int, default=100
+        Resolution of the figure
+    line_color : str, default='blue'
+        Color of the line plot
+    grid : bool, default=True
+        Whether to show grid on plots
+    save_suffix : str, default='time_series'
+        Suffix to add to saved filenames
+
+    Returns:
+    --------
+    None : Saves plots to the specified output path
+    """
+    import matplotlib.pyplot as plt
+    import numpy as np
+    import os
+    import math
+
+    # Create a copy of the dataframe to avoid modifying the original
+    plot_df = df.copy()
+
+    # Create a time column in minutes
+    plot_df['time_minutes'] = plot_df.index / (fps * 60)
+
+    # Calculate number of figures needed
+    num_plots = len(column_names)
+    num_figures = math.ceil(num_plots / rows_per_plot)
+
+    for fig_num in range(num_figures):
+        # Create a new figure
+        fig, axes = plt.subplots(min(rows_per_plot, num_plots - fig_num * rows_per_plot),
+                                 1, figsize=figsize, dpi=dpi, sharex=True)
+
+        # Handle the case when there's only one subplot
+        if rows_per_plot == 1 or num_plots - fig_num * rows_per_plot == 1:
+            axes = [axes]
+
+        # Plot each column in this figure
+        for i, col_idx in enumerate(range(fig_num * rows_per_plot,
+                                          min((fig_num + 1) * rows_per_plot, num_plots))):
+            col = column_names[col_idx]
+
+            # Create the plot
+            axes[i].plot(plot_df['time_minutes'], plot_df[col], color=line_color)
+
+            # Set labels and title
+            axes[i].set_ylabel(col)
+            axes[i].set_title(f'{col} vs Time')
+
+            # Add grid if requested
+            if grid:
+                axes[i].grid(True, linestyle='--', alpha=0.7)
+
+            # Add a horizontal line at y=0 for reference if appropriate
+            if abs(plot_df[col].min()) < abs(plot_df[col].max() * 0.1):
+                axes[i].axhline(y=0, color='k', linestyle='-', alpha=0.3)
+
+        # Set the x-label for the bottom subplot
+        axes[-1].set_xlabel('Time (minutes)')
+
+        # Adjust layout
+        plt.tight_layout()
+
+        # Save the figure
+        fig_path = os.path.join(output_path, f'{save_suffix}_fig{fig_num + 1}.png')
+        plt.savefig(fig_path)
+        plt.close()
+
+        print(f"Saved figure {fig_num + 1}/{num_figures} to {fig_path}")
+
+    print(f"Completed plotting {num_plots} time series across {num_figures} figures.")
+
 def create_angle_animation(df, output_path, x_odor, y_odor, fps, file_name, nth_frame):
     '''
     Create and save an animation showing angles from a DataFrame using OpenCV.
