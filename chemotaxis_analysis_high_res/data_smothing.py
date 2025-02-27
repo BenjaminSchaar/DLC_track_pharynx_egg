@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from scipy.signal import savgol_filte
+from scipy.signal import savgol_filter
 import re
 
 def replace_outliers_with_nan(dataframe, columns, threshold):
