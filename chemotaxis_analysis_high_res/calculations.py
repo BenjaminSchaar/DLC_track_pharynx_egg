@@ -338,65 +338,6 @@ def calculate_radial_speed(df, fps):
     return df
 
 
-def process_bearing_angles(df, window_size=50):
-    """
-    Process bearing angles in a DataFrame by adding new analytical columns.
-
-    Parameters:
-    df (pd.DataFrame): DataFrame containing a 'bearing_angle' column
-    window_size (int): Size of the rolling window for smoothing, default 50
-
-    Returns:
-    pd.DataFrame: Original DataFrame with new columns:
-        - bearing_angle_abs: Absolute value of bearing angles
-        - bearing_delta: Change in bearing angle between consecutive rows
-    """
-    # Create a copy to avoid modifying the original DataFrame
-    result_df = df.copy()
-
-    # Calculate absolute bearing angles
-    result_df['bearing_angle_abs'] = result_df['bearing_angle'].abs()
-
-    # Temporary smoothed bearing angles for delta calculation
-    temp_smooth = result_df['bearing_angle'].rolling(
-        window=window_size,
-        center=True,
-        min_periods=1
-    ).mean()
-
-    # Calculate change in bearing angle using the smoothed values
-    result_df['bearing_delta'] = temp_smooth.diff()
-
-    return result_df
 
 
-def calc_reorientation_columns(df, bearing_threshold=8, time_threshold=13, fps=10, frames_per_min=600):
-    """
-    frames_per_min (int): Number of frames per minute (e.g. 10 fps * 60 sec = 600)
-    """
-    print("frames per min:", frames_per_min)
-    result_df = df.copy()
 
-    result_df['reorientation'] = (np.abs(result_df['bearing_delta']) >= bearing_threshold).astype(int)
-    frame_threshold = int(time_threshold * fps)
-    result_df['reorientation_events'] = 0
-
-    reorientation_indices = result_df[result_df['reorientation'] == 1].index
-
-    if len(reorientation_indices) > 0:
-        current_event_start = reorientation_indices[0]
-        result_df.loc[current_event_start, 'reorientation_events'] = 1
-
-        for idx in reorientation_indices[1:]:
-            if idx - current_event_start > frame_threshold:
-                current_event_start = idx
-                result_df.loc[idx, 'reorientation_events'] = 1
-
-    # Calculate per minute frequency using frames_per_min window
-    result_df['reorientation_frequency'] = result_df['reorientation_events'].rolling(
-        window=frames_per_min,
-        min_periods=1,
-        center=True
-    ).sum()
-
-    return result_df

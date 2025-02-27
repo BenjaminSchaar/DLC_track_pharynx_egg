@@ -419,8 +419,6 @@ def main(arg_list=None):
     df_worm_parameter = calculate_curving_angle(df_worm_parameter, window_size=1)
     df_worm_parameter = calculate_bearing_angle(df_worm_parameter)
 
-    df_worm_parameter = process_bearing_angles(df_worm_parameter, window_size=50)
-
     # Print confirmation and first few rows of the DataFrame
     print("Angles calculated.")
     print(df_worm_parameter.head())
@@ -460,9 +458,6 @@ def main(arg_list=None):
 
     df_worm_parameter['reversal_frequency'] = df_worm_parameter['reversal_onset'].rolling(window=window_size).sum()
 
-    #calculate reorientations based on DBearing
-    df_worm_parameter = calc_reorientation_columns(df_worm_parameter, bearing_threshold=8, time_threshold=13, fps=fps, frames_per_min=int((6*fps)))
-
     #Speed, radial Speed, NI
 
     df_worm_parameter = calculate_centroid_speed(df_worm_parameter, fps) #adds column centroid speed to df
@@ -480,18 +475,15 @@ def main(arg_list=None):
 
     cals functions that smoothen and clean the data
     '''
-    replace_outliers_with_nan(df_worm_parameter, 'speed',  2.576 )
-    replace_outliers_with_nan(df_worm_parameter, 'radial_speed',  2.576 )
-    replace_outliers_with_nan(df_worm_parameter, 'NI',  2.576 )
 
     #-------------------------------data smoothing and cleaning
 
     df_worm_parameter = replace_outliers_with_nan(df_worm_parameter,
-                                             ['speed', 'radial_speed', 'reversal_frequency', 'bearing_angle', 'NI',
+                                             ['speed_centroid','speed_center', 'radial_speed', 'reversal_frequency', 'bearing_angle', 'NI',
                                               'curving_angle', 'distance_to_odor_centroid', 'conc_at_centroid',
                                               'conc_at_0', 'dC_centroid', 'dC_0'], threshold=2.576)
 
-    df_worm_parameter = apply_smoothing(df_worm_parameter, ['speed', 'radial_speed', 'reversal_frequency', 'bearing_angle', 'NI',
+    df_worm_parameter = apply_smoothing(df_worm_parameter, ['speed_centroid', ,'speed_center', 'radial_speed', 'reversal_frequency', 'bearing_angle', 'NI',
                                                   'curving_angle', 'distance_to_odor_centroid', 'conc_at_centroid',
                                                   'conc_at_0', 'dC_centroid', 'dC_0'])
 
