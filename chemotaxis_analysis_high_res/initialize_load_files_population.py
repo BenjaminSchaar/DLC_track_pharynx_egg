@@ -334,12 +334,15 @@ def main(arg_list=None):
         video_origin="crop"  # Set to "crop" for corrected logic
     )
 
+    center_point = int((len(spline_X.columns) / 2))
+    print("Centerpoint of the skeleton used for speed calculation:", center_point)
+
     # Calculate center spline point position for body speed
     df_worm_parameter = correct_stage_pos_with_skeleton(
         df_worm_parameter,
         spline_X,
         spline_Y,
-        int((len(spline_X.columns) / 2)),  # uses center spline point and calculates abs positions
+        center_point,  # uses center spline point and calculates abs positions
         video_resolution_x,
         video_resolution_y,
         factor_px_to_mm,
@@ -475,14 +478,14 @@ def main(arg_list=None):
     # --------------------------------------------------
     # Replace outliers with NaN values
     df_worm_parameter = replace_outliers_with_nan(df_worm_parameter,
-                                                  ['speed_centroid', 'speed_center', 'radial_speed',
+                                                  ['speed_centroid', f'speed_center_{center_point}', 'radial_speed',
                                                    'reversal_frequency', 'bearing_angle', 'NI',
                                                    'curving_angle', 'distance_to_odor_centroid', 'conc_at_centroid',
                                                    'conc_at_0', 'dC_centroid', 'dC_0'], threshold=2.576)
 
     # Apply smoothing to key metrics
     df_worm_parameter = apply_smoothing(df_worm_parameter,
-                                        ['speed_centroid', 'speed_center', 'radial_speed', 'reversal_frequency',
+                                        ['speed_centroid', f'speed_center_{center_point}', 'radial_speed', 'reversal_frequency',
                                          'bearing_angle', 'NI',
                                          'curving_angle', 'distance_to_odor_centroid', 'conc_at_centroid',
                                          'conc_at_0', 'dC_centroid', 'dC_0'])
@@ -497,7 +500,7 @@ def main(arg_list=None):
                              arena_max_y, fps, file_name="chemotaxis_overview.png")
 
     plot_time_series(df_worm_parameter,
-                     ['speed_centroid', 'speed_center', 'radial_speed', 'reversal_frequency', 'bearing_angle', 'NI',
+                     ['speed_centroid', f'speed_center_{center_point}', 'radial_speed', 'reversal_frequency', 'bearing_angle', 'NI',
                       'curving_angle', 'distance_to_odor_centroid', 'conc_at_centroid', 'conc_at_0', 'dC_centroid',
                       'dC_0'], fps, output_path, 12, figsize=(15, 20), save_suffix='chemotaxis_time_series')
 
