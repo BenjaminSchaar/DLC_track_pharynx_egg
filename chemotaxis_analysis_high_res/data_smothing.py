@@ -35,6 +35,7 @@ def replace_outliers_with_nan(dataframe, columns, threshold):
 
     return dataframe
 
+
 def apply_smoothing(df, columns):
     """
     Smooths specified columns in the DataFrame using a rolling window average.
@@ -49,7 +50,6 @@ def apply_smoothing(df, columns):
     # Default smoothing parameters
     smoothing_params = {
         'speed_centroid': 10,
-        re.compile(r'speed_center_\d+'): 10,  # This will match any 'speed_center_' followed by digits
         'radial_speed': 10,
         'reversal_frequency': 10,
         'bearing_angle': 10,
@@ -66,14 +66,19 @@ def apply_smoothing(df, columns):
         columns = [columns]  # Convert to list if a single column is provided
 
     for column in columns:
+        # Use get() with a default value of 10 if the column isn't in the dictionary
+        window_size = smoothing_params.get(column, 10)
+
+        # Print info about what window size is being used
         if column in smoothing_params:
-            window_size = smoothing_params[column]
-            smoothed_column_name = f"{column}_smoothed"
-            df[smoothed_column_name] = df[column].rolling(
-                window=window_size, center=True, min_periods=1
-            ).mean()
+            print(f"Smoothing column '{column}' with window size: {window_size}")
         else:
-            raise ValueError(f"Column '{column}' is not in the smoothing dictionary.")
+            print(f"Column '{column}' is not in the smoothing dictionary (using default window size: 10)")
+
+        smoothed_column_name = f"{column}_smoothed"
+        df[smoothed_column_name] = df[column].rolling(
+            window=window_size, center=True, min_periods=1
+        ).mean()
 
     return df
 
