@@ -313,7 +313,7 @@ def calculate_center_speed(df, fps, center_point):
     df[f'{center_point}_displacement_magnitude'] = displacement_magnitude
 
     # Calculate the speed (displacement magnitude per frame) and convert it to per second by multiplying by fps
-    df[f'speed_{center_point}'] = df[f'{center_point}_displacement_magnitude'] * fps
+    df[f'speed_center_{center_point}'] = df[f'{center_point}_displacement_magnitude'] * fps
 
     return df
 

@@ -473,7 +473,7 @@ def main(arg_list=None):
 
     # calculating column navigational index based on speed and radial speed
 
-    df_worm_parameter['NI'] = (df_worm_parameter['radial_speed'] / df_worm_parameter['speed'])
+    df_worm_parameter['NI'] = (df_worm_parameter['radial_speed'] / df_worm_parameter['speed_centroid'])
 
     '''
     data smoothing and cleaning part
