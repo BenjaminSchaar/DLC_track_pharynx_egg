@@ -193,9 +193,6 @@ def main(arg_list=None):
                         help='offset in seconds for Diffusion simulation (default 1h = 3600 sec)', type=int,
                         default=3600, required=False)
     parser.add_argument('--type',
-                        help='offset in seconds for Diffusion simulation (default 1h = 3600 sec)', type=int,
-                        default=3600, required=False)
-    parser.add_argument('--type',
                         help='Specify the type of recording: "vid" or "crop" (default: "crop")',
                         type=str,
                         choices=['vid', 'crop'],
