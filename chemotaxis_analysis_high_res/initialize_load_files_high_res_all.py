@@ -5,9 +5,9 @@ import numpy as np
 import yaml
 import sys
 
-from coordinate_system import CoordinateSystem
+from DLC_track_pharynx_egg.chemotaxis_analysis_high_res.src.coordinate_system import CoordinateSystem
 
-from chemotaxis_analysis_high_res.calculations import (
+from chemotaxis_analysis_high_res.src.calculations import (
     interpolate_df,
     correct_stage_pos_with_skeleton,
     calculate_distance,
@@ -21,7 +21,7 @@ from chemotaxis_analysis_high_res.calculations import (
     calculate_bearing_angle,
 )
 
-from chemotaxis_analysis_high_res.plotting_visualisation import (
+from chemotaxis_analysis_high_res.src.plotting_visualisation import (
     plot_chemotaxis_overview,
     create_angle_animation,
     plot_ethogram,
@@ -35,7 +35,7 @@ from chemotaxis_analysis_high_res.plotting_visualisation import (
     plot_time_series,
 )
 
-from chemotaxis_analysis_high_res.data_smothing import (
+from chemotaxis_analysis_high_res.src.data_smothing import (
     replace_outliers_with_nan,
     apply_smoothing,
     smooth_trajectory_savitzky_golay_filter,
