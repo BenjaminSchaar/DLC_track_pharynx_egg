@@ -330,7 +330,7 @@ def main(arg_list=None):
         video_resolution_x,
         video_resolution_y,
         factor_px_to_mm,
-        type  # Set to "crop" for corrected logic
+        img_type  # Set to "crop" for corrected logic
     )
 
     print("added relative worm position:", df_worm_parameter)
@@ -450,8 +450,7 @@ def main(arg_list=None):
     # --------------------------------------------------
     # Calculate different speed metrics
     df_worm_parameter = calculate_centroid_speed(df_worm_parameter, fps)  # adds column centroid speed to df
-    df_worm_parameter = calculate_center_speed(df_worm_parameter, fps,
-                                               int((len(spline_X.columns) / 2)))  # adds column center speed to df
+    df_worm_parameter = calculate_center_speed(df_worm_parameter, fps, center_point)  # adds column center speed to df
     df_worm_parameter = calculate_radial_speed(df_worm_parameter, fps)  # adds column radial speed to df
 
     # Calculate navigational index (NI)
