@@ -1,0 +1,99 @@
+import pandas as pd
+
+class CoordinateSystem:
+    def __init__(self, top_left_pos, odor_pos, factor_px_to_mm=1.0, recording_type='crop'):
+        # Store the initial parameters
+        self.top_left_x, self.top_left_y = top_left_pos
+        self.odor_x, self.odor_y = odor_pos
+        self.recording_type = recording_type
+
+        if recording_type == 'crop':
+            self.factor_px_to_mm = factor_px_to_mm
+            # Calculate odor position in mm for crop mode
+            self.odor_x_mm = (self.odor_y - self.top_left_y) * self.factor_px_to_mm
+            self.odor_y_mm = (self.odor_x - self.top_left_x) * self.factor_px_to_mm
+            # For consistency with the rotation in transform_coordinates_crop
+            temp = self.odor_x_mm
+            self.odor_x_mm = -self.odor_y_mm
+            self.odor_y_mm = temp
+            # Make X positive
+            self.odor_x_mm = abs(self.odor_x_mm)
+
+    def transform_coordinates(self, df):
+        """
+        Transform coordinates based on the recording type.
+        """
+        if self.recording_type == 'vid':
+            return self.transform_coordinates_vid(df)
+        else:  # Default to 'crop'
+            return self.transform_coordinates_crop(df)
+
+    def transform_coordinates_vid(self, df):
+        """
+        Transform coordinates using the new logic with shifting to ensure non-negative values.
+        """
+        # Find the minimum values for X and Y, including odor and top-left positions
+        min_x = min(df['X'].min(), self.odor_x, self.top_left_x)
+        min_y = min(df['Y'].min(), self.odor_y, self.top_left_y)
+
+        # Calculate shifts to make all coordinates non-negative
+        shift_x = abs(min_x) if min_x < 0 else 0
+        shift_y = abs(min_y) if min_y < 0 else 0
+
+        # Apply shifts to ensure all absolute coordinates are non-negative
+        df['X_shifted'] = df['X'] + shift_x
+        df['Y_shifted'] = df['Y'] + shift_y
+        self.odor_x_shifted = self.odor_x + shift_x
+        self.odor_y_shifted = self.odor_y + shift_y
+        self.top_left_x_shifted = self.top_left_x + shift_x
+        self.top_left_y_shifted = self.top_left_y + shift_y
+
+        print(f"Applied X-shift: {shift_x}")
+        print(f"Applied Y-shift: {shift_y}")
+
+        # Calculate relative coordinates and apply abs() to ensure they're positive
+        df['X_rel'] = abs(df['X_shifted'] - self.top_left_x_shifted)
+        df['Y_rel'] = abs(df['Y_shifted'] - self.top_left_y_shifted)
+
+        # Calculate relative odor position
+        self.odor_x_rel = abs(self.odor_x_shifted - self.top_left_x_shifted)
+        self.odor_y_rel = abs(self.odor_y_shifted - self.top_left_y_shifted)
+
+        print(f"Shifted odor position: x = {self.odor_x_shifted}, y = {self.odor_y_shifted}")
+        print(f"Shifted top-left position: x = {self.top_left_x_shifted}, y = {self.top_left_y_shifted}")
+        print(f"Relative odor position: x = {self.odor_x_rel}, y = {self.odor_y_rel}")
+        print(
+            f"Relative top-left position (should be 0,0): x = {abs(self.top_left_x_shifted - self.top_left_x_shifted)}, y = {abs(self.top_left_y_shifted - self.top_left_y_shifted)}")
+
+        # Clean up intermediate columns
+        df = df.drop(['X_shifted', 'Y_shifted'], axis=1)
+
+        # Add odor coordinates to DataFrame - for vid mode, use the relative coordinates
+        df['odor_x'] = self.odor_x_rel
+        df['odor_y'] = self.odor_y_rel
+
+        return df
+
+    def transform_coordinates_crop(self, df):
+        """
+        Transform coordinates exactly as in the Jupyter notebook implementation.
+        """
+        # Step 1: Convert X and Y to mm (note the swap in subtraction)
+        df['X_mm'] = (df['X'] - self.top_left_y) * self.factor_px_to_mm
+        df['Y_mm'] = (df['Y'] - self.top_left_x) * self.factor_px_to_mm
+
+        # Step 2: Rotate X_mm and Y_mm by 90 degrees counterclockwise
+        df['X_rel'] = -df['Y_mm']
+        df['Y_rel'] = df['X_mm']
+
+        # Step 3: Make X_mm_rotated positive
+        df['X_rel'] = df['X_rel'].abs()
+
+        # Remove intermediate columns
+        df = df.drop(['X_mm', 'Y_mm'], axis=1)
+
+        # Add rotated odor coordinates explicitly to DataFrame
+        df['odor_x'] = self.odor_x_mm
+        df['odor_y'] = self.odor_y_mm
+
+        return df
