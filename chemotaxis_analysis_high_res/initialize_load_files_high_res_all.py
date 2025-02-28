@@ -192,7 +192,7 @@ def main(arg_list=None):
     parser.add_argument('--diffusion_time_offset',
                         help='offset in seconds for Diffusion simulation (default 1h = 3600 sec)', type=int,
                         default=3600, required=False)
-    parser.add_argument('--type',
+    parser.add_argument('--img_type',
                         help='Specify the type of recording: "vid" or "crop" (default: "crop")',
                         type=str,
                         choices=['vid', 'crop'],
@@ -218,7 +218,7 @@ def main(arg_list=None):
     video_resolution_y = int(args.video_resolution_y)
     fps = float(args.fps)
     diffusion_time_offset = int(args.diffusion_time_offset)
-    type = args.type.lower()
+    img_type = args.type.lower()
 
     # Load concentration gradient arrays
     conc_gradient_array = np.load(args.conc_gradient_array)
@@ -264,7 +264,7 @@ def main(arg_list=None):
     #add condition dependend statement for type of recording
 
     # Initialize coordinate system with recording type
-    if type == 'crop':
+    if img_type == 'crop':
         # For crop mode, we need the pixel-to-mm conversion factor
         coord_system = CoordinateSystem(
             top_left_tuple,
@@ -302,7 +302,7 @@ def main(arg_list=None):
         video_resolution_x,
         video_resolution_y,
         factor_px_to_mm,
-        video_origin="crop"  # Set to "crop" for corrected logic
+        img_type  # Set to "crop" for corrected logic
     )
 
     # Calculate nose position (skeleton position 0)
@@ -315,7 +315,7 @@ def main(arg_list=None):
         video_resolution_x,
         video_resolution_y,
         factor_px_to_mm,
-        type  # Set to "crop" for corrected logic
+        img_type  # Set to "crop" for corrected logic
     )
 
     center_point = int((len(spline_X.columns) / 2))
@@ -516,7 +516,7 @@ def main(arg_list=None):
             video_resolution_x,
             video_resolution_y,
             factor_px_to_mm,
-            type
+            img_type
         )
 
     print('Worm Animation DF:', df_skel_pos_abs.head())
