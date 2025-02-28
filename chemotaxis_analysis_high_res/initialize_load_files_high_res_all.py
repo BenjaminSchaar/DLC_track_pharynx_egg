@@ -5,7 +5,7 @@ import numpy as np
 import yaml
 import sys
 
-from DLC_track_pharynx_egg.chemotaxis_analysis_high_res.src.coordinate_system import CoordinateSystem
+from chemotaxis_analysis_high_res.src.coordinate_system import CoordinateSystem
 
 from chemotaxis_analysis_high_res.src.calculations import (
     interpolate_df,
