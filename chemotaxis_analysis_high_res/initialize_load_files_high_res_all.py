@@ -218,7 +218,7 @@ def main(arg_list=None):
     video_resolution_y = int(args.video_resolution_y)
     fps = float(args.fps)
     diffusion_time_offset = int(args.diffusion_time_offset)
-    img_type = args.type.lower()
+    img_type = args.img_type.lower()
 
     # Load concentration gradient arrays
     conc_gradient_array = np.load(args.conc_gradient_array)
