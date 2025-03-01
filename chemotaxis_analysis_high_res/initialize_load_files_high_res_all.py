@@ -251,6 +251,10 @@ def main(arg_list=None):
         turn_annotation_path
     )
 
+    if img_type == 'vid':
+        # Add frame column if type = video to match cropper
+        df_worm_parameter['frame'] = range(len(df_worm_parameter))
+
     # Convert frame column to integer
     df_worm_parameter['frame'] = df_worm_parameter['frame'].astype(int)
 
