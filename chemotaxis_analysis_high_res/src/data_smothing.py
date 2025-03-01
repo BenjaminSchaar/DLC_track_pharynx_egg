@@ -82,9 +82,11 @@ def apply_smoothing(df, columns):
 
     return df
 
+
 def smooth_trajectory_savitzky_golay_filter(df_column, window_length=11, poly_order=3):
     """
     Smooth a DataFrame column using Savitzky-Golay filter with linear interpolation for any NaN values.
+    If data length is less than window_length, returns original data with a warning.
 
     Parameters:
     -----------
@@ -98,7 +100,7 @@ def smooth_trajectory_savitzky_golay_filter(df_column, window_length=11, poly_or
     Returns:
     --------
     smoothed_column : pandas.Series
-        Smoothed version of input column with same index
+        Smoothed version of input column with same index, or original column if smoothing not possible
     """
     # Convert window_length to integer explicitly
     window_length = int(window_length)
@@ -123,6 +125,13 @@ def smooth_trajectory_savitzky_golay_filter(df_column, window_length=11, poly_or
     if poly_order >= window_length:
         poly_order = window_length - 1
         print(f"Polynomial order was too high, adjusted to {poly_order}")
+
+    # Check if we have enough data points for the Savitzky-Golay filter
+    if len(filled_data) < window_length:
+        print(
+            f"WARNING: Not enough data points ({len(filled_data)}) for Savitzky-Golay filter with window_length={window_length}.")
+        print("Skipping smoothing step and returning original data.")
+        return df_column
 
     # Apply Savitzky-Golay smoothing
     smoothed_data = savgol_filter(filled_data, window_length, poly_order)
