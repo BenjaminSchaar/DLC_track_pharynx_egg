@@ -164,8 +164,8 @@ def extract_coords(pos_string):
     pos_string = pos_string.replace('x=', '').replace('y=', '')
     # Split the string by comma
     x_str, y_str = pos_string.split(',')
-    # Convert to integers and return as tuple
-    return int(x_str.strip()), int(y_str.strip())
+    # Convert to float instead of int and return as tuple
+    return float(x_str.strip()), float(y_str.strip())
 
 def main(arg_list=None):
     # --------------------------------------------------
