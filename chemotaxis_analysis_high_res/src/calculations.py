@@ -14,7 +14,7 @@ def correct_stage_pos_with_skeleton(
         video_resolution_x: int,
         video_resolution_y: int,
         factor_px_to_mm: float,
-        video_origin: str = "video"
+        video_origin: str
 ) -> pd.DataFrame:
     '''
     This function uses the relative stage position and the skeleton to calculate the real relative
@@ -57,7 +57,7 @@ def correct_stage_pos_with_skeleton(
     difference_center_x_mm = difference_x_px * factor_px_to_mm
     difference_center_y_mm = difference_y_px * factor_px_to_mm
 
-    if video_origin == "video":
+    if video_origin == "vid":
         # Original logic with swapped axes
         if skel_pos == 999:
             worm_pos['X_rel_skel_pos_centroid'] = worm_pos['X_rel'] - difference_center_y_mm
