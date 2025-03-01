@@ -524,9 +524,13 @@ def main(arg_list=None):
 
     print('Worm Animation DF:', df_skel_pos_abs.head())
 
-    # Clean up intermediate columns
-    df_skel_pos_abs.drop(['frame', 'X', 'Y', 'time_imputed_seconds', 'X_rel', 'Y_rel', 'odor_x', 'odor_y'], axis=1,
-                         inplace=True)
+    # Clean up intermediate columns - only drop columns that exist
+    columns_to_drop = ['frame', 'X', 'Y', 'time_imputed_seconds', 'X_rel', 'Y_rel', 'odor_x', 'odor_y']
+    # Filter to only include columns that actually exist in the DataFrame
+    existing_columns = [col for col in columns_to_drop if col in df_skel_pos_abs.columns]
+    # Drop only the existing columns
+    if existing_columns:
+        df_skel_pos_abs.drop(existing_columns, axis=1, inplace=True)
 
     # Create MultiIndex columns for skeleton positions
     skel_pos_columns = pd.MultiIndex.from_product(
