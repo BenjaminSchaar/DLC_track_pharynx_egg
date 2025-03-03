@@ -258,7 +258,7 @@ def calculate_bearing_angle(df):
     bearing_angle = ((bearing_angle + 180) % 360) - 180
 
     # Add to DataFrame
-    df['bearing_angle'] = bearing_angle
+    df['bearing_angle'] = abs(bearing_angle)
 
     return df
 

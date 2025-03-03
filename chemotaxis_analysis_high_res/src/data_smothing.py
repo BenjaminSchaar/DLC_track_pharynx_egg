@@ -36,30 +36,33 @@ def replace_outliers_with_nan(dataframe, columns, threshold):
     return dataframe
 
 
-def apply_smoothing(df, columns):
+def apply_smoothing(df, columns, fps):
     """
     Smooths specified columns in the DataFrame using a rolling window average.
+    Window sizes are scaled by the frame rate (fps).
 
     Parameters:
         df (pd.DataFrame): Input DataFrame.
         columns (str or list): The column(s) to smooth.
+        fps (float): Frames per second, used to scale window sizes.
 
     Returns:
         pd.DataFrame: DataFrame with smoothed columns added as new columns.
     """
-    # Default smoothing parameters
+    # Default smoothing parameters (in seconds, will be multiplied by fps)
     smoothing_params = {
-        'speed_centroid': 10,
-        'radial_speed': 10,
-        'reversal_frequency': 10,
-        'bearing_angle': 10,
-        'NI': 10,
-        'curving_angle': 10,
-        'distance_to_odor_centroid': 10,
-        'conc_at_centroid': 10,
-        'conc_at_0': 10,
-        'dC_centroid': 10,
-        'dC_0': 10,
+        'speed_centroid': 1,
+        'speed_center_0': 1,  # Assuming this is the format for the center point column
+        'radial_speed': 1,
+        'reversal_frequency': 1,
+        'bearing_angle': 1,
+        'NI': 1,
+        'curving_angle': 1,
+        'distance_to_odor_centroid': 1,
+        'conc_at_centroid': 1,
+        'conc_at_0': 1,
+        'dC_centroid': 1,
+        'dC_0': 1,
     }
 
     if isinstance(columns, str):
@@ -67,13 +70,18 @@ def apply_smoothing(df, columns):
 
     for column in columns:
         # Use get() with a default value of 10 if the column isn't in the dictionary
-        window_size = smoothing_params.get(column, 10)
+        base_window_size = smoothing_params.get(column, 10)
+
+        # Scale window size by fps
+        window_size = max(1, int(base_window_size * fps))
 
         # Print info about what window size is being used
         if column in smoothing_params:
-            print(f"Smoothing column '{column}' with window size: {window_size}")
+            print(
+                f"Smoothing column '{column}' with window size: {window_size} frames ({base_window_size} seconds at {fps} fps)")
         else:
-            print(f"Column '{column}' is not in the smoothing dictionary (using default window size: 10)")
+            print(
+                f"Column '{column}' is not in the smoothing dictionary (using default window size: {window_size} frames)")
 
         smoothed_column_name = f"{column}_smoothed"
         df[smoothed_column_name] = df[column].rolling(

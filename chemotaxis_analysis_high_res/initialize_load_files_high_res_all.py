@@ -472,10 +472,12 @@ def main(arg_list=None):
 
     # Apply smoothing to key metrics
     df_worm_parameter = apply_smoothing(df_worm_parameter,
-                                        ['speed_centroid', f'speed_center_{center_point}', 'radial_speed', 'reversal_frequency',
+                                        ['speed_centroid', f'speed_center_{center_point}', 'radial_speed',
+                                         'reversal_frequency',
                                          'bearing_angle', 'NI',
                                          'curving_angle', 'distance_to_odor_centroid', 'conc_at_centroid',
-                                         'conc_at_0', 'dC_centroid', 'dC_0'])
+                                         'conc_at_0', 'dC_centroid', 'dC_0'],
+                                        fps)
 
     # --------------------------------------------------
     # 13. VISUALIZATION & PLOTTING
