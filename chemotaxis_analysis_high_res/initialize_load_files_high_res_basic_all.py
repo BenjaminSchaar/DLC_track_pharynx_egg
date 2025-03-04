@@ -386,10 +386,6 @@ def main(arg_list=None):
     plot_ethogram_simple(reversal_annotation, output_path, file_name='ehtogram_simple.png')
     plot_skeleton_spline(skeleton_spline, output_path, file_name='kymogram.png')
 
-    plot_dynamic_binned(df_worm_parameter, 'reversal_frequency', output_path, 'reversal_frequency_over_time.png',
-                        bin_count=100)
-    plot_dynamic_binned(df_worm_parameter, 'speed', output_path, 'speed_over_time.png', bin_count=100)
-
     plot_turns(df_worm_parameter, output_path, file_name='turns.png')
 
     plot_time_series(df_worm_parameter,
