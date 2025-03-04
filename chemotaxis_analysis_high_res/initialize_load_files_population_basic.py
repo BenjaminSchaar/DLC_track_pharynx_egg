@@ -19,7 +19,7 @@ from chemotaxis_analysis_high_res.src.calculations import (
     calc_reorientation_columns,
 )
 
-from chemotaxis_analysis_high_res.plotting_visualisation import (
+from chemotaxis_analysis_high_res.src.plotting_visualisation import (
     plot_chemotaxis_overview,
     create_angle_animation,
     plot_ethogram,
@@ -32,7 +32,7 @@ from chemotaxis_analysis_high_res.plotting_visualisation import (
     plot_dynamic_binned,
 )
 
-from chemotaxis_analysis_high_res.data_smothing import (
+from chemotaxis_analysis_high_res.src.data_smothing import (
     replace_outliers_with_nan,
     apply_smoothing,
 )
