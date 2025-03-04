@@ -1,23 +1,27 @@
 import pandas as pd
 
 class CoordinateSystem:
-    def __init__(self, top_left_pos, odor_pos, factor_px_to_mm=1.0, recording_type='crop'):
+    def __init__(self, top_left_pos, factor_px_to_mm=1.0, recording_type='crop', odor_pos=None):
         # Store the initial parameters
         self.top_left_x, self.top_left_y = top_left_pos
-        self.odor_x, self.odor_y = odor_pos
         self.recording_type = recording_type
+        self.factor_px_to_mm = factor_px_to_mm
 
-        if recording_type == 'crop':
-            self.factor_px_to_mm = factor_px_to_mm
-            # Calculate odor position in mm for crop mode
-            self.odor_x_mm = (self.odor_y - self.top_left_y) * self.factor_px_to_mm
-            self.odor_y_mm = (self.odor_x - self.top_left_x) * self.factor_px_to_mm
-            # For consistency with the rotation in transform_coordinates_crop
-            temp = self.odor_x_mm
-            self.odor_x_mm = -self.odor_y_mm
-            self.odor_y_mm = temp
-            # Make X positive
-            self.odor_x_mm = abs(self.odor_x_mm)
+        # Store odor position if provided
+        self.has_odor = odor_pos is not None
+        if self.has_odor:
+            self.odor_x, self.odor_y = odor_pos
+
+            # Calculate odor position in mm for crop mode if in crop mode
+            if recording_type == 'crop':
+                self.odor_x_mm = (self.odor_y - self.top_left_y) * self.factor_px_to_mm
+                self.odor_y_mm = (self.odor_x - self.top_left_x) * self.factor_px_to_mm
+                # For consistency with the rotation in transform_coordinates_crop
+                temp = self.odor_x_mm
+                self.odor_x_mm = -self.odor_y_mm
+                self.odor_y_mm = temp
+                # Make X positive
+                self.odor_x_mm = abs(self.odor_x_mm)
 
     def transform_coordinates(self, df):
         """
@@ -32,9 +36,13 @@ class CoordinateSystem:
         """
         Transform coordinates using the new logic with shifting to ensure non-negative values.
         """
-        # Find the minimum values for X and Y, including odor and top-left positions
-        min_x = min(df['X'].min(), self.odor_x, self.top_left_x)
-        min_y = min(df['Y'].min(), self.odor_y, self.top_left_y)
+        # Find the minimum values for X and Y
+        if self.has_odor:
+            min_x = min(df['X'].min(), self.odor_x, self.top_left_x)
+            min_y = min(df['Y'].min(), self.odor_y, self.top_left_y)
+        else:
+            min_x = min(df['X'].min(), self.top_left_x)
+            min_y = min(df['Y'].min(), self.top_left_y)
 
         # Calculate shifts to make all coordinates non-negative
         shift_x = abs(min_x) if min_x < 0 else 0
@@ -43,8 +51,6 @@ class CoordinateSystem:
         # Apply shifts to ensure all absolute coordinates are non-negative
         df['X_shifted'] = df['X'] + shift_x
         df['Y_shifted'] = df['Y'] + shift_y
-        self.odor_x_shifted = self.odor_x + shift_x
-        self.odor_y_shifted = self.odor_y + shift_y
         self.top_left_x_shifted = self.top_left_x + shift_x
         self.top_left_y_shifted = self.top_left_y + shift_y
 
@@ -55,22 +61,28 @@ class CoordinateSystem:
         df['X_rel'] = abs(df['X_shifted'] - self.top_left_x_shifted)
         df['Y_rel'] = abs(df['Y_shifted'] - self.top_left_y_shifted)
 
-        # Calculate relative odor position
-        self.odor_x_rel = abs(self.odor_x_shifted - self.top_left_x_shifted)
-        self.odor_y_rel = abs(self.odor_y_shifted - self.top_left_y_shifted)
+        # Handle odor position if available
+        if self.has_odor:
+            self.odor_x_shifted = self.odor_x + shift_x
+            self.odor_y_shifted = self.odor_y + shift_y
 
-        print(f"Shifted odor position: x = {self.odor_x_shifted}, y = {self.odor_y_shifted}")
+            # Calculate relative odor position
+            self.odor_x_rel = abs(self.odor_x_shifted - self.top_left_x_shifted)
+            self.odor_y_rel = abs(self.odor_y_shifted - self.top_left_y_shifted)
+
+            print(f"Shifted odor position: x = {self.odor_x_shifted}, y = {self.odor_y_shifted}")
+            print(f"Relative odor position: x = {self.odor_x_rel}, y = {self.odor_y_rel}")
+
+            # Add odor coordinates to DataFrame
+            df['odor_x'] = self.odor_x_rel
+            df['odor_y'] = self.odor_y_rel
+
         print(f"Shifted top-left position: x = {self.top_left_x_shifted}, y = {self.top_left_y_shifted}")
-        print(f"Relative odor position: x = {self.odor_x_rel}, y = {self.odor_y_rel}")
         print(
             f"Relative top-left position (should be 0,0): x = {abs(self.top_left_x_shifted - self.top_left_x_shifted)}, y = {abs(self.top_left_y_shifted - self.top_left_y_shifted)}")
 
         # Clean up intermediate columns
         df = df.drop(['X_shifted', 'Y_shifted'], axis=1)
-
-        # Add odor coordinates to DataFrame - for vid mode, use the relative coordinates
-        df['odor_x'] = self.odor_x_rel
-        df['odor_y'] = self.odor_y_rel
 
         return df
 
@@ -92,8 +104,9 @@ class CoordinateSystem:
         # Remove intermediate columns
         df = df.drop(['X_mm', 'Y_mm'], axis=1)
 
-        # Add rotated odor coordinates explicitly to DataFrame
-        df['odor_x'] = self.odor_x_mm
-        df['odor_y'] = self.odor_y_mm
+        # Add rotated odor coordinates to DataFrame only if odor position was provided
+        if self.has_odor:
+            df['odor_x'] = self.odor_x_mm
+            df['odor_y'] = self.odor_y_mm
 
         return df
