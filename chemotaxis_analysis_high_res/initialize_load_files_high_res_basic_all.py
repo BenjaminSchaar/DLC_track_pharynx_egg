@@ -13,6 +13,7 @@ from chemotaxis_analysis_high_res.src.calculations import (
     calculate_distance,
     calculate_time_in_seconds,
     calculate_centroid_speed,
+    calculate_center_speed,
     calculate_radial_speed,
     calculate_displacement_vector,
     calculate_curving_angle,
