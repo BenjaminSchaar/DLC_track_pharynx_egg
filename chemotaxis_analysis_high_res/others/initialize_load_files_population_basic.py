@@ -5,7 +5,7 @@ import numpy as np
 import yaml
 import sys
 
-from chemotaxis_analysis_high_res.calculations import (
+from chemotaxis_analysis_high_res.src.calculations import (
     interpolate_df,
     correct_stage_pos_with_skeleton,
     calculate_distance,
