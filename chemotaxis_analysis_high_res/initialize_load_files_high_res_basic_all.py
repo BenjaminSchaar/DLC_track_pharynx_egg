@@ -12,7 +12,7 @@ from chemotaxis_analysis_high_res.src.calculations import (
     correct_stage_pos_with_skeleton,
     calculate_distance,
     calculate_time_in_seconds,
-    calculate_speed,
+    calculate_centroid_speed,
     calculate_radial_speed,
     calculate_displacement_vector,
     calculate_curving_angle,
@@ -361,7 +361,8 @@ def main(arg_list=None):
     # 10. SPEED CALCULATIONS
     # --------------------------------------------------
     # Calculate speed (simplified from the original version)
-    df_worm_parameter = calculate_speed(df_worm_parameter, fps)  # adds column speed to df
+    df_worm_parameter = calculate_centroid_speed(df_worm_parameter, fps)  # adds column centroid speed to df
+    df_worm_parameter = calculate_center_speed(df_worm_parameter, fps, center_point)  # adds column center speed to df
 
     # --------------------------------------------------
     # 11. DATA CLEANING & SMOOTHING
