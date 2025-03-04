@@ -370,12 +370,12 @@ def main(arg_list=None):
     # --------------------------------------------------
     # Replace outliers with NaN values
     df_worm_parameter = replace_outliers_with_nan(df_worm_parameter,
-                                                  ['speed', 'reversal_frequency', 'curving_angle'],
+                                                  ['speed_centroid', f'speed_center_{center_point}', 'reversal_frequency', 'curving_angle'],
                                                   threshold=2.576)
 
     # Apply smoothing to key metrics
     df_worm_parameter = apply_smoothing(df_worm_parameter,
-                                        ['speed', 'reversal_frequency', 'curving_angle'],
+                                        ['speed_centroid', f'speed_center_{center_point}', 'reversal_frequency', 'curving_angle'],
                                         fps)
 
     # --------------------------------------------------
@@ -393,8 +393,8 @@ def main(arg_list=None):
     plot_turns(df_worm_parameter, output_path, file_name='turns.png')
 
     plot_time_series(df_worm_parameter,
-                     ['speed_smoothed', 'reversal_frequency_smoothed', 'curving_angle_smoothed'],
-                     fps, output_path, 3, figsize=(15, 10), save_suffix='basic_time_series_smoothed')
+                     ['speed_centroid_smoothed', f'speed_center_{center_point}_smoothed', 'reversal_frequency_smoothed', 'curving_angle_smoothed'],
+                     fps, output_path, 4, figsize=(15, 10), save_suffix='basic_time_series_smoothed')
 
     # --------------------------------------------------
     # 13. DATA EXPORT & FINALIZATION
