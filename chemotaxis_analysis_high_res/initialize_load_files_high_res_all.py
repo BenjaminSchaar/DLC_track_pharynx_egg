@@ -376,7 +376,7 @@ def main(arg_list=None):
         lambda row: calculate_distance(row, f'X_rel_skel_pos_{skel_pos_0}', f'Y_rel_skel_pos_{skel_pos_0}', x_odor,
                                        y_odor), axis=1)
 
-    df['distance_to_border_centroid'] = calculate_min_border_distance(
+    df_worm_parameter['distance_to_border_centroid'] = calculate_min_border_distance(
         df_worm_parameter,
         arena_max_x,
         arena_max_y,
@@ -384,7 +384,7 @@ def main(arg_list=None):
         'Y_rel_skel_pos_centroid'
     )
 
-    df['distance_to_border_nose'] = calculate_min_border_distance(
+    df_worm_parameter['distance_to_border_nose'] = calculate_min_border_distance(
         df_worm_parameter,
         arena_max_x,
         arena_max_y,
