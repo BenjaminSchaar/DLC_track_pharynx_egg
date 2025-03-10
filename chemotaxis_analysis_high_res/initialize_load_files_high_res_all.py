@@ -273,16 +273,16 @@ def main(arg_list=None):
         # For crop mode, we need the pixel-to-mm conversion factor
         coord_system = CoordinateSystem(
             top_left_tuple,
-            odor_pos_tuple,
             factor_px_to_mm,  # Using the variable directly
-            'crop'
+            'crop',
+            odor_pos_tuple,
         )
     else:  # Must be 'vid' since argparse validates the choices
         # For vid mode, we don't need the conversion factor
         coord_system = CoordinateSystem(
             top_left_tuple,
+            'vid',
             odor_pos_tuple,
-            'vid'
         )
 
     df_worm_parameter = coord_system.transform_coordinates(df_worm_parameter)
