@@ -275,14 +275,14 @@ def main(arg_list=None):
             top_left_tuple,
             odor_pos_tuple,
             factor_px_to_mm,  # Using the variable directly
-            recording_type='crop'
+            'crop'
         )
     else:  # Must be 'vid' since argparse validates the choices
         # For vid mode, we don't need the conversion factor
         coord_system = CoordinateSystem(
             top_left_tuple,
             odor_pos_tuple,
-            recording_type='vid'
+            'vid'
         )
 
     df_worm_parameter = coord_system.transform_coordinates(df_worm_parameter)
