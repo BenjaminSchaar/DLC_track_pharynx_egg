@@ -376,6 +376,7 @@ def main(arg_list=None):
         lambda row: calculate_distance(row, f'X_rel_skel_pos_{skel_pos_0}', f'Y_rel_skel_pos_{skel_pos_0}', x_odor,
                                        y_odor), axis=1)
 
+    #Calculate distances from different points to border
     df_worm_parameter['distance_to_border_centroid'] = calculate_min_border_distance(
         df_worm_parameter,
         arena_max_x,

@@ -17,6 +17,7 @@ from chemotaxis_analysis_high_res.src.calculations import (
     calculate_radial_speed,
     calculate_displacement_vector,
     calculate_curving_angle,
+    calculate_min_border_distance,
 )
 
 from chemotaxis_analysis_high_res.src.plotting_visualisation import (
@@ -293,6 +294,23 @@ def main(arg_list=None):
 
     print("added relative worm position:", df_worm_parameter)
 
+    #Calculate distances from different points to border
+    df_worm_parameter['distance_to_border_centroid'] = calculate_min_border_distance(
+        df_worm_parameter,
+        arena_max_x,
+        arena_max_y,
+        'X_rel_skel_pos_centroid',
+        'Y_rel_skel_pos_centroid'
+    )
+
+    df_worm_parameter['distance_to_border_nose'] = calculate_min_border_distance(
+        df_worm_parameter,
+        arena_max_x,
+        arena_max_y,
+        f'X_rel_skel_pos_{skel_pos_0}',
+        f'Y_rel_skel_pos_{skel_pos_0}',
+    )
+
     # --------------------------------------------------
     # 6. INTERPOLATION & SMOOTHING OF POSITION DATA
     # --------------------------------------------------
@@ -369,13 +387,18 @@ def main(arg_list=None):
     # 11. DATA CLEANING & SMOOTHING
     # --------------------------------------------------
     # Replace outliers with NaN values
+    # Add the two new columns to the list of columns being processed
     df_worm_parameter = replace_outliers_with_nan(df_worm_parameter,
-                                                  ['speed_centroid', f'speed_center_{center_point}', 'reversal_frequency', 'curving_angle'],
+                                                  ['speed_centroid', f'speed_center_{center_point}',
+                                                   'reversal_frequency', 'curving_angle',
+                                                   'distance_to_border_centroid', 'distance_to_border_nose'],
                                                   threshold=2.576)
 
-    # Apply smoothing to key metrics
+    # Apply smoothing to key metrics including the new columns
     df_worm_parameter = apply_smoothing(df_worm_parameter,
-                                        ['speed_centroid', f'speed_center_{center_point}', 'reversal_frequency', 'curving_angle'],
+                                        ['speed_centroid', f'speed_center_{center_point}',
+                                         'reversal_frequency', 'curving_angle',
+                                         'distance_to_border_centroid', 'distance_to_border_nose'],
                                         fps)
 
     # --------------------------------------------------
