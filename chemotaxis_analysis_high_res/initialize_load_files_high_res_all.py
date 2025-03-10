@@ -19,6 +19,7 @@ from chemotaxis_analysis_high_res.src.calculations import (
     calculate_displacement_vector,
     calculate_curving_angle,
     calculate_bearing_angle,
+    calculate_min_border_distance,
 )
 
 from chemotaxis_analysis_high_res.src.plotting_visualisation import (
@@ -375,6 +376,22 @@ def main(arg_list=None):
         lambda row: calculate_distance(row, f'X_rel_skel_pos_{skel_pos_0}', f'Y_rel_skel_pos_{skel_pos_0}', x_odor,
                                        y_odor), axis=1)
 
+    df['distance_to_border_centroid'] = calculate_min_border_distance(
+        df_worm_parameter,
+        arena_max_x,
+        arena_max_y,
+        'X_rel_skel_pos_centroid',
+        'Y_rel_skel_pos_centroid'
+    )
+
+    df['distance_to_border_nose'] = calculate_min_border_distance(
+        df_worm_parameter,
+        arena_max_x,
+        arena_max_y,
+        f'X_rel_skel_pos_{skel_pos_0}',
+        f'Y_rel_skel_pos_{skel_pos_0}',
+    )
+
     # Convert distance values to float
     df_worm_parameter['distance_to_odor_stage'] = df_worm_parameter['distance_to_odor_stage'].astype(float)
     df_worm_parameter['distance_to_odor_centroid'] = df_worm_parameter['distance_to_odor_centroid'].astype(float)
@@ -468,15 +485,19 @@ def main(arg_list=None):
                                                   ['speed_centroid', f'speed_center_{center_point}', 'radial_speed',
                                                    'reversal_frequency', 'bearing_angle', 'NI',
                                                    'curving_angle', 'distance_to_odor_centroid', 'conc_at_centroid',
-                                                   'conc_at_0', 'dC_centroid', 'dC_0'], threshold=2.576)
+                                                   'conc_at_0', 'dC_centroid', 'dC_0',
+                                                   'distance_to_border_centroid', 'distance_to_border_nose',
+                                                   f'distance_to_odor_{skel_pos_0}'],
+                                                  threshold=2.576)
 
-    # Apply smoothing to key metrics
     df_worm_parameter = apply_smoothing(df_worm_parameter,
                                         ['speed_centroid', f'speed_center_{center_point}', 'radial_speed',
                                          'reversal_frequency',
                                          'bearing_angle', 'NI',
                                          'curving_angle', 'distance_to_odor_centroid', 'conc_at_centroid',
-                                         'conc_at_0', 'dC_centroid', 'dC_0'],
+                                         'conc_at_0', 'dC_centroid', 'dC_0',
+                                         'distance_to_border_centroid', 'distance_to_border_nose',
+                                         f'distance_to_odor_{skel_pos_0}'],
                                         fps)
 
     # --------------------------------------------------

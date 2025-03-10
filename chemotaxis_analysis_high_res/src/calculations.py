@@ -338,6 +338,46 @@ def calculate_radial_speed(df, fps):
     return df
 
 
+def calculate_min_border_distance(df, arena_max_x, arena_max_y, x_col='X_rel_skel_pos_centroid', y_col='Y_rel_skel_pos_centroid',
+                                  arena_min_x=0, arena_min_y=0):
+    """
+    Calculate the minimum distance from each point (x,y) to the closest border of a rectangular arena.
+
+    Parameters:
+    -----------
+    df : pandas.DataFrame
+        DataFrame containing coordinates
+    arena_max_x : float
+        Maximum x-coordinate (width) of the arena in mm
+    arena_max_y : float
+        Maximum y-coordinate (height) of the arena in mm
+    x_col : str, optional
+        Name of the column containing x coordinates, defaults to 'x'
+    y_col : str, optional
+        Name of the column containing y coordinates, defaults to 'Y_rel_skel_pos_centroid'
+    arena_min_x : float, optional
+        Minimum x-coordinate of the arena, defaults to 0
+    arena_min_y : float, optional
+        Minimum y-coordinate of the arena, defaults to 0
+
+    Returns:
+    --------
+    pandas.Series
+        Series containing minimum distance to any border
+    """
+    # Calculate distances to each border
+    dist_to_left = df[x_col] - arena_min_x
+    dist_to_right = arena_max_x - df[x_col]
+    dist_to_top = df[y_col] - arena_min_y
+    dist_to_bottom = arena_max_y - df[y_col]
+
+    # Find minimum distance using pandas minimum function
+    min_distances = pd.concat([dist_to_left, dist_to_right, dist_to_top, dist_to_bottom],
+                              axis=1).min(axis=1)
+
+    return min_distances
+
+
 
 
 
