@@ -11,7 +11,7 @@ from matplotlib.lines import Line2D
 import plotly.express as px
 
 
-def plot_chemotaxis_overview(df, output_path, x_odor, y_odor, arena_min_x, arena_max_x, arena_min_y, arena_max_y, fps, file_name):
+def plot_chemotaxis_overview(df, output_path, x_odor, y_odor, arena_min_x, arena_max_x, arena_min_y, arena_max_y, center_point, fps, file_name):
     """
     Plot the tracks and odor point from a given DataFrame and save the plot as a PNG file.
 
@@ -38,6 +38,8 @@ def plot_chemotaxis_overview(df, output_path, x_odor, y_odor, arena_min_x, arena
 
     # Create a scatter plot for the nose tracks
     plt.scatter(df['X_rel_skel_pos_0'], df['Y_rel_skel_pos_0'], label='Tracks_nose', s=1, c=(df['dC_0']))
+    # Create a scatter plot for the nose tracks
+    plt.scatter(df[f'X_rel_skel_pos_{center_point}'], df[f'Y_rel_skel_pos_{center_point}'], label='Tracks_center', s=1)
 
     # Filter tracks where dC/cT is positive
     positive_dC_cT = df[df['dC_centroid'] > (0.0000000000001)]

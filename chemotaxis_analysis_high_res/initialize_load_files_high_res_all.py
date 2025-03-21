@@ -511,7 +511,7 @@ def main(arg_list=None):
     plot_ethogram(reversal_annotation, output_path, file_name='ehtogram.png')
     plot_skeleton_spline(skeleton_spline, output_path, file_name='kymogram.png')
     plot_chemotaxis_overview(df_worm_parameter, output_path, x_odor, y_odor, arena_min_x, arena_max_x, arena_min_y,
-                             arena_max_y, fps, file_name="chemotaxis_overview.png")
+                             arena_max_y,center_point, fps, file_name="chemotaxis_overview.png")
 
     plot_time_series(df_worm_parameter,
                      ['speed_centroid_smoothed', f'speed_center_{center_point}_smoothed', 'radial_speed_smoothed', 'reversal_frequency_smoothed', 'bearing_angle_smoothed', 'NI_smoothed',
