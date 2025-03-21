@@ -57,9 +57,9 @@ class CoordinateSystem:
         print(f"Applied X-shift: {shift_x}")
         print(f"Applied Y-shift: {shift_y}")
 
-        # Calculate relative coordinates using abs() to ensure they're positive
-        df['X_rel'] = abs(df['X_shifted'] - self.top_left_x_shifted)
-        df['Y_rel'] = abs(df['Y_shifted'] - self.top_left_y_shifted)
+        # Calculate relative coordinates with coordinate system transformation
+        df['X_rel'] = abs(df['Y_shifted'] - self.top_left_y_shifted)  # Swap X and Y
+        df['Y_rel'] = abs(-df['X_shifted'] + self.top_left_x_shifted)  # Negate and swap
 
         # Handle odor position if available
         if self.has_odor:
@@ -73,9 +73,9 @@ class CoordinateSystem:
             print(f"Shifted odor position: x = {self.odor_x_shifted}, y = {self.odor_y_shifted}")
             print(f"Relative odor position: x = {self.odor_x_rel}, y = {self.odor_y_rel}")
 
-            # Add odor coordinates to DataFrame
-            df['odor_x'] = self.odor_x_rel
-            df['odor_y'] = self.odor_y_rel
+            # Add odor coordinates to DataFrame with coordinate system transformation
+            df['odor_x'] = abs(self.odor_y_rel)  # Swap X and Y
+            df['odor_y'] = abs(-self.odor_x_rel)  # Negate and swap
 
         print(f"Shifted top-left position: x = {self.top_left_x_shifted}, y = {self.top_left_y_shifted}")
         print(
