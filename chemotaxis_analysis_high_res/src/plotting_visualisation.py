@@ -50,8 +50,8 @@ def plot_chemotaxis_overview(df, output_path, x_odor, y_odor, arena_min_x, arena
     # Plot the "odor" point
     plt.scatter(x_odor, y_odor, color='red', label='Odor Point', s=1000)
 
-    plt.xlim(arena_min_x, arena_max_x)
-    plt.ylim(arena_min_y, arena_max_y)
+    #plt.xlim(arena_min_x, arena_max_x)
+    #plt.ylim(arena_min_y, arena_max_y)
 
     plt.legend()
     # Add grid lines
