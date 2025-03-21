@@ -47,18 +47,9 @@ def correct_stage_pos_with_skeleton(
     if skel_pos == 999:  # calculate centroid
         column_skel_pos_x = spline_X.mean(axis=1).to_numpy().astype(float)
         column_skel_pos_y = spline_Y.mean(axis=1).to_numpy().astype(float)
-        print(f"Using centroid calculation for skeleton positions")
-        print(f"Shape of column_skel_pos_x: {column_skel_pos_x.shape}")
-        print(f"First 5 centroid X values: {column_skel_pos_x[:5]}")
-        print(f"First 5 centroid Y values: {column_skel_pos_y[:5]}")
-
     else:
         column_skel_pos_x = spline_X.iloc[:, skel_pos].to_numpy().astype(float)
         column_skel_pos_y = spline_Y.iloc[:, skel_pos].to_numpy().astype(float)
-        print(f"Using specific skeleton position: {skel_pos}")
-        print(f"Shape of column_skel_pos_x: {column_skel_pos_x.shape}")
-        print(f"First 5 X values at position {skel_pos}: {column_skel_pos_x[:5]}")
-        print(f"First 5 Y values at position {skel_pos}: {column_skel_pos_y[:5]}")
 
     difference_x_px = column_skel_pos_x - center_x
     difference_y_px = column_skel_pos_y - center_y
@@ -69,11 +60,11 @@ def correct_stage_pos_with_skeleton(
     if video_origin == "vid":
         # Original logic with swapped axes
         if skel_pos == 999:
-            worm_pos['X_rel_skel_pos_centroid'] = worm_pos['X_rel'] - difference_center_y_mm
-            worm_pos['Y_rel_skel_pos_centroid'] = worm_pos['Y_rel'] - difference_center_x_mm
+            worm_pos['X_rel_skel_pos_centroid'] = worm_pos['X_rel'] - difference_center_x_mm
+            worm_pos['Y_rel_skel_pos_centroid'] = worm_pos['Y_rel'] - difference_center_y_mm
         else:
-            worm_pos[f'X_rel_skel_pos_{skel_pos}'] = worm_pos['X_rel'] - difference_center_y_mm
-            worm_pos[f'Y_rel_skel_pos_{skel_pos}'] = worm_pos['Y_rel'] - difference_center_x_mm
+            worm_pos[f'X_rel_skel_pos_{skel_pos}'] = worm_pos['X_rel'] - difference_center_x_mm
+            worm_pos[f'Y_rel_skel_pos_{skel_pos}'] = worm_pos['Y_rel'] - difference_center_y_mm
     elif video_origin == "crop":
         # Corrected logic without swapping axes
         if skel_pos == 999:
