@@ -160,12 +160,16 @@ def export_dataframe_to_csv(df: pd.DataFrame, output_path: str, file_name: str):
     # Export the DataFrame to a CSV file
     df.to_csv(full_path, index=True)  # Change 'index=False' to 'index=True' if you want to include the index.
 
+
 def extract_coords(pos_string):
-    # Remove the 'x=' and 'y=' parts and split by comma
-    pos_string = pos_string.replace('x=', '').replace('y=', '')
+    # Handle cases with or without spaces around the equals sign
+    pos_string = pos_string.replace('x =', '').replace('x=', '')
+    pos_string = pos_string.replace('y =', '').replace('y=', '')
+
     # Split the string by comma
     x_str, y_str = pos_string.split(',')
-    # Convert to float instead of int and return as tuple
+
+    # Convert to float and return as tuple
     return float(x_str.strip()), float(y_str.strip())
 
 def main(arg_list=None):
