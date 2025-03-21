@@ -34,7 +34,7 @@ class CoordinateSystem:
 
     def transform_coordinates_vid(self, df):
         """
-        Transform coordinates using the new logic with shifting to ensure non-negative values.
+        Transform coordinates using the absolute method to ensure non-negative relative coordinates.
         """
         # Find the minimum values for X and Y
         if self.has_odor:
@@ -57,18 +57,18 @@ class CoordinateSystem:
         print(f"Applied X-shift: {shift_x}")
         print(f"Applied Y-shift: {shift_y}")
 
-        # Calculate relative coordinates (removing abs() to preserve directional information)
-        df['X_rel'] = df['X_shifted'] - self.top_left_x_shifted
-        df['Y_rel'] = df['Y_shifted'] - self.top_left_y_shifted
+        # Calculate relative coordinates using abs() to ensure they're positive
+        df['X_rel'] = abs(df['X_shifted'] - self.top_left_x_shifted)
+        df['Y_rel'] = abs(df['Y_shifted'] - self.top_left_y_shifted)
 
         # Handle odor position if available
         if self.has_odor:
             self.odor_x_shifted = self.odor_x + shift_x
             self.odor_y_shifted = self.odor_y + shift_y
 
-            # Calculate relative odor position (removing abs() to preserve directional information)
-            self.odor_x_rel = self.odor_x_shifted - self.top_left_x_shifted
-            self.odor_y_rel = self.odor_y_shifted - self.top_left_y_shifted
+            # Calculate relative odor position using abs()
+            self.odor_x_rel = abs(self.odor_x_shifted - self.top_left_x_shifted)
+            self.odor_y_rel = abs(self.odor_y_shifted - self.top_left_y_shifted)
 
             print(f"Shifted odor position: x = {self.odor_x_shifted}, y = {self.odor_y_shifted}")
             print(f"Relative odor position: x = {self.odor_x_rel}, y = {self.odor_y_rel}")
@@ -79,7 +79,7 @@ class CoordinateSystem:
 
         print(f"Shifted top-left position: x = {self.top_left_x_shifted}, y = {self.top_left_y_shifted}")
         print(
-            f"Relative top-left position (should be 0,0): x = {self.top_left_x_shifted - self.top_left_x_shifted}, y = {self.top_left_y_shifted - self.top_left_y_shifted}")
+            f"Relative top-left position (should be 0,0): x = {abs(self.top_left_x_shifted - self.top_left_x_shifted)}, y = {abs(self.top_left_y_shifted - self.top_left_y_shifted)}")
 
         # Clean up intermediate columns
         df = df.drop(['X_shifted', 'Y_shifted'], axis=1)
