@@ -34,9 +34,9 @@ class CoordinateSystem:
 
     def transform_coordinates_vid(self, df):
         """
-        Transform coordinates using the absolute method to ensure non-negative relative coordinates.
+        Transform coordinates to be non-negative and account for video-to-Matplotlib coordinate system differences.
         """
-        # Find the minimum values for X and Y
+        # Determine the minimum values for X and Y (ensure all coordinates are positive)
         if self.has_odor:
             min_x = min(df['X'].min(), self.odor_x, self.top_left_x)
             min_y = min(df['Y'].min(), self.odor_y, self.top_left_y)
@@ -44,11 +44,11 @@ class CoordinateSystem:
             min_x = min(df['X'].min(), self.top_left_x)
             min_y = min(df['Y'].min(), self.top_left_y)
 
-        # Calculate shifts to make all coordinates non-negative
-        shift_x = abs(min_x) if min_x < 0 else 0
-        shift_y = abs(min_y) if min_y < 0 else 0
+        # Compute shifts to ensure all coordinates are non-negative
+        shift_x = -min_x  # To move everything rightward
+        shift_y = -min_y  # To move everything upward
 
-        # Apply shifts to ensure all absolute coordinates are non-negative
+        # Apply shifts to transform all coordinates into a positive coordinate space
         df['X_shifted'] = df['X'] + shift_x
         df['Y_shifted'] = df['Y'] + shift_y
         self.top_left_x_shifted = self.top_left_x + shift_x
@@ -57,31 +57,30 @@ class CoordinateSystem:
         print(f"Applied X-shift: {shift_x}")
         print(f"Applied Y-shift: {shift_y}")
 
-        # Calculate relative coordinates with coordinate system transformation
-        df['X_rel'] = abs(df['Y_shifted'] - self.top_left_y_shifted)  # Swap X and Y
-        df['Y_rel'] = abs(-df['X_shifted'] + self.top_left_x_shifted)  # Negate and swap
+        # Transform to Matplotlib coordinates (swap X and Y, invert Y-axis)
+        df['X_rel'] = df['Y_shifted'] - self.top_left_y_shifted  # Swap X and Y
+        df['Y_rel'] = -(df['X_shifted'] - self.top_left_x_shifted)  # Swap and flip Y-axis
 
         # Handle odor position if available
         if self.has_odor:
             self.odor_x_shifted = self.odor_x + shift_x
             self.odor_y_shifted = self.odor_y + shift_y
 
-            # Calculate relative odor position using abs()
-            self.odor_x_rel = abs(self.odor_x_shifted - self.top_left_x_shifted)
-            self.odor_y_rel = abs(self.odor_y_shifted - self.top_left_y_shifted)
+            # Calculate relative odor position
+            self.odor_x_rel = self.odor_y_shifted - self.top_left_y_shifted  # Swap X and Y
+            self.odor_y_rel = -(self.odor_x_shifted - self.top_left_x_shifted)  # Swap and flip Y-axis
 
             print(f"Shifted odor position: x = {self.odor_x_shifted}, y = {self.odor_y_shifted}")
             print(f"Relative odor position: x = {self.odor_x_rel}, y = {self.odor_y_rel}")
 
-            # Add odor coordinates to DataFrame with coordinate system transformation
-            df['odor_x'] = abs(self.odor_y_rel)  # Swap X and Y
-            df['odor_y'] = abs(-self.odor_x_rel)  # Negate and swap
+            # Add transformed odor coordinates to DataFrame
+            df['odor_x'] = self.odor_x_rel
+            df['odor_y'] = self.odor_y_rel
 
         print(f"Shifted top-left position: x = {self.top_left_x_shifted}, y = {self.top_left_y_shifted}")
-        print(
-            f"Relative top-left position (should be 0,0): x = {abs(self.top_left_x_shifted - self.top_left_x_shifted)}, y = {abs(self.top_left_y_shifted - self.top_left_y_shifted)}")
+        print(f"Relative top-left position (should be 0,0): x = {0}, y = {0}")
 
-        # Clean up intermediate columns
+        # Drop intermediate columns
         df = df.drop(['X_shifted', 'Y_shifted'], axis=1)
 
         return df
