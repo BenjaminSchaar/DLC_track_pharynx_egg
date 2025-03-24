@@ -353,18 +353,18 @@ def main(arg_list=None):
         method='linear')
 
     # Keep raw data for reference
-    #df_worm_parameter['X_rel_skel_pos_centroid_raw'] = df_worm_parameter['X_rel_skel_pos_centroid']
-    #df_worm_parameter['Y_rel_skel_pos_centroid_raw'] = df_worm_parameter['Y_rel_skel_pos_centroid']
+    df_worm_parameter['X_rel_skel_pos_centroid_raw'] = df_worm_parameter['X_rel_skel_pos_centroid']
+    df_worm_parameter['Y_rel_skel_pos_centroid_raw'] = df_worm_parameter['Y_rel_skel_pos_centroid']
 
     # Apply smoothing filter to trajectory
-    #df_worm_parameter['X_rel_skel_pos_centroid'] = smooth_trajectory_savitzky_golay_filter(
-    #    df_worm_parameter['X_rel_skel_pos_centroid'],
-    #    window_length=fps
-    #)
-    #df_worm_parameter['Y_rel_skel_pos_centroid'] = smooth_trajectory_savitzky_golay_filter(
-    #    df_worm_parameter['Y_rel_skel_pos_centroid'],
-    #    window_length=fps
-    #)
+    df_worm_parameter['X_rel_skel_pos_centroid'] = smooth_trajectory_savitzky_golay_filter(
+        df_worm_parameter['X_rel_skel_pos_centroid'],
+        window_length=fps
+    )
+    df_worm_parameter['Y_rel_skel_pos_centroid'] = smooth_trajectory_savitzky_golay_filter(
+        df_worm_parameter['Y_rel_skel_pos_centroid'],
+        window_length=fps
+    )
 
     # --------------------------------------------------
     # 7. DISTANCE CALCULATIONS
