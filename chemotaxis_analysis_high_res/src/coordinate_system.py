@@ -44,11 +44,11 @@ class CoordinateSystem:
             min_x = min(df['X'].min(), self.top_left_x)
             min_y = min(df['Y'].min(), self.top_left_y)
 
-            min_overall = min(min_x, min_y)
+        min_overall = min(min_x, min_y)
 
-            # Compute shifts to ensure all coordinates are non-negative
-            shift_x = -min_overall  # To move everything rightward
-            shift_y = -min_overall  # To move everything upward
+        # Compute shifts to ensure all coordinates are non-negative
+        shift_x = -min_overall  # To move everything rightward
+        shift_y = -min_overall  # To move everything upward
 
         # Apply shifts to transform all coordinates into a positive coordinate space
         df['X_shifted'] = df['X'] + shift_x

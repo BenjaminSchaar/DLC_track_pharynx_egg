@@ -62,14 +62,10 @@ def correct_stage_pos_with_skeleton(
         # Original logic with swapped axes
         # Transformation for video to matplotlib coordinates
         if skel_pos == 999:
-            worm_pos['X_rel_skel_pos_centroid'] = worm_pos['X_rel'] - difference_center_x_mm
-            worm_pos['Y_rel_skel_pos_centroid'] = worm_pos['Y_rel'] - difference_center_y_mm
             # Centroid transformation
             worm_pos['X_rel_skel_pos_centroid'] = worm_pos['Y_rel'] - difference_center_y_mm
             worm_pos['Y_rel_skel_pos_centroid'] = -(worm_pos['X_rel'] - difference_center_x_mm)
         else:
-            worm_pos[f'X_rel_skel_pos_{skel_pos}'] = worm_pos['X_rel'] - difference_center_x_mm
-            worm_pos[f'Y_rel_skel_pos_{skel_pos}'] = worm_pos['Y_rel'] - difference_center_y_mm
             # Other skeleton positions transformation
             worm_pos[f'X_rel_skel_pos_{skel_pos}'] = worm_pos['Y_rel'] - difference_center_y_mm
             worm_pos[f'Y_rel_skel_pos_{skel_pos}'] = -(worm_pos['X_rel'] - difference_center_x_mm)
