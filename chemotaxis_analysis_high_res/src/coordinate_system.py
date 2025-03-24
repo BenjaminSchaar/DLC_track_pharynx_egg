@@ -58,8 +58,8 @@ class CoordinateSystem:
         print(f"Applied Y-shift: {shift_y}")
 
         # Transform to Matplotlib coordinates (swap X and Y, invert Y-axis)
-        df['X_rel'] = df['Y_shifted'] - self.top_left_y_shifted  # Swap X and Y
-        df['Y_rel'] = -(df['X_shifted'] - self.top_left_x_shifted)  # Swap and flip Y-axis
+        df['X_rel'] = abs(df['Y_shifted'] - self.top_left_y_shifted)  # Swap X and Y
+        df['Y_rel'] = abs(-(df['X_shifted'] - self.top_left_x_shifted))  # Swap and flip Y-axis
 
         # Handle odor position if available
         if self.has_odor:
@@ -67,8 +67,8 @@ class CoordinateSystem:
             self.odor_y_shifted = self.odor_y + shift_y
 
             # Calculate relative odor position
-            self.odor_x_rel = self.odor_y_shifted - self.top_left_y_shifted  # Swap X and Y
-            self.odor_y_rel = -(self.odor_x_shifted - self.top_left_x_shifted)  # Swap and flip Y-axis
+            self.odor_x_rel = abs(self.odor_y_shifted - self.top_left_y_shifted)  # Swap X and Y
+            self.odor_y_rel = abs(-(self.odor_x_shifted - self.top_left_x_shifted))  # Swap and flip Y-axis
 
             print(f"Shifted odor position: x = {self.odor_x_shifted}, y = {self.odor_y_shifted}")
             print(f"Relative odor position: x = {self.odor_x_rel}, y = {self.odor_y_rel}")
