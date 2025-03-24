@@ -18,72 +18,72 @@ def correct_stage_pos_with_skeleton(
         video_origin: str
 ) -> pd.DataFrame:
     '''
-    Uses the stage position and skeleton to calculate the real relative worm position inside the arena.
-    Assumes worm_pos["X_rel"] and worm_pos["Y_rel"] are already in the transformed coordinate system.
+    This function uses the relative stage position and the skeleton to calculate the real relative
+    worm position inside the arena.
+
+    Parameters:
+    worm_pos (pd.DataFrame): DataFrame containing the worm's position.
+    spline_X (pd.DataFrame): DataFrame with X coordinates of the worm's spline.
+    spline_Y (pd.DataFrame): DataFrame with Y coordinates of the worm's spline.
+    skel_pos (int): Index of the skeleton position (0-99) to use for correction.
+                    -> if position = 999 , centroid is calculated as average of all positions (1-99)
+    video_resolution_x (int): Width of the video in pixels.
+    video_resolution_y (int): Height of the video in pixels.
+    factor_px_to_mm (float): Conversion factor from pixels to millimeters.
+    video_origin (str): Origin of the video. "video" for the original logic, "crop" for corrected logic.
+
+    Returns:
+    pd.DataFrame: Updated DataFrame with the worm's corrected position.
     '''
 
-    print("Running correct_stage_pos_with_skeleton for skel_pos:", skel_pos, "and video_origin:", video_origin)
+    print("running func correct_stage_pos_with_skeleton for skel_pos:", skel_pos, "and video_origin:", video_origin)
 
     video_resolution_x = int(video_resolution_x)
     video_resolution_y = int(video_resolution_y)
     factor_px_to_mm = float(factor_px_to_mm)
 
-    # Initialize the difference variables before the if/elif blocks
-    difference_x_px: float = 0.0
-    difference_y_px: float = 0.0
+    center_x = video_resolution_x / 2
+    center_y = video_resolution_y / 2
 
-    if video_origin == "vid":
-        # For "vid", the transformation swaps axes:
-        # The transformed center is:
-        center_rel_x = video_resolution_y / 2
-        center_rel_y = -video_resolution_x / 2
+    if skel_pos == 999:  # calculate centroid
+        column_skel_pos_x = spline_X.mean(axis=1).to_numpy().astype(float)
+        column_skel_pos_y = spline_Y.mean(axis=1).to_numpy().astype(float)
+    else:
+        column_skel_pos_x = spline_X.iloc[:, skel_pos].to_numpy().astype(float)
+        column_skel_pos_y = spline_Y.iloc[:, skel_pos].to_numpy().astype(float)
 
-        # Transform the skeleton coordinates accordingly.
-        if skel_pos == 999:  # use centroid
-            # Compute mean in original coordinates
-            skel_orig_x = spline_X.mean(axis=1).to_numpy().astype(float)
-            skel_orig_y = spline_Y.mean(axis=1).to_numpy().astype(float)
-        else:
-            skel_orig_x = spline_X.iloc[:, skel_pos].to_numpy().astype(float)
-            skel_orig_y = spline_Y.iloc[:, skel_pos].to_numpy().astype(float)
+    difference_x_px = column_skel_pos_x - center_x
+    difference_y_px = column_skel_pos_y - center_y
 
-        # Apply transformation: swap and invert x
-        skel_rel_x = skel_orig_y
-        skel_rel_y = -skel_orig_x
-
-        # Compute differences in the transformed system
-        difference_x_px = skel_rel_x - center_rel_x
-        difference_y_px = skel_rel_y - center_rel_y
-
-    elif video_origin == "crop":
-        # For "crop", no axis swap is needed.
-        center_x = video_resolution_x / 2
-        center_y = video_resolution_y / 2
-
-        if skel_pos == 999:  # centroid
-            skel_rel_x = spline_X.mean(axis=1).to_numpy().astype(float)
-            skel_rel_y = spline_Y.mean(axis=1).to_numpy().astype(float)
-        else:
-            skel_rel_x = spline_X.iloc[:, skel_pos].to_numpy().astype(float)
-            skel_rel_y = spline_Y.iloc[:, skel_pos].to_numpy().astype(float)
-
-        difference_x_px = skel_rel_x - center_x
-        difference_y_px = skel_rel_y - center_y
-
-    # Convert pixel differences to millimeters
     difference_center_x_mm = difference_x_px * factor_px_to_mm
     difference_center_y_mm = difference_y_px * factor_px_to_mm
 
-    # Apply the correction to the worm's transformed relative position
-    if skel_pos == 999:
-        worm_pos['X_rel_skel_pos_centroid'] = worm_pos['X_rel'] - difference_center_x_mm
-        worm_pos['Y_rel_skel_pos_centroid'] = worm_pos['Y_rel'] - difference_center_y_mm
-    else:
-        worm_pos[f'X_rel_skel_pos_{skel_pos}'] = worm_pos['X_rel'] - difference_center_x_mm
-        worm_pos[f'Y_rel_skel_pos_{skel_pos}'] = worm_pos['Y_rel'] - difference_center_y_mm
+    if video_origin == "vid":
+        # Original logic with swapped axes
+        # Transformation for video to matplotlib coordinates
+        if skel_pos == 999:
+            worm_pos['X_rel_skel_pos_centroid'] = worm_pos['X_rel'] - difference_center_x_mm
+            worm_pos['Y_rel_skel_pos_centroid'] = worm_pos['Y_rel'] - difference_center_y_mm
+            # Centroid transformation
+            worm_pos['X_rel_skel_pos_centroid'] = worm_pos['Y_rel'] - difference_center_y_mm
+            worm_pos['Y_rel_skel_pos_centroid'] = -(worm_pos['X_rel'] - difference_center_x_mm)
+        else:
+            worm_pos[f'X_rel_skel_pos_{skel_pos}'] = worm_pos['X_rel'] - difference_center_x_mm
+            worm_pos[f'Y_rel_skel_pos_{skel_pos}'] = worm_pos['Y_rel'] - difference_center_y_mm
+            # Other skeleton positions transformation
+            worm_pos[f'X_rel_skel_pos_{skel_pos}'] = worm_pos['Y_rel'] - difference_center_y_mm
+            worm_pos[f'Y_rel_skel_pos_{skel_pos}'] = -(worm_pos['X_rel'] - difference_center_x_mm)
+
+    elif video_origin == "crop":
+        # Corrected logic without swapping axes
+        if skel_pos == 999:
+            worm_pos['X_rel_skel_pos_centroid'] = worm_pos['X_rel'] - difference_center_x_mm
+            worm_pos['Y_rel_skel_pos_centroid'] = worm_pos['Y_rel'] - difference_center_y_mm
+        else:
+            worm_pos[f'X_rel_skel_pos_{skel_pos}'] = worm_pos['X_rel'] - difference_center_x_mm
+            worm_pos[f'Y_rel_skel_pos_{skel_pos}'] = worm_pos['Y_rel'] - difference_center_y_mm
 
     return worm_pos
-
 
 # Define a function to calculate distance while handling NaN
 def calculate_distance(row: pd.Series, x_col: str, y_col: str, x_odor: float, y_odor: float) -> float:
