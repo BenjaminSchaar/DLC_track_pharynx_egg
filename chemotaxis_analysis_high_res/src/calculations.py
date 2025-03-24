@@ -42,8 +42,16 @@ def correct_stage_pos_with_skeleton(
     video_resolution_y = int(video_resolution_y)
     factor_px_to_mm = float(factor_px_to_mm)
 
-    center_x = video_resolution_x / 2
-    center_y = video_resolution_y / 2
+    center_x = 0.0
+    center_y = 0.0
+
+    if video_origin == "vid":
+        center_x = video_resolution_x / 2
+        center_y = video_resolution_y / 2
+
+    elif video_origin == "crop":
+        center_x = video_resolution_y / 2
+        center_y = video_resolution_x / 2
 
     if skel_pos == 999:  # calculate centroid
         column_skel_pos_x = spline_X.mean(axis=1).to_numpy().astype(float)
