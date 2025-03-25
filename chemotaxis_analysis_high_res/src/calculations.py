@@ -6,7 +6,6 @@ import math
 def interpolate_df(vector, length) -> np.ndarray:
     return np.interp(np.linspace(0, len(vector) - 1, length), np.arange(len(vector)), vector)
 
-
 def correct_stage_pos_with_skeleton(
         worm_pos: pd.DataFrame,
         spline_X: pd.DataFrame,
@@ -30,15 +29,11 @@ def correct_stage_pos_with_skeleton(
     video_resolution_x (int): Width of the video in pixels.
     video_resolution_y (int): Height of the video in pixels.
     factor_px_to_mm (float): Conversion factor from pixels to millimeters.
-    video_origin (str): Origin of the video. "video" for the original logic, "crop" for corrected logic.
+    video_origin (str): Origin of the video. "vid" for the original logic, "crop" for corrected logic.
 
     Returns:
     pd.DataFrame: Updated DataFrame with the worm's corrected position.
     '''
-
-    print("running func correct_stage_pos_with_skeleton for skel_pos:", skel_pos, "and video_origin:", video_origin)
-    print(f"Video resolution: {video_resolution_x} x {video_resolution_y}")
-    print(f"Conversion factor (px to mm): {factor_px_to_mm}")
 
     video_resolution_x = int(video_resolution_x)
     video_resolution_y = int(video_resolution_y)
@@ -54,91 +49,39 @@ def correct_stage_pos_with_skeleton(
         center_x = video_resolution_x / 2
         center_y = video_resolution_y / 2
 
-    print(f"Video center (pixels): center_x = {center_x}, center_y = {center_y}")
-
     if skel_pos == 999:  # calculate centroid
         column_skel_pos_x = spline_X.mean(axis=1).to_numpy().astype(float)
         column_skel_pos_y = spline_Y.mean(axis=1).to_numpy().astype(float)
-        print(f"Using centroid (average of all skeleton positions)")
     else:
         column_skel_pos_x = spline_X.iloc[:, skel_pos].to_numpy().astype(float)
         column_skel_pos_y = spline_Y.iloc[:, skel_pos].to_numpy().astype(float)
-        print(f"Using skeleton position {skel_pos}")
-
-    # Print first few values to inspect
-    print(f"First 3 skeleton position X values: {column_skel_pos_x[:3]}")
-    print(f"First 3 skeleton position Y values: {column_skel_pos_y[:3]}")
 
     difference_x_px = column_skel_pos_x - center_x
     difference_y_px = column_skel_pos_y - center_y
 
-    print(f"First 3 difference_x_px values: {difference_x_px[:3]}")
-    print(f"First 3 difference_y_px values: {difference_y_px[:3]}")
-
     difference_center_x_mm = difference_x_px * factor_px_to_mm
     difference_center_y_mm = difference_y_px * factor_px_to_mm
 
-    print(f"First 3 difference_center_x_mm values: {difference_center_x_mm[:3]}")
-    print(f"First 3 difference_center_y_mm values: {difference_center_y_mm[:3]}")
-
-    # Print initial worm_pos values for comparison
-    print(f"First 3 initial X_rel values: {worm_pos['X_rel'].iloc[:3].tolist()}")
-    print(f"First 3 initial Y_rel values: {worm_pos['Y_rel'].iloc[:3].tolist()}")
-
     if video_origin == "vid":
         # Original logic with swapped axes
-        # Transformation for video to matplotlib coordinates
         if skel_pos == 999:
             # Centroid transformation
             worm_pos['X_rel_skel_pos_centroid'] = worm_pos['X_rel'] - difference_center_x_mm
             worm_pos['Y_rel_skel_pos_centroid'] = worm_pos['Y_rel'] - difference_center_y_mm
-
-            # Print transformed values
-            print(
-                f"First 3 transformed X_rel_skel_pos_centroid values: {worm_pos['X_rel_skel_pos_centroid'].iloc[:3].tolist()}")
-            print(
-                f"First 3 transformed Y_rel_skel_pos_centroid values: {worm_pos['Y_rel_skel_pos_centroid'].iloc[:3].tolist()}")
-            print(f"Transformation used: X_rel_skel_pos_centroid = Y_rel - difference_center_y_mm")
-            print(f"Transformation used: Y_rel_skel_pos_centroid = -(X_rel - difference_center_x_mm)")
         else:
             # Other skeleton positions transformation
             worm_pos[f'X_rel_skel_pos_{skel_pos}'] = worm_pos['X_rel'] - difference_center_x_mm
             worm_pos[f'Y_rel_skel_pos_{skel_pos}'] = worm_pos['Y_rel'] - difference_center_y_mm
-
-            # Print transformed values
-            print(
-                f"First 3 transformed X_rel_skel_pos_{skel_pos} values: {worm_pos[f'X_rel_skel_pos_{skel_pos}'].iloc[:3].tolist()}")
-            print(
-                f"First 3 transformed Y_rel_skel_pos_{skel_pos} values: {worm_pos[f'Y_rel_skel_pos_{skel_pos}'].iloc[:3].tolist()}")
-            print(f"Transformation used: X_rel_skel_pos_{skel_pos} = Y_rel - difference_center_y_mm")
-            print(f"Transformation used: Y_rel_skel_pos_{skel_pos} = -(X_rel - difference_center_x_mm)")
 
     elif video_origin == "crop":
         # Corrected logic without swapping axes
         if skel_pos == 999:
             worm_pos['X_rel_skel_pos_centroid'] = worm_pos['X_rel'] - difference_center_x_mm
             worm_pos['Y_rel_skel_pos_centroid'] = worm_pos['Y_rel'] - difference_center_y_mm
-
-            # Print transformed values
-            print(
-                f"First 3 transformed X_rel_skel_pos_centroid values: {worm_pos['X_rel_skel_pos_centroid'].iloc[:3].tolist()}")
-            print(
-                f"First 3 transformed Y_rel_skel_pos_centroid values: {worm_pos['Y_rel_skel_pos_centroid'].iloc[:3].tolist()}")
-            print(f"Transformation used: X_rel_skel_pos_centroid = X_rel - difference_center_x_mm")
-            print(f"Transformation used: Y_rel_skel_pos_centroid = Y_rel - difference_center_y_mm")
         else:
             worm_pos[f'X_rel_skel_pos_{skel_pos}'] = worm_pos['X_rel'] - difference_center_x_mm
             worm_pos[f'Y_rel_skel_pos_{skel_pos}'] = worm_pos['Y_rel'] - difference_center_y_mm
 
-            # Print transformed values
-            print(
-                f"First 3 transformed X_rel_skel_pos_{skel_pos} values: {worm_pos[f'X_rel_skel_pos_{skel_pos}'].iloc[:3].tolist()}")
-            print(
-                f"First 3 transformed Y_rel_skel_pos_{skel_pos} values: {worm_pos[f'Y_rel_skel_pos_{skel_pos}'].iloc[:3].tolist()}")
-            print(f"Transformation used: X_rel_skel_pos_{skel_pos} = X_rel - difference_center_x_mm")
-            print(f"Transformation used: Y_rel_skel_pos_{skel_pos} = Y_rel - difference_center_y_mm")
-
-    print("Transformation complete")
     return worm_pos
 
 # Define a function to calculate distance while handling NaN

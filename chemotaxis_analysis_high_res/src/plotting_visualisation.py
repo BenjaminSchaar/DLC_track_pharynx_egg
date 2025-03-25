@@ -11,7 +11,8 @@ from matplotlib.lines import Line2D
 import plotly.express as px
 
 
-def plot_chemotaxis_overview(df, output_path, x_odor, y_odor, arena_min_x, arena_max_x, arena_min_y, arena_max_y, center_point, fps, file_name):
+def plot_chemotaxis_overview(df, output_path, x_odor, y_odor, arena_min_x, arena_max_x, arena_min_y, arena_max_y,
+                             center_point, fps, file_name):
     """
     Plot the tracks and odor point from a given DataFrame and save the plot as a PNG file.
 
@@ -23,8 +24,14 @@ def plot_chemotaxis_overview(df, output_path, x_odor, y_odor, arena_min_x, arena
     - arena_max_x: Maximum X-coordinate of the arena.
     - arena_min_y: Minimum Y-coordinate of the arena.
     - arena_max_y: Maximum Y-coordinate of the arena.
-    - file_name: Name of the file to save the plot. Default is 'tracks_and_odor_point.png'.
+    - center_point: Index of the center point in skeleton positions.
+    - fps: Frames per second.
+    - file_name: Name of the file to save the plot.
     """
+    import matplotlib.pyplot as plt
+    import os
+    import numpy as np
+
     fps = int(fps)
 
     # Combine the output path and file name
@@ -32,43 +39,90 @@ def plot_chemotaxis_overview(df, output_path, x_odor, y_odor, arena_min_x, arena
 
     plt.figure(figsize=(160, 160))
 
-    # Create a scatter plot for the corrected tracks
-    plt.scatter(df['X_rel_skel_pos_centroid'], df['Y_rel_skel_pos_centroid'], label='Tracks_centroid', s=1, c=(df['time_seconds'] / 60), cmap='plasma')
-    plt.colorbar(label='Time(min)')
+    # Get unique track IDs (assuming there's a track_id or similar column)
+    # If no such column exists, you can create one based on time gaps or other criteria
+    if 'track_id' not in df.columns:
+        # Create a simple track ID based on animal ID if available, otherwise just use index
+        if 'animal_id' in df.columns:
+            track_ids = df['animal_id'].unique()
+        else:
+            # This is a simplification - in a real scenario, you'd need a better way to identify tracks
+            track_ids = [1]  # Assume single track if no ID available
+    else:
+        track_ids = df['track_id'].unique()
 
-    # Create a scatter plot for the nose tracks
-    plt.scatter(df['X_rel_skel_pos_0'], df['Y_rel_skel_pos_0'], label='Tracks_nose', s=1, c=(df['dC_0']))
-    # Create a scatter plot for the nose tracks
-    plt.scatter(df[f'X_rel_skel_pos_{center_point}'], df[f'Y_rel_skel_pos_{center_point}'], label='Tracks_center', s=1)
+    # Create a color map for unique tracks
+    import matplotlib.cm as cm
+    colors = cm.rainbow(np.linspace(0, 1, len(track_ids)))
+
+    # Plot each track with a unique color
+    for i, track_id in enumerate(track_ids):
+        if 'track_id' in df.columns:
+            track_data = df[df['track_id'] == track_id]
+        elif 'animal_id' in df.columns:
+            track_data = df[df['animal_id'] == track_id]
+        else:
+            track_data = df  # If no ID column, use all data as one track
+
+        # Plot centroid track
+        plt.plot(track_data['X_rel_skel_pos_centroid'], track_data['Y_rel_skel_pos_centroid'],
+                 label=f'Track {track_id} (centroid)' if i == 0 else "",
+                 color=colors[i], linewidth=0.5, alpha=0.7)
+
+        # Plot nose track
+        plt.plot(track_data['X_rel_skel_pos_0'], track_data['Y_rel_skel_pos_0'],
+                 label=f'Track {track_id} (nose)' if i == 0 else "",
+                 color=colors[i], linewidth=0.5, linestyle='--', alpha=0.7)
+
+        # Plot center point track
+        plt.plot(track_data[f'X_rel_skel_pos_{center_point}'], track_data[f'Y_rel_skel_pos_{center_point}'],
+                 label=f'Track {track_id} (center)' if i == 0 else "",
+                 color=colors[i], linewidth=0.5, linestyle=':', alpha=0.7)
 
     # Filter tracks where dC/cT is positive
     positive_dC_cT = df[df['dC_centroid'] > (0.0000000000001)]
-    plt.scatter(positive_dC_cT['X_rel_skel_pos_0'], positive_dC_cT['Y_rel_skel_pos_0'], color='yellow', label='dC/cT > 0', s=0.2, alpha=0.05)
+    plt.scatter(positive_dC_cT['X_rel_skel_pos_0'], positive_dC_cT['Y_rel_skel_pos_0'],
+                color='yellow', label='dC/cT > 0', s=5, alpha=0.5, marker='^')
 
     # Filter tracks where dC/cT is negative
     negative_dC_cT = df[df['dC_centroid'] < (0.0000000000001)]
-    plt.scatter(negative_dC_cT['X_rel_skel_pos_0'], negative_dC_cT['Y_rel_skel_pos_0'], color='red', label='dC/cT < 0', s=0.2, alpha=0.05)
+    plt.scatter(negative_dC_cT['X_rel_skel_pos_0'], negative_dC_cT['Y_rel_skel_pos_0'],
+                color='red', label='dC/cT < 0', s=5, alpha=0.5, marker='v')
 
-    # Plot the "odor" point
-    plt.scatter(x_odor, y_odor, color='red', label='Odor Point', s=1000)
+    # Plot the odor point
+    plt.scatter(x_odor, y_odor, color='red', label='Odor Point', s=1000, marker='*', edgecolors='black')
 
-    #plt.xlim(arena_min_x, arena_max_x)
-    #plt.ylim(arena_min_y, arena_max_y)
+    # Set axis limits if specified
+    if all(v is not None for v in [arena_min_x, arena_max_x, arena_min_y, arena_max_y]):
+        plt.xlim(arena_min_x, arena_max_x)
+        plt.ylim(arena_min_y, arena_max_y)
 
-    plt.legend()
     # Add grid lines
-    plt.grid(True)
+    plt.grid(True, linestyle='--', alpha=0.7)
 
-    # Add labels and legend
-    plt.xlabel('X Relative')
-    plt.ylabel('Y Relative')
-    plt.title('Tracks and Odor Point')
+    # Add axis labels and title
+    plt.xlabel('X Position (relative)', fontsize=14, fontweight='bold')
+    plt.ylabel('Y Position (relative)', fontsize=14, fontweight='bold')
+    plt.title('Chemotaxis Tracks and Odor Point', fontsize=16, fontweight='bold')
+
+    # Add legend with better positioning and formatting
+    plt.legend(loc='upper right', fontsize=12, framealpha=0.7, edgecolor='black')
+
+    # Add timestamp
+    import datetime
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    plt.figtext(0.01, 0.01, f"Generated: {timestamp}", fontsize=8)
+
+    # Add a scale bar (if scale information is available)
+    # Example: 1 unit = 1 mm
+    # plt.plot([arena_max_x-20, arena_max_x-10], [arena_min_y+10, arena_min_y+10], 'k-', linewidth=2)
+    # plt.text(arena_max_x-15, arena_min_y+12, '10 mm', ha='center')
 
     print("The full file path is:", full_path)
-    # Save the plot
-    plt.savefig(full_path)
+    # Save the plot with high DPI for better quality
+    plt.savefig(full_path, dpi=300, bbox_inches='tight')
     plt.close()  # Close the plot to free memory
-
+    
 
 def plot_time_series(df, column_names, fps, output_path, rows_per_plot=3, figsize=(15, 10),
                      dpi=100, line_color='blue', grid=True, save_suffix='time_series'):
