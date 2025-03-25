@@ -48,11 +48,11 @@ def correct_stage_pos_with_skeleton(
     center_y = 0.0
 
     if video_origin == "vid":
-        center_x = video_resolution_x / 2
-        center_y = video_resolution_y / 2
-    elif video_origin == "crop":
         center_x = video_resolution_y / 2
         center_y = video_resolution_x / 2
+    elif video_origin == "crop":
+        center_x = video_resolution_x / 2
+        center_y = video_resolution_y / 2
 
     print(f"Video center (pixels): center_x = {center_x}, center_y = {center_y}")
 
