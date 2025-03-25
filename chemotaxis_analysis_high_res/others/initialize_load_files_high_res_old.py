@@ -36,7 +36,6 @@ from chemotaxis_analysis_high_res.data_smothing import (
     update_behaviour_based_on_speed,
 )
 
-
 class ConditionalPositiveCoordinateSystem:
     def __init__(self, config):
         self.x_odor, self.y_odor = self.extract_coords(config['odor_pos'])

@@ -48,8 +48,8 @@ def correct_stage_pos_with_skeleton(
     center_y = 0.0
 
     if video_origin == "vid":
-        center_x = video_resolution_y / 2
-        center_y = video_resolution_x / 2
+        center_x = video_resolution_x / 2
+        center_y = video_resolution_y / 2
     elif video_origin == "crop":
         center_x = video_resolution_x / 2
         center_y = video_resolution_y / 2
@@ -90,8 +90,8 @@ def correct_stage_pos_with_skeleton(
         # Transformation for video to matplotlib coordinates
         if skel_pos == 999:
             # Centroid transformation
-            worm_pos['X_rel_skel_pos_centroid'] = worm_pos['Y_rel'] - difference_center_y_mm
-            worm_pos['Y_rel_skel_pos_centroid'] = -(worm_pos['X_rel'] - difference_center_x_mm)
+            worm_pos['X_rel_skel_pos_centroid'] = worm_pos['X_rel'] - difference_center_x_mm
+            worm_pos['Y_rel_skel_pos_centroid'] = worm_pos['Y_rel'] - difference_center_y_mm
 
             # Print transformed values
             print(
@@ -102,8 +102,8 @@ def correct_stage_pos_with_skeleton(
             print(f"Transformation used: Y_rel_skel_pos_centroid = -(X_rel - difference_center_x_mm)")
         else:
             # Other skeleton positions transformation
-            worm_pos[f'X_rel_skel_pos_{skel_pos}'] = worm_pos['Y_rel'] - difference_center_y_mm
-            worm_pos[f'Y_rel_skel_pos_{skel_pos}'] = -(worm_pos['X_rel'] - difference_center_x_mm)
+            worm_pos[f'X_rel_skel_pos_{skel_pos}'] = worm_pos['X_rel'] - difference_center_x_mm
+            worm_pos[f'Y_rel_skel_pos_{skel_pos}'] = worm_pos['Y_rel'] - difference_center_y_mm
 
             # Print transformed values
             print(
