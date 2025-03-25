@@ -92,10 +92,9 @@ def plot_chemotaxis_overview(df, output_path, x_odor, y_odor, arena_min_x, arena
     # Plot the odor point
     plt.scatter(x_odor, y_odor, color='red', label='Odor Point', s=1000, marker='*', edgecolors='black')
 
-    # Set axis limits if specified
-    if all(v is not None for v in [arena_min_x, arena_max_x, arena_min_y, arena_max_y]):
-        plt.xlim(arena_min_x, arena_max_x)
-        plt.ylim(arena_min_y, arena_max_y)
+
+    #plt.xlim(arena_min_x, arena_max_x)
+    #plt.ylim(arena_min_y, arena_max_y)
 
     # Add grid lines
     plt.grid(True, linestyle='--', alpha=0.7)
@@ -122,7 +121,7 @@ def plot_chemotaxis_overview(df, output_path, x_odor, y_odor, arena_min_x, arena
     # Save the plot with high DPI for better quality
     plt.savefig(full_path, dpi=300, bbox_inches='tight')
     plt.close()  # Close the plot to free memory
-    
+
 
 def plot_time_series(df, column_names, fps, output_path, rows_per_plot=3, figsize=(15, 10),
                      dpi=100, line_color='blue', grid=True, save_suffix='time_series'):
