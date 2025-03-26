@@ -34,28 +34,36 @@ class CoordinateSystem:
 
     def transform_coordinates_vid(self, df):
         """
-        Transform coordinates to make the top_left corner the origin (0,0)
-        while maintaining the original axis orientation.
+        Transform coordinates so that the top-left corner becomes the origin (0,0),
+        and relative coordinates increase positively to the right and upward
+        (by swapping axes after flipping relative to the top-left corner).
         """
-        # Use top_left corner as the reference point without swapping axes
-        df['X_rel'] = df['X'] - self.top_left_x  # Keep X as X
-        df['Y_rel'] = df['Y'] - self.top_left_y  # Keep Y as Y
+        df = df.copy()
+
+        # Flip signs so that coordinates are relative to top-left
+        x_rel = self.top_left_x - df['X']
+        y_rel = self.top_left_y - df['Y']
+
+        # Swap axes so Y increases upwards
+        df['X_rel'] = y_rel
+        df['Y_rel'] = x_rel
 
         print(f"Using top-left position as reference: x = {self.top_left_x}, y = {self.top_left_y}")
-        print(f"Relative top-left position (should be 0,0): x = {0}, y = {0}")
+        print(f"Relative top-left position (should be 0,0): x = 0, y = 0")
 
         # Handle odor position if available
         if self.has_odor:
-            # Calculate relative odor position
-            self.odor_x_rel = self.odor_x - self.top_left_x
-            self.odor_y_rel = self.odor_y - self.top_left_y
+            odor_x_rel = self.top_left_x - self.odor_x
+            odor_y_rel = self.top_left_y - self.odor_y
+
+            self.odor_x_rel = odor_y_rel  # Swapped
+            self.odor_y_rel = odor_x_rel  # Swapped
 
             print(f"Original odor position: x = {self.odor_x}, y = {self.odor_y}")
-            print(f"Relative odor position: x = {self.odor_x_rel}, y = {self.odor_y_rel}")
+            print(f"Relative odor position: x = {odor_y_rel}, y = {odor_x_rel}")
 
-            # Add transformed odor coordinates to DataFrame
-            df['odor_x'] = self.odor_x_rel
-            df['odor_y'] = self.odor_y_rel
+            df['odor_x'] = odor_y_rel
+            df['odor_y'] = odor_x_rel
 
         return df
 

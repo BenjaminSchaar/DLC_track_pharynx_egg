@@ -39,15 +39,8 @@ def correct_stage_pos_with_skeleton(
     video_resolution_y = int(video_resolution_y)
     factor_px_to_mm = float(factor_px_to_mm)
 
-    center_x = 0.0
-    center_y = 0.0
-
-    if video_origin == "vid":
-        center_x = video_resolution_x / 2
-        center_y = video_resolution_y / 2
-    elif video_origin == "crop":
-        center_x = video_resolution_x / 2
-        center_y = video_resolution_y / 2
+    center_x = video_resolution_x / 2
+    center_y = video_resolution_y / 2
 
     if skel_pos == 999:  # calculate centroid
         column_skel_pos_x = spline_X.mean(axis=1).to_numpy().astype(float)
@@ -62,19 +55,19 @@ def correct_stage_pos_with_skeleton(
     difference_center_x_mm = difference_x_px * factor_px_to_mm
     difference_center_y_mm = difference_y_px * factor_px_to_mm
 
+    worm_pos = worm_pos.copy()
+
     if video_origin == "vid":
-        # Original logic with swapped axes
+        # Working logic with swapped Y sign
         if skel_pos == 999:
-            # Centroid transformation
             worm_pos['X_rel_skel_pos_centroid'] = worm_pos['X_rel'] - difference_center_x_mm
-            worm_pos['Y_rel_skel_pos_centroid'] = worm_pos['Y_rel'] - difference_center_y_mm
+            worm_pos['Y_rel_skel_pos_centroid'] = worm_pos['Y_rel'] + difference_center_y_mm
         else:
-            # Other skeleton positions transformation
             worm_pos[f'X_rel_skel_pos_{skel_pos}'] = worm_pos['X_rel'] - difference_center_x_mm
-            worm_pos[f'Y_rel_skel_pos_{skel_pos}'] = worm_pos['Y_rel'] - difference_center_y_mm
+            worm_pos[f'Y_rel_skel_pos_{skel_pos}'] = worm_pos['Y_rel'] + difference_center_y_mm
 
     elif video_origin == "crop":
-        # Corrected logic without swapping axes
+        # Logic without Y flip
         if skel_pos == 999:
             worm_pos['X_rel_skel_pos_centroid'] = worm_pos['X_rel'] - difference_center_x_mm
             worm_pos['Y_rel_skel_pos_centroid'] = worm_pos['Y_rel'] - difference_center_y_mm
@@ -83,6 +76,7 @@ def correct_stage_pos_with_skeleton(
             worm_pos[f'Y_rel_skel_pos_{skel_pos}'] = worm_pos['Y_rel'] - difference_center_y_mm
 
     return worm_pos
+
 
 # Define a function to calculate distance while handling NaN
 def calculate_distance(row: pd.Series, x_col: str, y_col: str, x_odor: float, y_odor: float) -> float:
