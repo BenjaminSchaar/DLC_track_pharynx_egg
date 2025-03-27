@@ -204,6 +204,7 @@ def main(arg_list=None):
     # Extract output path from input file path
     output_path = os.path.dirname(reversal_annotation_path)
 
+
     # --------------------------------------------------
     # 3. DATA LOADING & PREPARATION
     # --------------------------------------------------
@@ -225,27 +226,33 @@ def main(arg_list=None):
     # --------------------------------------------------
     # Parse coordinate strings from arguments
     top_left_tuple = extract_coords(args.top_left_pos)
+    odor_pos_tuple = extract_coords(args.odor_pos)
+
+    #add condition dependend statement for type of recording
 
     # Initialize coordinate system with recording type
     if img_type == 'crop':
-        # For crop mode, we need the pixel-to-mm conversion factor
-        coord_system = CoordinateSystem(
-            top_left_tuple,
-            factor_px_to_mm,  # Using the variable directly
-            recording_type='crop'
-        )
-    else:  # Must be 'vid' since argparse validates the choices
-        # For vid mode, we also use the factor
         coord_system = CoordinateSystem(
             top_left_tuple,
             factor_px_to_mm,
-            recording_type='vid'
+            'crop',
+            odor_pos_tuple
+        )
+    else:  # Must be 'vid'
+        coord_system = CoordinateSystem(
+            top_left_tuple,
+            factor_px_to_mm,  # Make sure to pass the numeric value here
+            'vid',
+            odor_pos_tuple
         )
 
     df_worm_parameter = coord_system.transform_coordinates(df_worm_parameter)
 
+    # Get odor position from DataFrame columns
+    x_odor = df_worm_parameter['odor_x'].iloc[0]  # Get from first row
+    y_odor = df_worm_parameter['odor_y'].iloc[0]  # Get from first row
+    print(f"Odor position (mm): x={x_odor}, y={y_odor}")
     print(df_worm_parameter.head())
-
     # --------------------------------------------------
     # 5. SKELETON & POSITION CALCULATIONS
     # --------------------------------------------------
@@ -294,22 +301,7 @@ def main(arg_list=None):
 
     print("added relative worm position:", df_worm_parameter)
 
-    #Calculate distances from different points to border
-    df_worm_parameter['distance_to_border_centroid'] = calculate_min_border_distance(
-        df_worm_parameter,
-        arena_max_x,
-        arena_max_y,
-        'X_rel_skel_pos_centroid',
-        'Y_rel_skel_pos_centroid'
-    )
 
-    df_worm_parameter['distance_to_border_nose'] = calculate_min_border_distance(
-        df_worm_parameter,
-        arena_max_x,
-        arena_max_y,
-        f'X_rel_skel_pos_{skel_pos_0}',
-        f'Y_rel_skel_pos_{skel_pos_0}',
-    )
 
     # --------------------------------------------------
     # 6. INTERPOLATION & SMOOTHING OF POSITION DATA
@@ -330,6 +322,24 @@ def main(arg_list=None):
     df_worm_parameter['Y_rel_skel_pos_centroid'] = smooth_trajectory_savitzky_golay_filter(
         df_worm_parameter['Y_rel_skel_pos_centroid'],
         window_length=fps
+    )
+    # ---------------distance to border
+
+    # Calculate distances from different points to border
+    df_worm_parameter['distance_to_border_centroid'] = calculate_min_border_distance(
+        df_worm_parameter,
+        arena_max_x,
+        arena_max_y,
+        'X_rel_skel_pos_centroid',
+        'Y_rel_skel_pos_centroid'
+    )
+
+    df_worm_parameter['distance_to_border_nose'] = calculate_min_border_distance(
+        df_worm_parameter,
+        arena_max_x,
+        arena_max_y,
+        f'X_rel_skel_pos_{skel_pos_0}',
+        f'Y_rel_skel_pos_{skel_pos_0}',
     )
 
     # --------------------------------------------------
