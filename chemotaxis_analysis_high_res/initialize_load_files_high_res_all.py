@@ -614,7 +614,6 @@ def main(arg_list=None):
         fps,
         arena_min_x, arena_max_x,
         arena_min_y, arena_max_y,
-        video_path,
         int(fps/4),
         5,
         "worm_movie.avi"

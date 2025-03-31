@@ -1071,7 +1071,7 @@ def plot_dynamic_binned(df, y_column, output_path, file_name, hue_column=None, b
 
 
 def create_improved_worm_animation(df1, df2, output_path, x_odor, y_odor, fps, arena_min_x, arena_max_x,
-                                   arena_min_y, arena_max_y, video_path, nth_frame, nth_point, file_name):
+                                   arena_min_y, arena_max_y, nth_frame=1, nth_point=5, file_name="worm_animation.avi"):
     '''
     Create and save an animation showing worm movement with a side-by-side view:
     overview of arena and detailed zoomed view of the worm.
@@ -1086,7 +1086,6 @@ def create_improved_worm_animation(df1, df2, output_path, x_odor, y_odor, fps, a
     :param arena_max_x: Maximum x-coordinate for the arena.
     :param arena_min_y: Minimum y-coordinate for the arena.
     :param arena_max_y: Maximum y-coordinate for the arena.
-    :param video_path: Path to the input video file.
     :param nth_frame: Process every nth frame.
     :param nth_point: Plot every nth point of the worm skeleton.
     :param file_name: Name of the output file.
@@ -1096,150 +1095,137 @@ def create_improved_worm_animation(df1, df2, output_path, x_odor, y_odor, fps, a
     import numpy as np
     import matplotlib.pyplot as plt
     from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-    from matplotlib.markers import MarkerStyle
 
     full_path = os.path.join(output_path, file_name)
 
-    # Open the video
-    cap = cv2.VideoCapture(video_path)
-    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    fourcc = cv2.VideoWriter_fourcc(*'DIVX')
+    # Set standard dimensions for the output video
+    width, height = 1280, 720  # Standard HD resolution
 
-    # Create video writer with double width for side-by-side view
+    # Create video writer
+    fourcc = cv2.VideoWriter_fourcc(*'DIVX')
     out = cv2.VideoWriter(full_path, fourcc, fps, (width, height))
 
     # Create figure with two subplots side by side
-    fig, (ax_overview, ax_detail) = plt.subplots(1, 2, figsize=(width / 50, height / 100), dpi=100)
+    fig, (ax_overview, ax_detail) = plt.subplots(1, 2, figsize=(width/50, height/100), dpi=100)
     canvas = FigureCanvas(fig)
 
-    frame_count = 0
+    # Determine total number of frames to process
+    total_frames = min(len(df1), len(df2))
+    print(f"Processing {total_frames} frames...")
 
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            break
+    for frame_count in range(0, total_frames, nth_frame):
+        if frame_count % 100 == 0:
+            print(f"Processing frame {frame_count}/{total_frames}")
 
-        if frame_count % nth_frame == 0:
-            if frame_count >= len(df1) or frame_count >= len(df2):
-                print(f"Frame count {frame_count} is out of range for the dataframes.")
-                break
+        # Get current worm position
+        center_x = df1.at[frame_count, 'X_rel']
+        center_y = df1.at[frame_count, 'Y_rel']
 
-            # Get current worm position
-            center_x = df1.at[frame_count, 'X_rel']
-            center_y = df1.at[frame_count, 'Y_rel']
+        # Clear previous plots
+        ax_overview.clear()
+        ax_detail.clear()
 
-            # Clear previous plots
-            ax_overview.clear()
-            ax_detail.clear()
+        # Plot skeleton points for both views
+        for skel_number in range(0, 101, nth_point):  # Only plot every nth_point
+            if skel_number == 0:  # Nose point
+                ax_overview.scatter(df1.at[frame_count, f'X_rel_skel_pos_{skel_number}'],
+                                    df1.at[frame_count, f'Y_rel_skel_pos_{skel_number}'],
+                                    s=30, c='green', marker='o', label='Nose')
+                ax_detail.scatter(df1.at[frame_count, f'X_rel_skel_pos_{skel_number}'],
+                                  df1.at[frame_count, f'Y_rel_skel_pos_{skel_number}'],
+                                  s=80, c='green', marker='o')
+            elif skel_number == 100:  # Tail point
+                ax_overview.scatter(df1.at[frame_count, f'X_rel_skel_pos_{skel_number}'],
+                                    df1.at[frame_count, f'Y_rel_skel_pos_{skel_number}'],
+                                    s=30, c='blue', marker='o', label='Tail')
+                ax_detail.scatter(df1.at[frame_count, f'X_rel_skel_pos_{skel_number}'],
+                                  df1.at[frame_count, f'Y_rel_skel_pos_{skel_number}'],
+                                  s=80, c='blue', marker='o')
+            else:  # Regular skeleton points
+                ax_overview.scatter(df1.at[frame_count, f'X_rel_skel_pos_{skel_number}'],
+                                    df1.at[frame_count, f'Y_rel_skel_pos_{skel_number}'],
+                                    s=5, c='black', marker='.')
+                ax_detail.scatter(df1.at[frame_count, f'X_rel_skel_pos_{skel_number}'],
+                                  df1.at[frame_count, f'Y_rel_skel_pos_{skel_number}'],
+                                  s=15, c='black', marker='.')
 
-            # Plot skeleton points for both views
-            for skel_number in range(0, 101, nth_point):  # Only plot every nth_point
-                if skel_number == 0:  # Nose point
-                    ax_overview.scatter(df1.at[frame_count, f'X_rel_skel_pos_{skel_number}'],
-                                        df1.at[frame_count, f'Y_rel_skel_pos_{skel_number}'],
-                                        s=30, c='green', marker='o', label='Nose')
-                    ax_detail.scatter(df1.at[frame_count, f'X_rel_skel_pos_{skel_number}'],
-                                      df1.at[frame_count, f'Y_rel_skel_pos_{skel_number}'],
-                                      s=80, c='green', marker='o')
-                elif skel_number == 100:  # Tail point
-                    ax_overview.scatter(df1.at[frame_count, f'X_rel_skel_pos_{skel_number}'],
-                                        df1.at[frame_count, f'Y_rel_skel_pos_{skel_number}'],
-                                        s=30, c='blue', marker='o', label='Tail')
-                    ax_detail.scatter(df1.at[frame_count, f'X_rel_skel_pos_{skel_number}'],
-                                      df1.at[frame_count, f'Y_rel_skel_pos_{skel_number}'],
-                                      s=80, c='blue', marker='o')
-                else:  # Regular skeleton points
-                    ax_overview.scatter(df1.at[frame_count, f'X_rel_skel_pos_{skel_number}'],
-                                        df1.at[frame_count, f'Y_rel_skel_pos_{skel_number}'],
-                                        s=5, c='black', marker='.')
-                    ax_detail.scatter(df1.at[frame_count, f'X_rel_skel_pos_{skel_number}'],
-                                      df1.at[frame_count, f'Y_rel_skel_pos_{skel_number}'],
-                                      s=15, c='black', marker='.')
+        # Plot centroid with yellowish color and transparency
+        ax_overview.scatter(df1.at[frame_count, 'X_rel_skel_pos_centroid'],
+                            df1.at[frame_count, 'Y_rel_skel_pos_centroid'],
+                            s=40, c='yellow', alpha=0.7, label='Centroid')
+        ax_detail.scatter(df1.at[frame_count, 'X_rel_skel_pos_centroid'],
+                          df1.at[frame_count, 'Y_rel_skel_pos_centroid'],
+                          s=100, c='yellow', alpha=0.7)
 
-            # Plot centroid with yellowish color and transparency
-            ax_overview.scatter(df1.at[frame_count, 'X_rel_skel_pos_centroid'],
-                                df1.at[frame_count, 'Y_rel_skel_pos_centroid'],
-                                s=40, c='yellow', alpha=0.7, label='Centroid')
-            ax_detail.scatter(df1.at[frame_count, 'X_rel_skel_pos_centroid'],
-                              df1.at[frame_count, 'Y_rel_skel_pos_centroid'],
-                              s=100, c='yellow', alpha=0.7)
+        # Plot odor point as red star
+        ax_overview.scatter(x_odor, y_odor, color='red', marker='*', s=200, label='Odor Source')
+        ax_detail.scatter(x_odor, y_odor, color='red', marker='*', s=300)
 
-            # Plot odor point as red star
-            ax_overview.scatter(x_odor, y_odor, color='red', marker='*', s=200, label='Odor Source')
-            ax_detail.scatter(x_odor, y_odor, color='red', marker='*', s=300)
+        # Set up overview plot
+        ax_overview.set_xlim(arena_min_x, arena_max_x)
+        ax_overview.set_ylim(arena_min_y, arena_max_y)
+        ax_overview.set_title('Arena Overview')
+        ax_overview.set_xlabel('Distance (mm)')
+        ax_overview.set_ylabel('Distance (mm)')
+        ax_overview.grid(True)
+        ax_overview.legend(loc='upper right')
 
-            # Set up overview plot
-            ax_overview.set_xlim(arena_min_x, arena_max_x)
-            ax_overview.set_ylim(arena_min_y, arena_max_y)
-            ax_overview.set_title('Arena Overview')
-            ax_overview.set_xlabel('Distance (mm)')
-            ax_overview.set_ylabel('Distance (mm)')
-            ax_overview.grid(True)
-            ax_overview.legend(loc='upper right')
+        # Highlight current worm position in overview with a circle
+        circle = plt.Circle((center_x, center_y), 0.5, fill=False, color='red', linestyle='--')
+        ax_overview.add_patch(circle)
 
-            # Highlight current worm position in overview with a circle
-            circle = plt.Circle((center_x, center_y), 0.5, fill=False, color='red', linestyle='--')
-            ax_overview.add_patch(circle)
+        # Set up detailed zoomed plot
+        ax_detail.set_xlim(center_x - 0.7, center_x + 0.7)
+        ax_detail.set_ylim(center_y - 0.7, center_y + 0.7)
+        ax_detail.set_title('Detailed Worm View')
+        ax_detail.set_xlabel('Distance (mm)')
+        ax_detail.grid(True)
+        ax_detail.invert_xaxis()
 
-            # Set up detailed zoomed plot
-            ax_detail.set_xlim(center_x - 0.7, center_x + 0.7)
-            ax_detail.set_ylim(center_y - 0.7, center_y + 0.7)
-            ax_detail.set_title('Detailed Worm View')
-            ax_detail.set_xlabel('Distance (mm)')
-            ax_detail.grid(True)
-            ax_detail.invert_xaxis()
+        # Add angle information to detailed plot
+        bearing_angle_text = f'Bearing Angle: {df2.at[frame_count, "bearing_angle"]:.2f}'
+        curving_angle_text = f'Curving Angle: {df2.at[frame_count, "curving_angle"]:.2f}'
+        speed_text = f'Speed: {df2.at[frame_count, "speed_centroid"]:.2f}' if 'speed_centroid' in df2.columns else 'Speed: N/A'
 
-            # Add angle information to detailed plot
-            bearing_angle_text = f'Bearing Angle: {df2.at[frame_count, "bearing_angle"]:.2f}'
-            curving_angle_text = f'Curving Angle: {df2.at[frame_count, "curving_angle"]:.2f}'
-            speed_text = f'Speed: {df2.at[frame_count, "speed"]:.2f}'
+        ax_detail.text(0.05, 0.95, bearing_angle_text, transform=ax_detail.transAxes, fontsize=10, color='black')
+        ax_detail.text(0.05, 0.90, curving_angle_text, transform=ax_detail.transAxes, fontsize=10, color='black')
+        ax_detail.text(0.05, 0.85, speed_text, transform=ax_detail.transAxes, fontsize=10, color='black')
 
-            ax_detail.text(0.05, 0.95, bearing_angle_text, transform=ax_detail.transAxes, fontsize=10, color='black')
-            ax_detail.text(0.05, 0.90, curving_angle_text, transform=ax_detail.transAxes, fontsize=10, color='black')
-            ax_detail.text(0.05, 0.85, speed_text, transform=ax_detail.transAxes, fontsize=10, color='black')
+        # Add frame counter to both plots
+        frame_text = f'Frame: {frame_count}'
+        ax_overview.text(0.05, 0.05, frame_text, transform=ax_overview.transAxes, fontsize=10, color='black')
+        ax_detail.text(0.05, 0.05, frame_text, transform=ax_detail.transAxes, fontsize=10, color='black')
 
-            # Add frame counter to both plots
-            frame_text = f'Frame: {frame_count}'
-            ax_overview.text(0.05, 0.05, frame_text, transform=ax_overview.transAxes, fontsize=10, color='black')
-            ax_detail.text(0.05, 0.05, frame_text, transform=ax_detail.transAxes, fontsize=10, color='black')
+        # Draw paths and lines connecting worm parts
+        # Draw trail (last 30 positions)
+        trail_length = 30
+        start_frame = max(0, frame_count - trail_length)
+        if frame_count > 0:
+            trail_x = [df1.at[i, 'X_rel_skel_pos_centroid'] for i in range(start_frame, frame_count)]
+            trail_y = [df1.at[i, 'Y_rel_skel_pos_centroid'] for i in range(start_frame, frame_count)]
+            ax_overview.plot(trail_x, trail_y, 'y-', alpha=0.5, linewidth=1)
+            ax_detail.plot(trail_x, trail_y, 'y-', alpha=0.5, linewidth=1)
 
-            # Draw paths and lines connecting worm parts
-            # Draw trail (last 30 positions)
-            trail_length = 30
-            start_frame = max(0, frame_count - trail_length)
-            if frame_count > 0:
-                trail_x = [df1.at[i, 'X_rel_skel_pos_centroid'] for i in range(start_frame, frame_count)]
-                trail_y = [df1.at[i, 'Y_rel_skel_pos_centroid'] for i in range(start_frame, frame_count)]
-                ax_overview.plot(trail_x, trail_y, 'y-', alpha=0.5, linewidth=1)
-                ax_detail.plot(trail_x, trail_y, 'y-', alpha=0.5, linewidth=1)
+        # Connect skeleton points with lines
+        skel_x = [df1.at[frame_count, f'X_rel_skel_pos_{i}'] for i in range(0, 101, nth_point)]
+        skel_y = [df1.at[frame_count, f'Y_rel_skel_pos_{i}'] for i in range(0, 101, nth_point)]
+        ax_detail.plot(skel_x, skel_y, 'k-', linewidth=0.5, alpha=0.7)
 
-            # Connect skeleton points with lines
-            skel_x = [df1.at[frame_count, f'X_rel_skel_pos_{i}'] for i in range(0, 101, nth_point)]
-            skel_y = [df1.at[frame_count, f'Y_rel_skel_pos_{i}'] for i in range(0, 101, nth_point)]
-            ax_detail.plot(skel_x, skel_y, 'k-', linewidth=0.5, alpha=0.7)
+        # Adjust layout
+        plt.tight_layout()
 
-            # Adjust layout
-            plt.tight_layout()
+        # Convert plot to image
+        canvas.draw()
+        frame_array = np.array(canvas.renderer.buffer_rgba())
+        frame_array = cv2.cvtColor(frame_array, cv2.COLOR_RGBA2BGR)
 
-            # Convert plot to image
-            canvas.draw()
-            frame_array = np.array(canvas.renderer.buffer_rgba())
-            frame_array = cv2.cvtColor(frame_array, cv2.COLOR_RGBA2BGR)
+        # Resize to match desired dimensions
+        frame_array_resized = cv2.resize(frame_array, (width, height))
 
-            # Resize to match original frame dimensions
-            frame_array_resized = cv2.resize(frame_array, (width, height))
-
-            # Overlay the plot on the video frame
-            overlay = cv2.addWeighted(frame, 0.3, frame_array_resized, 0.7, 0)
-
-            # Write the frame to output video
-            out.write(overlay)
-
-        frame_count += 1
+        # Write the frame to output video
+        out.write(frame_array_resized)
 
     out.release()
-    cap.release()
     plt.close(fig)
     print(f"Animation saved to: {full_path}")
     return None
