@@ -327,10 +327,6 @@ def main(arg_list=None):
         img_type
     )
 
-    # --------------------------------------------------
-    # Create a copy of worm parameters for later use
-    df_skel_all = df_worm_parameter.copy()  # create copy of df_worm_parameter for worm movie later
-
     center_point = int((len(spline_X.columns) / 2))
     print("Centerpoint of the skeleton used for speed calculation:", center_point)
 
@@ -348,6 +344,8 @@ def main(arg_list=None):
 
     print("added relative worm position:", df_worm_parameter)
 
+    # Create a copy of worm parameters for later use
+    df_skel_all = df_worm_parameter.copy()  # create copy of df_worm_parameter for worm movie later
 
     # --------------------------------------------------
     # 6. INTERPOLATION & SMOOTHING OF POSITION DATA
