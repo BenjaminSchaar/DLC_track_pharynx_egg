@@ -605,6 +605,16 @@ def main(arg_list=None):
     # Save final DataFrame to CSV
     df_combined.to_csv(os.path.join(output_path, 'chemotaxis_params.csv'), index=True)
 
+    # First, print column names before calling the function
+    print("=== DataFrame Column Names Debugging ===")
+    print("\nColumns in df_skel_pos_abs:")
+    for col in df_skel_pos_abs.columns:
+        print(f"- {col}")
+
+    print("\nColumns in df_worm_parameter:")
+    for col in df_worm_parameter.columns:
+        print(f"- {col}")
+
     create_improved_worm_animation(
         df_skel_pos_abs,
         df_worm_parameter,
