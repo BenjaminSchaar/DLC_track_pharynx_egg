@@ -34,6 +34,8 @@ from chemotaxis_analysis_high_res.src.plotting_visualisation import (
     plot_pumps,
     plot_dynamic_binned,
     plot_time_series,
+    create_improved_worm_animation,
+    create_combined_visualization
 )
 
 from chemotaxis_analysis_high_res.src.data_smothing import (
@@ -203,6 +205,8 @@ def main(arg_list=None):
                         choices=['vid', 'crop'],
                         default='crop',
                         required=False)
+    parser.add_argument('--arena_x', help='arena X dimension (default: 38mm in wbfm)', required=False, default='38mm')
+    parser.add_argument('--arena_y', help='arena Y dimension (default: 40.5mm in wbfm)', required=False, default='40.5mm')
 
     args = parser.parse_args(arg_list)
 
@@ -240,9 +244,9 @@ def main(arg_list=None):
 
     # Set arena boundaries
     arena_min_x = 0
-    arena_max_x = 38
+    arena_max_x = float(args.arena_x)
     arena_min_y = 0
-    arena_max_y = 40.5
+    arena_max_y = float(args.arena_y)
 
     # Extract output path from input file path
     output_path = os.path.dirname(reversal_annotation_path)
@@ -509,15 +513,42 @@ def main(arg_list=None):
     # 13. VISUALIZATION & PLOTTING
     # --------------------------------------------------
     # Generate various plots and visualizations
-    plot_ethogram(reversal_annotation, output_path, file_name='ehtogram.png')
-    plot_skeleton_spline(skeleton_spline, output_path, file_name='kymogram.png')
-    plot_chemotaxis_overview(df_worm_parameter, output_path, x_odor, y_odor, arena_min_x, arena_max_x, arena_min_y,
-                             arena_max_y,center_point, fps, file_name="chemotaxis_overview.png")
+    #plot_ethogram(reversal_annotation, output_path, file_name='ehtogram.png')
+    #plot_skeleton_spline(skeleton_spline, output_path, file_name='kymogram.png')
+    #plot_chemotaxis_overview(df_worm_parameter, output_path, x_odor, y_odor, arena_min_x, arena_max_x, arena_min_y,
+    #                         arena_max_y,center_point, fps, file_name="chemotaxis_overview.png")
 
-    plot_time_series(df_worm_parameter,
-                     ['speed_centroid_smoothed', f'speed_center_{center_point}_smoothed', 'radial_speed_smoothed', 'reversal_frequency_smoothed', 'bearing_angle_smoothed', 'NI_smoothed',
-                      'curving_angle_smoothed', 'distance_to_odor_centroid_smoothed', 'conc_at_centroid_smoothed', 'conc_at_0_smoothed', 'dC_centroid_smoothed',
-                      'dC_0_smoothed'], fps, output_path, 12, figsize=(15, 20), save_suffix='chemotaxis_time_series_smoothed')
+    time_series_columns = [
+        'speed_centroid_smoothed',
+        f'speed_center_{center_point}_smoothed',
+        'radial_speed_smoothed',
+        'reversal_frequency_smoothed',
+        'bearing_angle_smoothed',
+        'NI_smoothed',
+        'curving_angle_smoothed',
+        'distance_to_odor_centroid_smoothed',
+        'conc_at_centroid_smoothed',
+        'conc_at_0_smoothed',
+        'dC_centroid_smoothed',
+        'dC_0_smoothed'
+    ]
+
+    create_combined_visualization(
+        df=df_worm_parameter,
+        beh_annotation=behavior_df,
+        skeleton_spline=skeleton_df,
+        output_path=output_path,
+        x_odor=x_odor,
+        y_odor=y_odor,
+        arena_min_x=arena_min_x,
+        arena_max_x=arena_max_x,
+        arena_min_y=arena_min_y,
+        arena_max_y=arena_max_y,
+        center_point=center_point,
+        fps=fps,
+        time_series_columns=time_series_columns,
+        filename="chemotaxis_analysis.pdf"
+    )
 
     # --------------------------------------------------
     # 14. DATA EXPORT & FINALIZATION
@@ -575,8 +606,22 @@ def main(arg_list=None):
     # Save final DataFrame to CSV
     df_combined.to_csv(os.path.join(output_path, 'chemotaxis_params.csv'), index=True)
 
-    # Animation code is commented out in the original
-    # create_worm_animation(df_skel_pos_abs, df_worm_parameter, output_path, x_odor, y_odor, fps, arena_min_x, arena_max_x, arena_min_y, arena_max_y, file_name='worm_movie.avi')
+    create_improved_worm_animation(
+        df_skel_pos_abs,
+        df_worm_parameter,
+        output_path,
+        x_odor, y_odor,
+        fps,
+        arena_min_x, arena_max_x,
+        arena_min_y, arena_max_y,
+        video_path,
+        int(fps/4),
+        5,
+        "worm_movie.avi"
+    )
+
+    # If you want to check if the function executed successfully
+    print("Animation creation complete.")
 
 if __name__ == "__main__":
 
