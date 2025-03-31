@@ -580,7 +580,21 @@ def main(arg_list=None):
             img_type
         )
 
-    print('Worm Animation DF:', df_skel_pos_abs.head())
+    create_improved_worm_animation(
+        df_skel_pos_abs,
+        df_worm_parameter,
+        output_path,
+        x_odor, y_odor,
+        fps,
+        arena_min_x, arena_max_x,
+        arena_min_y, arena_max_y,
+        int(fps/4),
+        5,
+        "worm_movie.avi"
+    )
+
+    # If you want to check if the function executed successfully
+    print("Animation creation complete.")
 
     # Clean up intermediate columns - only drop columns that exist
     columns_to_drop = ['frame', 'X', 'Y', 'time_imputed_seconds', 'X_rel', 'Y_rel', 'odor_x', 'odor_y']
@@ -604,32 +618,6 @@ def main(arg_list=None):
 
     # Save final DataFrame to CSV
     df_combined.to_csv(os.path.join(output_path, 'chemotaxis_params.csv'), index=True)
-
-    # First, print column names before calling the function
-    print("=== DataFrame Column Names Debugging ===")
-    print("\nColumns in df_skel_pos_abs:")
-    for col in df_skel_pos_abs.columns:
-        print(f"- {col}")
-
-    print("\nColumns in df_worm_parameter:")
-    for col in df_worm_parameter.columns:
-        print(f"- {col}")
-
-    create_improved_worm_animation(
-        df_skel_pos_abs,
-        df_worm_parameter,
-        output_path,
-        x_odor, y_odor,
-        fps,
-        arena_min_x, arena_max_x,
-        arena_min_y, arena_max_y,
-        int(fps/4),
-        5,
-        "worm_movie.avi"
-    )
-
-    # If you want to check if the function executed successfully
-    print("Animation creation complete.")
 
 if __name__ == "__main__":
 
