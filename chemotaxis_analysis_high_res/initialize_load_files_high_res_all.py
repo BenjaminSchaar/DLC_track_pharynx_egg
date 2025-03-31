@@ -535,8 +535,8 @@ def main(arg_list=None):
 
     create_combined_visualization(
         df=df_worm_parameter,
-        beh_annotation=behavior_df,
-        skeleton_spline=skeleton_df,
+        beh_annotation=reversal_annotation,
+        skeleton_spline=skeleton_spline,
         output_path=output_path,
         x_odor=x_odor,
         y_odor=y_odor,
