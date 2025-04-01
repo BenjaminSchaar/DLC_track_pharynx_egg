@@ -16,6 +16,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 import math
+
 def create_combined_visualization(df, beh_annotation=None, skeleton_spline=None, output_path=None,
                                   x_odor=None, y_odor=None, arena_min_x=None, arena_max_x=None,
                                   arena_min_y=None, arena_max_y=None, center_point=None, fps=None,
@@ -51,6 +52,7 @@ def create_combined_visualization(df, beh_annotation=None, skeleton_spline=None,
     has_behavior_data = beh_annotation is not None
     has_skeleton_data = skeleton_spline is not None
     has_timeseries = time_series_columns is not None and len(time_series_columns) > 0
+    has_odor = x_odor is not None and y_odor is not None
 
     if has_tracking_data and fps is not None:
         fps = int(fps)
@@ -94,24 +96,34 @@ def create_combined_visualization(df, beh_annotation=None, skeleton_spline=None,
             pdf.savefig(fig_behavior)
             plt.close(fig_behavior)
 
-        # Next page: Chemotaxis overview plot (if tracking data available)
-        if has_tracking_data and x_odor is not None and y_odor is not None:
+        # Next page: Worm track visualization (with or without odor point)
+        if has_tracking_data:
             fig_overview = plt.figure(figsize=(11, 8))
 
-            # Main chemotaxis plot
+            # Main track plot
             # Create a scatter plot for the corrected tracks
             plt.scatter(df['X_rel_skel_pos_centroid'], df['Y_rel_skel_pos_centroid'],
                         label='Tracks_centroid', s=1, c=(df['time_seconds'] / 60), cmap='plasma')
             cbar = plt.colorbar(label='Time (min)')
             cbar.ax.tick_params(labelsize=8)
 
-            # Create a scatter plot for the nose tracks
-            plt.scatter(df['X_rel_skel_pos_0'], df['Y_rel_skel_pos_0'],
-                        label='Tracks_nose', s=1, c=(df['dC_0']))
+            # Create a scatter plot for the nose tracks if possible
+            if 'X_rel_skel_pos_0' in df.columns:
+                if has_odor and 'dC_0' in df.columns:
+                    # If we have odor data, color by concentration derivative
+                    plt.scatter(df['X_rel_skel_pos_0'], df['Y_rel_skel_pos_0'],
+                                label='Tracks_nose', s=1, c=(df['dC_0']))
+                else:
+                    # If no odor data, just show tracks with a single color
+                    plt.scatter(df['X_rel_skel_pos_0'], df['Y_rel_skel_pos_0'],
+                                label='Tracks_nose', s=1, color='green')
 
             # Plot the "odor" point if coordinates are provided
-            if x_odor is not None and y_odor is not None:
+            if has_odor:
                 plt.scatter(x_odor, y_odor, color='red', label='Odor Point', s=100)
+                title = 'Chemotaxis Tracks and Odor Point'
+            else:
+                title = 'Worm Tracks'
 
             plt.xlim(arena_min_x, arena_max_x)
             plt.ylim(arena_min_y, arena_max_y)
@@ -120,7 +132,7 @@ def create_combined_visualization(df, beh_annotation=None, skeleton_spline=None,
             plt.grid(True, alpha=0.3)
             plt.xlabel('X Relative')
             plt.ylabel('Y Relative')
-            plt.title('Chemotaxis Tracks and Odor Point')
+            plt.title(title)
 
             # Make legend smaller and put it outside the plot
             plt.legend(loc='upper left', bbox_to_anchor=(1.05, 1), fontsize=8)
@@ -150,22 +162,31 @@ def create_combined_visualization(df, beh_annotation=None, skeleton_spline=None,
                                                   min((page_num + 1) * rows_per_page, num_plots))):
                     col = time_series_columns[col_idx]
 
-                    # Create the plot
-                    axes[i].plot(df['time_minutes'], df[col], color='blue')
+                    # Check if column exists in the dataframe
+                    if col in df.columns:
+                        # Create the plot
+                        axes[i].plot(df['time_minutes'], df[col], color='blue')
 
-                    # Set labels and title
-                    axes[i].set_ylabel(col, fontsize=8)
-                    axes[i].set_title(f'{col} vs Time', fontsize=10)
+                        # Set labels and title
+                        axes[i].set_ylabel(col, fontsize=8)
+                        axes[i].set_title(f'{col} vs Time', fontsize=10)
 
-                    # Add grid
-                    axes[i].grid(True, linestyle='--', alpha=0.7)
+                        # Add grid
+                        axes[i].grid(True, linestyle='--', alpha=0.7)
 
-                    # Add a horizontal line at y=0 for reference if appropriate
-                    if abs(df[col].min()) < abs(df[col].max() * 0.1):
-                        axes[i].axhline(y=0, color='k', linestyle='-', alpha=0.3)
+                        # Add a horizontal line at y=0 for reference if appropriate
+                        if abs(df[col].min()) < abs(df[col].max() * 0.1):
+                            axes[i].axhline(y=0, color='k', linestyle='-', alpha=0.3)
 
-                    # Set y-axis ticks smaller
-                    axes[i].tick_params(axis='y', labelsize=8)
+                        # Set y-axis ticks smaller
+                        axes[i].tick_params(axis='y', labelsize=8)
+                    else:
+                        # Handle the case where the column doesn't exist
+                        axes[i].text(0.5, 0.5, f"Column '{col}' not available",
+                                     horizontalalignment='center', verticalalignment='center',
+                                     transform=axes[i].transAxes, fontsize=10, color='gray')
+                        axes[i].set_ylabel(col, fontsize=8)
+                        axes[i].grid(False)
 
                 # Set the x-label for the bottom subplot
                 axes[-1].set_xlabel('Time (minutes)')
