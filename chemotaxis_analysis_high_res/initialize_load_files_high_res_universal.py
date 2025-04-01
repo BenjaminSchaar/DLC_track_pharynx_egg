@@ -3,6 +3,7 @@ import os
 import numpy as np
 import yaml
 import sys
+import pandas as pd
 
 from chemotaxis_analysis_high_res.src.coordinate_system import CoordinateSystem
 
