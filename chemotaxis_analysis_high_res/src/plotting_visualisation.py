@@ -16,7 +16,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 import math
-
 def create_combined_visualization(df, beh_annotation=None, skeleton_spline=None, output_path=None,
                                   x_odor=None, y_odor=None, arena_min_x=None, arena_max_x=None,
                                   arena_min_y=None, arena_max_y=None, center_point=None, fps=None,
@@ -182,125 +181,6 @@ def create_combined_visualization(df, beh_annotation=None, skeleton_spline=None,
                 # Save the page
                 pdf.savefig(fig_ts)
                 plt.close(fig_ts)
-
-        # Create an additional summary page with all key visualizations
-        fig_summary = plt.figure(figsize=(11, 10))
-
-        # Create a more complex grid layout to fit all visualizations
-        if has_behavior_data and has_skeleton_data and has_tracking_data and has_timeseries:
-            # Complex grid with all visualizations
-            gs = fig_summary.add_gridspec(3, 2, height_ratios=[1, 1, 1], width_ratios=[1, 1])
-
-            # Skeleton spline in top-left
-            ax_spline = fig_summary.add_subplot(gs[0, 0])
-            im_spline = ax_spline.imshow(skeleton_spline.iloc[:1000].T, origin="upper", cmap='seismic',
-                                         aspect='auto', vmin=-0.06, vmax=0.06)
-            ax_spline.set_title('Skeleton Spline (first 1000 frames)', fontsize=8)
-            ax_spline.set_ylabel('Body Part', fontsize=7)
-            ax_spline.tick_params(labelsize=6)
-            ax_spline.set_xticks([])  # Hide x ticks to save space
-
-            # Ethogram in top-right
-            ax_ethogram = fig_summary.add_subplot(gs[0, 1])
-            im_ethogram = ax_ethogram.imshow(beh_annotation.iloc[:1000].T, origin="upper", cmap='seismic_r',
-                                             aspect='auto', vmin=-0.06, vmax=0.06, interpolation='nearest')
-            ax_ethogram.set_title('Behavioral Ethogram (first 1000 frames)', fontsize=8)
-            ax_ethogram.tick_params(labelsize=6)
-            ax_ethogram.set_yticks([])  # Hide y ticks for ethogram
-            ax_ethogram.set_xticks([])  # Hide x ticks to save space
-
-            # Chemotaxis overview in middle row, spanning both columns
-            if x_odor is not None and y_odor is not None:
-                ax_overview = fig_summary.add_subplot(gs[1, :])
-                ax_overview.scatter(df['X_rel_skel_pos_centroid'], df['Y_rel_skel_pos_centroid'],
-                                    s=0.5, c=(df['time_seconds'] / 60), cmap='plasma')
-                if x_odor is not None and y_odor is not None:
-                    ax_overview.scatter(x_odor, y_odor, color='red', s=50)
-                ax_overview.set_xlim(arena_min_x, arena_max_x)
-                ax_overview.set_ylim(arena_min_y, arena_max_y)
-                ax_overview.set_title('Chemotaxis Track Overview', fontsize=8)
-                ax_overview.set_xlabel('X Relative', fontsize=7)
-                ax_overview.set_ylabel('Y Relative', fontsize=7)
-                ax_overview.tick_params(labelsize=6)
-
-            # Time series plots in bottom row
-            if len(time_series_columns) >= 2:
-                # Choose the two most important columns
-                important_columns = time_series_columns[:2]
-
-                # Time series 1
-                ax_ts1 = fig_summary.add_subplot(gs[2, 0])
-                ax_ts1.plot(df['time_minutes'], df[important_columns[0]], color='blue')
-                ax_ts1.set_title(important_columns[0], fontsize=8)
-                ax_ts1.set_xlabel('Time (min)', fontsize=7)
-                ax_ts1.set_ylabel(important_columns[0], fontsize=7)
-                ax_ts1.grid(True, alpha=0.5)
-                ax_ts1.tick_params(labelsize=6)
-
-                # Time series 2
-                ax_ts2 = fig_summary.add_subplot(gs[2, 1])
-                ax_ts2.plot(df['time_minutes'], df[important_columns[1]], color='blue')
-                ax_ts2.set_title(important_columns[1], fontsize=8)
-                ax_ts2.set_xlabel('Time (min)', fontsize=7)
-                ax_ts2.set_ylabel(important_columns[1], fontsize=7)
-                ax_ts2.grid(True, alpha=0.5)
-                ax_ts2.tick_params(labelsize=6)
-
-        elif has_behavior_data and has_skeleton_data:
-            # Just behavioral data without tracking
-            gs = fig_summary.add_gridspec(2, 1, height_ratios=[1, 1])
-
-            # Skeleton spline on top
-            ax_spline = fig_summary.add_subplot(gs[0])
-            sample_frames = min(1000, len(skeleton_spline))
-            im_spline = ax_spline.imshow(skeleton_spline.iloc[:sample_frames].T, origin="upper",
-                                         cmap='seismic', aspect='auto', vmin=-0.06, vmax=0.06)
-            ax_spline.set_title(f'Skeleton Spline (first {sample_frames} frames)', fontsize=9)
-            ax_spline.set_ylabel('Body Part', fontsize=8)
-
-            # Ethogram below
-            ax_ethogram = fig_summary.add_subplot(gs[1])
-            im_ethogram = ax_ethogram.imshow(beh_annotation.iloc[:sample_frames].T, origin="upper",
-                                             cmap='seismic_r', aspect='auto', vmin=-0.06, vmax=0.06)
-            ax_ethogram.set_title(f'Behavioral Ethogram (first {sample_frames} frames)', fontsize=9)
-            ax_ethogram.set_xlabel('Frame', fontsize=8)
-            ax_ethogram.set_yticks([])  # Hide y ticks for ethogram
-
-        elif has_tracking_data and has_timeseries:
-            # Just tracking data without behavioral data
-            gs = fig_summary.add_gridspec(2, 2)
-
-            # Chemotaxis overview in top-left quadrant
-            if x_odor is not None and y_odor is not None:
-                ax_overview = fig_summary.add_subplot(gs[0, 0])
-                ax_overview.scatter(df['X_rel_skel_pos_centroid'], df['Y_rel_skel_pos_centroid'],
-                                    s=0.5, c=(df['time_seconds'] / 60), cmap='plasma')
-                if x_odor is not None and y_odor is not None:
-                    ax_overview.scatter(x_odor, y_odor, color='red', s=50)
-                ax_overview.set_xlim(arena_min_x, arena_max_x)
-                ax_overview.set_ylim(arena_min_y, arena_max_y)
-                ax_overview.set_title('Track Overview', fontsize=9)
-                ax_overview.set_xlabel('X', fontsize=8)
-                ax_overview.set_ylabel('Y', fontsize=8)
-                ax_overview.tick_params(labelsize=7)
-
-            # Important time series plots in other quadrants
-            important_columns = time_series_columns[:3] if len(time_series_columns) >= 3 else time_series_columns
-            for i, col in enumerate(important_columns):
-                if i < 3:  # Only show up to 3 time series
-                    position = (i // 2, (i % 2) + int(i // 2 == 0))
-                    ax = fig_summary.add_subplot(gs[position])
-                    ax.plot(df['time_minutes'], df[col], color='blue')
-                    ax.set_title(col, fontsize=9)
-                    ax.set_xlabel('Time (min)', fontsize=8)
-                    ax.set_ylabel(col, fontsize=8)
-                    ax.grid(True, alpha=0.5)
-                    ax.tick_params(labelsize=7)
-
-        plt.suptitle('Summary of All Visualizations', fontsize=12)
-        plt.tight_layout(rect=[0, 0, 1, 0.95])  # Make room for the title
-        pdf.savefig(fig_summary)
-        plt.close(fig_summary)
 
     print(f"Combined visualization saved to: {pdf_path}")
     return None
@@ -1056,8 +936,10 @@ def plot_dynamic_binned(df, y_column, output_path, file_name, hue_column=None, b
     plt.clf()  # Clear the current figure
 
 
-def create_improved_worm_animation(df1, df2, output_path, x_odor, y_odor, fps, arena_min_x, arena_max_x,
-                                   arena_min_y, arena_max_y, nth_frame=1, nth_point=5, file_name="worm_animation.avi"):
+def create_improved_worm_animation(df1, df2, output_path, x_odor=None, y_odor=None, fps=30, arena_min_x=0,
+                                   arena_max_x=10,
+                                   arena_min_y=0, arena_max_y=10, nth_frame=1, nth_point=5,
+                                   file_name="worm_animation.avi"):
     '''
     Create and save an animation showing worm movement with a side-by-side view:
     overview of arena and detailed zoomed view of the worm.
@@ -1065,8 +947,8 @@ def create_improved_worm_animation(df1, df2, output_path, x_odor, y_odor, fps, a
     :param df1: DataFrame containing the data points for the animation.
     :param df2: DataFrame containing additional data points (e.g., angles).
     :param output_path: The directory to save the output file.
-    :param x_odor: X-coordinate for the odor/source location.
-    :param y_odor: Y-coordinate for the odor/source location.
+    :param x_odor: X-coordinate for the odor/source location. Optional.
+    :param y_odor: Y-coordinate for the odor/source location. Optional.
     :param fps: Frames per second for the output video.
     :param arena_min_x: Minimum x-coordinate for the arena.
     :param arena_max_x: Maximum x-coordinate for the arena.
@@ -1076,6 +958,9 @@ def create_improved_worm_animation(df1, df2, output_path, x_odor, y_odor, fps, a
     :param nth_point: Plot every nth point of the worm skeleton.
     :param file_name: Name of the output file.
     '''
+
+    # Flag to check if odor position is provided
+    has_odor_position = x_odor is not None and y_odor is not None
 
     # DEBUG: Print column names to help diagnose the issue
     print("DEBUG: Available columns in df1:")
@@ -1205,9 +1090,10 @@ def create_improved_worm_animation(df1, df2, output_path, x_odor, y_odor, fps, a
                                   df1.at[frame_count, 'Y_rel_skel_pos_centroid'],
                                   s=100, c='yellow', alpha=0.7)
 
-            # Plot odor point as red star
-            ax_overview.scatter(x_odor, y_odor, color='red', marker='*', s=200, label='Odor Source')
-            ax_detail.scatter(x_odor, y_odor, color='red', marker='*', s=300)
+            # Plot odor point as red star (only if odor position is provided)
+            if has_odor_position:
+                ax_overview.scatter(x_odor, y_odor, color='red', marker='*', s=200, label='Odor Source')
+                ax_detail.scatter(x_odor, y_odor, color='red', marker='*', s=300)
 
             # Set up overview plot
             ax_overview.set_xlim(arena_min_x, arena_max_x)
@@ -1231,6 +1117,7 @@ def create_improved_worm_animation(df1, df2, output_path, x_odor, y_odor, fps, a
             ax_detail.invert_xaxis()
 
             # Add angle information to detailed plot (with error checking)
+            # Only add bearing angle if it exists (typically only exists with odor position)
             if 'bearing_angle' in df2.columns:
                 bearing_angle_text = f'Bearing Angle: {df2.at[frame_count, "bearing_angle"]:.2f}'
                 ax_detail.text(0.05, 0.95, bearing_angle_text, transform=ax_detail.transAxes, fontsize=10,
