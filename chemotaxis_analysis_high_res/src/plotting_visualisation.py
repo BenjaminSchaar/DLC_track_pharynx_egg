@@ -17,7 +17,6 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 import math
 
-
 def create_combined_visualization(df, beh_annotation=None, skeleton_spline=None, output_path=None,
                                   x_odor=None, y_odor=None, arena_min_x=None, arena_max_x=None,
                                   arena_min_y=None, arena_max_y=None, center_point=None, fps=None,
@@ -1077,11 +1076,6 @@ def create_improved_worm_animation(df1, df2, output_path, x_odor, y_odor, fps, a
     :param nth_point: Plot every nth point of the worm skeleton.
     :param file_name: Name of the output file.
     '''
-    import os
-    import cv2
-    import numpy as np
-    import matplotlib.pyplot as plt
-    from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 
     # DEBUG: Print column names to help diagnose the issue
     print("DEBUG: Available columns in df1:")
@@ -1090,10 +1084,26 @@ def create_improved_worm_animation(df1, df2, output_path, x_odor, y_odor, fps, a
     print(df2.columns.tolist())
 
     # DEBUG: Find actual skeleton columns and determine max skeleton index
-    skel_columns = [col for col in df1.columns if 'X_rel_skel_pos_' in col]
+    # Exclude 'centroid' from skeleton columns
+    skel_columns = [col for col in df1.columns if 'X_rel_skel_pos_' in col and 'centroid' not in col]
+
     if skel_columns:
-        max_skel_index = max([int(col.split('_')[-1]) for col in skel_columns])
-        print(f"\nDEBUG: Found skeleton columns. Maximum skeleton index: {max_skel_index}")
+        # Extract only numeric indices
+        numeric_indices = []
+        for col in skel_columns:
+            try:
+                idx = int(col.split('_')[-1])
+                numeric_indices.append(idx)
+            except ValueError:
+                # Skip non-numeric indices like 'centroid'
+                continue
+
+        if numeric_indices:
+            max_skel_index = max(numeric_indices)
+            print(f"\nDEBUG: Found skeleton columns. Maximum skeleton index: {max_skel_index}")
+        else:
+            print("\nDEBUG: No numeric skeleton indices found")
+            return None
     else:
         print("\nDEBUG: No skeleton columns found with pattern 'X_rel_skel_pos_'")
         return None  # Exit if no skeleton columns found
@@ -1115,9 +1125,21 @@ def create_improved_worm_animation(df1, df2, output_path, x_odor, y_odor, fps, a
     total_frames = min(len(df1), len(df2))
     print(f"Processing {total_frames} frames...")
 
-    # Adjust the skeleton point range based on what's available
-    # Use the actual max skeleton index instead of hardcoded 100
-    skeleton_range = range(0, max_skel_index + 1, nth_point)
+    # Instead of using a range, use the actual available skeleton indices
+    available_indices = []
+    for col in df1.columns:
+        if col.startswith('X_rel_skel_pos_'):
+            try:
+                idx = int(col.split('_')[-1])
+                available_indices.append(idx)
+            except ValueError:
+                continue
+
+    available_indices.sort()  # Sort them numerically
+    print(f"\nDEBUG: Available skeleton indices: {available_indices}")
+
+    # Use only the available indices for skeleton visualization
+    skeleton_range = available_indices
 
     for frame_count in range(0, total_frames, nth_frame):
         if frame_count % 100 == 0:
@@ -1140,8 +1162,11 @@ def create_improved_worm_animation(df1, df2, output_path, x_odor, y_odor, fps, a
             ax_overview.clear()
             ax_detail.clear()
 
-            # Plot skeleton points for both views with error checking
-            for skel_number in skeleton_range:
+            # Plot skeleton points for both views
+            # Filter skeleton points to process every nth point
+            skeleton_points_to_plot = [i for i in skeleton_range if i % nth_point == 0]
+
+            for skel_number in skeleton_points_to_plot:
                 x_col = f'X_rel_skel_pos_{skel_number}'
                 y_col = f'Y_rel_skel_pos_{skel_number}'
 
@@ -1156,7 +1181,7 @@ def create_improved_worm_animation(df1, df2, output_path, x_odor, y_odor, fps, a
                     ax_detail.scatter(df1.at[frame_count, x_col],
                                       df1.at[frame_count, y_col],
                                       s=80, c='green', marker='o')
-                elif skel_number == max_skel_index:  # Tail point (use max index instead of hardcoded 100)
+                elif skel_number == max(skeleton_range):  # Tail point (use max index instead of hardcoded 100)
                     ax_overview.scatter(df1.at[frame_count, x_col],
                                         df1.at[frame_count, y_col],
                                         s=30, c='blue', marker='o', label='Tail')
@@ -1236,13 +1261,14 @@ def create_improved_worm_animation(df1, df2, output_path, x_odor, y_odor, fps, a
                     ax_detail.plot(trail_x, trail_y, 'y-', alpha=0.5, linewidth=1)
 
             # Connect skeleton points with lines (with error checking)
-            valid_skel_indices = [i for i in skeleton_range
-                                  if f'X_rel_skel_pos_{i}' in df1.columns
-                                  and f'Y_rel_skel_pos_{i}' in df1.columns]
+            valid_points = []
+            for i in skeleton_range:
+                if f'X_rel_skel_pos_{i}' in df1.columns and f'Y_rel_skel_pos_{i}' in df1.columns:
+                    valid_points.append(i)
 
-            if valid_skel_indices:
-                skel_x = [df1.at[frame_count, f'X_rel_skel_pos_{i}'] for i in valid_skel_indices]
-                skel_y = [df1.at[frame_count, f'Y_rel_skel_pos_{i}'] for i in valid_skel_indices]
+            if valid_points:
+                skel_x = [df1.at[frame_count, f'X_rel_skel_pos_{i}'] for i in valid_points]
+                skel_y = [df1.at[frame_count, f'Y_rel_skel_pos_{i}'] for i in valid_points]
                 ax_detail.plot(skel_x, skel_y, 'k-', linewidth=0.5, alpha=0.7)
 
             # Adjust layout
