@@ -963,10 +963,10 @@ def create_improved_worm_animation(df1, df2, output_path, x_odor=None, y_odor=No
     has_odor_position = x_odor is not None and y_odor is not None
 
     # DEBUG: Print column names to help diagnose the issue
-    print("DEBUG: Available columns in df1:")
-    print(df1.columns.tolist())
-    print("\nDEBUG: Available columns in df2:")
-    print(df2.columns.tolist())
+    #print("DEBUG: Available columns in df1:")
+    #print(df1.columns.tolist())
+    #print("\nDEBUG: Available columns in df2:")
+    #print(df2.columns.tolist())
 
     # DEBUG: Find actual skeleton columns and determine max skeleton index
     # Exclude 'centroid' from skeleton columns
