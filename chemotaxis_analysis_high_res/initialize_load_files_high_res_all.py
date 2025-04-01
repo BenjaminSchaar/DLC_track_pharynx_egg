@@ -568,8 +568,14 @@ def main(arg_list=None):
     df_combined.columns = chemotaxis_columns.append(spline_columns)
 
     # Calculate and add absolute skeleton positions for each spline point
+    print(f"Number of skeleton columns before processing: {spline_X.shape[1]}")
     for skel_pos_abs in range(spline_X.shape[1]):
-        df_skel_pos_abs = correct_stage_pos_with_skeleton(
+        # Print progress for long-running operations
+        if skel_pos_abs % 10 == 0:
+            print(f"Processing skeleton position {skel_pos_abs}/{spline_X.shape[1]}")
+
+        # Keep using df_skel_all as it's already initialized above
+        df_skel_all = correct_stage_pos_with_skeleton(
             df_skel_all,
             spline_X,
             spline_Y,
@@ -580,15 +586,19 @@ def main(arg_list=None):
             img_type
         )
 
+    print("Skeleton positions calculated.")
+    print(f"Number of columns in df_skel_all: {len(df_skel_all.columns)}")
+    print(f"Available columns: {df_skel_all.columns.tolist()}")
+
     create_improved_worm_animation(
-        df_skel_pos_abs,
+        df_skel_all,  # Use df_skel_all consistently
         df_worm_parameter,
         output_path,
         x_odor, y_odor,
         fps,
         arena_min_x, arena_max_x,
         arena_min_y, arena_max_y,
-        int(fps/4),
+        int(fps / 4),
         5,
         "worm_movie.avi"
     )
@@ -599,18 +609,18 @@ def main(arg_list=None):
     # Clean up intermediate columns - only drop columns that exist
     columns_to_drop = ['frame', 'X', 'Y', 'time_imputed_seconds', 'X_rel', 'Y_rel', 'odor_x', 'odor_y']
     # Filter to only include columns that actually exist in the DataFrame
-    existing_columns = [col for col in columns_to_drop if col in df_skel_pos_abs.columns]
+    existing_columns = [col for col in columns_to_drop if col in df_skel_all.columns]
     # Drop only the existing columns
     if existing_columns:
-        df_skel_pos_abs.drop(existing_columns, axis=1, inplace=True)
+        df_skel_all.drop(existing_columns, axis=1, inplace=True)
 
     # Create MultiIndex columns for skeleton positions
     skel_pos_columns = pd.MultiIndex.from_product(
-        [['skel_pos_abs'], df_skel_pos_abs.columns]
+        [['skel_pos_abs'], df_skel_all.columns]
     )
 
     # Add skeleton position data to combined DataFrame
-    df_combined = pd.concat([df_combined, df_skel_pos_abs], axis=1)
+    df_combined = pd.concat([df_combined, df_skel_all], axis=1)
 
     # Combine all column hierarchies
     all_columns = chemotaxis_columns.append(spline_columns).append(skel_pos_columns)
