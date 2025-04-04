@@ -1,5 +1,6 @@
 import pandas as pd
 
+
 class CoordinateSystem:
     def __init__(self, top_left_pos, factor_px_to_mm=1.0, recording_type='crop', odor_pos=None):
         # Store the initial parameters
@@ -27,12 +28,39 @@ class CoordinateSystem:
         """
         Transform coordinates based on the recording type.
         """
-        if self.recording_type == 'vid':
-            return self.transform_coordinates_vid(df)
+        if self.recording_type == 'zim01':
+            return self.transform_coordinates_zim01(df)
+        elif self.recording_type == 'zim06':
+            return self.transform_coordinates_zim06(df)
         else:  # Default to 'crop'
             return self.transform_coordinates_crop(df)
 
-    def transform_coordinates_vid(self, df):
+    def transform_coordinates_crop(self, df):
+        """
+        Transform coordinates exactly as in the Jupyter notebook implementation.
+        """
+        # Step 1: Convert X and Y to mm (note the swap in subtraction)
+        df['X_mm'] = (df['X'] - self.top_left_y) * self.factor_px_to_mm
+        df['Y_mm'] = (df['Y'] - self.top_left_x) * self.factor_px_to_mm
+
+        # Step 2: Rotate X_mm and Y_mm by 90 degrees counterclockwise
+        df['X_rel'] = -df['Y_mm']
+        df['Y_rel'] = df['X_mm']
+
+        # Step 3: Make X_mm_rotated positive
+        df['X_rel'] = df['X_rel'].abs()
+
+        # Remove intermediate columns
+        df = df.drop(['X_mm', 'Y_mm'], axis=1)
+
+        # Add rotated odor coordinates to DataFrame only if odor position was provided
+        if self.has_odor:
+            df['odor_x'] = self.odor_x_mm
+            df['odor_y'] = self.odor_y_mm
+
+        return df
+
+    def transform_coordinates_zim01(self, df):
         """
         Transform coordinates so that the top-left corner becomes the origin (0,0),
         and relative coordinates increase positively to the right and upward
@@ -67,27 +95,43 @@ class CoordinateSystem:
 
         return df
 
-    def transform_coordinates_crop(self, df):
+    def transform_coordinates_zim06(self, df):
         """
-        Transform coordinates exactly as in the Jupyter notebook implementation.
+        Transform coordinates so that the top-left corner becomes the origin (0,0),
+        and ensure all coordinates are positive.
         """
-        # Step 1: Convert X and Y to mm (note the swap in subtraction)
-        df['X_mm'] = (df['X'] - self.top_left_y) * self.factor_px_to_mm
-        df['Y_mm'] = (df['Y'] - self.top_left_x) * self.factor_px_to_mm
+        df = df.copy()
 
-        # Step 2: Rotate X_mm and Y_mm by 90 degrees counterclockwise
-        df['X_rel'] = -df['Y_mm']
-        df['Y_rel'] = df['X_mm']
+        # Flip signs so that coordinates are relative to top-left
+        x_rel = df['X'] - self.top_left_x
+        y_rel = df['Y'] - self.top_left_y
 
-        # Step 3: Make X_mm_rotated positive
+        # Swap axes so Y increases upwards
+        df['X_rel'] = y_rel
+        df['Y_rel'] = x_rel
+
+        # Make coordinates positive by taking absolute value - simplest approach
         df['X_rel'] = df['X_rel'].abs()
+        df['Y_rel'] = df['Y_rel'].abs()
 
-        # Remove intermediate columns
-        df = df.drop(['X_mm', 'Y_mm'], axis=1)
+        print(f"Using top-left position as reference: x = {self.top_left_x}, y = {self.top_left_y}")
 
-        # Add rotated odor coordinates to DataFrame only if odor position was provided
+        # Handle odor position if available
         if self.has_odor:
-            df['odor_x'] = self.odor_x_mm
-            df['odor_y'] = self.odor_y_mm
+            odor_x_rel = self.odor_x - self.top_left_x
+            odor_y_rel = self.odor_y - self.top_left_y
+
+            self.odor_x_rel = odor_y_rel  # Swapped
+            self.odor_y_rel = odor_x_rel  # Swapped
+
+            # Make odor coordinates positive too
+            self.odor_x_rel = abs(self.odor_x_rel)
+            self.odor_y_rel = abs(self.odor_y_rel)
+
+            print(f"Original odor position: x = {self.odor_x}, y = {self.odor_y}")
+            print(f"Relative odor position: x = {self.odor_x_rel}, y = {self.odor_y_rel}")
+
+            df['odor_x'] = self.odor_x_rel
+            df['odor_y'] = self.odor_y_rel
 
         return df

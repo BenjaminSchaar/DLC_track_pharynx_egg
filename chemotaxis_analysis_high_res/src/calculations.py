@@ -57,7 +57,7 @@ def correct_stage_pos_with_skeleton(
 
     worm_pos = worm_pos.copy()
 
-    if video_origin == "vid":
+    if video_origin == "zim01":
         # Working logic with swapped Y sign
         if skel_pos == 999:
             worm_pos['X_rel_skel_pos_centroid'] = worm_pos['X_rel'] - difference_center_x_mm
@@ -65,6 +65,15 @@ def correct_stage_pos_with_skeleton(
         else:
             worm_pos[f'X_rel_skel_pos_{skel_pos}'] = worm_pos['X_rel'] - difference_center_x_mm
             worm_pos[f'Y_rel_skel_pos_{skel_pos}'] = worm_pos['Y_rel'] + difference_center_y_mm
+
+    if video_origin == "zim06":
+        # Working logic with swapped Y sign
+        if skel_pos == 999:
+            worm_pos['X_rel_skel_pos_centroid'] = worm_pos['X_rel'] + difference_center_x_mm
+            worm_pos['Y_rel_skel_pos_centroid'] = worm_pos['Y_rel'] - difference_center_y_mm
+        else:
+            worm_pos[f'X_rel_skel_pos_{skel_pos}'] = worm_pos['X_rel'] + difference_center_x_mm
+            worm_pos[f'Y_rel_skel_pos_{skel_pos}'] = worm_pos['Y_rel'] - difference_center_y_mm
 
     elif video_origin == "crop":
         # Logic without Y flip

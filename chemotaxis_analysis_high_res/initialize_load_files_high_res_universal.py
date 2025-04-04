@@ -207,11 +207,11 @@ def main(arg_list=None):
     parser.add_argument('--img_type',
                         help='Specify the type of recording: "vid" or "crop" (default: "crop")',
                         type=str,
-                        choices=['vid', 'crop'],
+                        choices=['zim01', 'zim06', 'crop'],
                         default='crop',
                         required=False)
-    parser.add_argument('--arena_x', help='arena X dimension (default: 38mm in wbfm)', required=False, default='38mm')
-    parser.add_argument('--arena_y', help='arena Y dimension (default: 40.5mm in wbfm)', required=False, default='40.5mm')
+    parser.add_argument('--arena_x', help='arena X dimension (default: 38mm in wbfm)', required=False, default='38')
+    parser.add_argument('--arena_y', help='arena Y dimension (default: 40.5mm in wbfm)', required=False, default='40.5')
 
     args = parser.parse_args(arg_list)
 
@@ -276,8 +276,8 @@ def main(arg_list=None):
         turn_annotation_path
     )
 
-    if img_type == 'vid':
-        # Add frame column if type = video to match cropper
+    if img_type != 'crop':
+        # Add frame column for all types except 'crop'
         df_worm_parameter['frame'] = range(len(df_worm_parameter))
 
     # Convert frame column to integer
@@ -296,18 +296,26 @@ def main(arg_list=None):
             top_left_tuple,
             factor_px_to_mm,
             'crop',
-            odor_pos_tuple  # May be None
+            odor_pos_tuple
         )
-    else:  # Must be 'vid'
+    elif img_type == 'zim01':
         coord_system = CoordinateSystem(
             top_left_tuple,
-            factor_px_to_mm,  # Make sure to pass the numeric value here
-            'vid',
-            odor_pos_tuple  # May be None
+            factor_px_to_mm,
+            'zim01',
+            odor_pos_tuple
         )
+    elif img_type == 'zim06':
+        coord_system = CoordinateSystem(
+            top_left_tuple,
+            factor_px_to_mm,
+            'zim06',
+            odor_pos_tuple
+        )
+    else:
+        raise ValueError(f"Unsupported image type: {img_type}. Must be one of 'crop', 'zim01', or 'zim06'.")
 
     df_worm_parameter = coord_system.transform_coordinates(df_worm_parameter)
-
     # Get odor position from DataFrame columns if available
     x_odor, y_odor = None, None
     if has_odor_data and 'odor_x' in df_worm_parameter.columns and 'odor_y' in df_worm_parameter.columns:
