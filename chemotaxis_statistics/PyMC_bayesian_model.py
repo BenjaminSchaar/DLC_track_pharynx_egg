@@ -235,7 +235,7 @@ def run_bayesian_model(behavior_df, neural_df, behavior_params):
     return idata, result_df, predicted_df, neuron_correlations, all_neurons_corr
 
 
-def main():
+def main(arg_list=None):
     """
     Main function to parse arguments and run the Bayesian modeling pipeline.
     """
