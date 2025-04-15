@@ -306,5 +306,11 @@ def main():
 
 
 if __name__ == "__main__":
-    # Use sys.exit to return the exit code from main()
-    sys.exit(main())
+    try:
+        print("Shell commands passed:", sys.argv)
+        main(sys.argv[1:])  # exclude the script name from the args when called from shell
+    except Exception as e:
+        print(f"Error occurred: {e}")
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
