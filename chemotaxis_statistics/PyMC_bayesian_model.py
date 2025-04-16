@@ -77,7 +77,7 @@ def equalize_dataframes(behavior_df, neuron_df, method='linear'):
         return behavior_df, neuron_df
 
 
-def run_bayesian_model(behavior_df, neural_df, behavior_params):
+def run_bayesian_model(behavior_df, neural_df, behavior_params, n_draws=1000, n_tune=1000):
     """
     Run a Bayesian model to analyze the relationship between behavior parameters and neural activity.
 
@@ -88,6 +88,8 @@ def run_bayesian_model(behavior_df, neural_df, behavior_params):
         behavior_df: DataFrame containing behavior measurements
         neural_df: DataFrame containing neural activity recordings
         behavior_params: List of behavior parameters to include in the model
+        n_draws: Number of posterior samples to draw (default: 1000)
+        n_tune: Number of tuning steps (default: 1000)
 
     Returns:
         Tuple containing:
@@ -155,8 +157,9 @@ def run_bayesian_model(behavior_df, neural_df, behavior_params):
                                observed=neural_activity[1:trimmed_size + 1, :])
 
         # Sample from the posterior distribution
-        idata = pm.sample(draws=1000,  # Number of samples to draw
-                          tune=1000,  # Number of tuning steps (discarded)
+        print(f"Sampling with {n_draws} draws and {n_tune} tuning steps...")
+        idata = pm.sample(draws=n_draws,  # Number of samples to draw
+                          tune=n_tune,  # Number of tuning steps (discarded)
                           return_inferencedata=True,  # Return arviz InferenceData object
                           progressbar=True,
                           init='adapt_diag',  # Initialization method
@@ -169,21 +172,28 @@ def run_bayesian_model(behavior_df, neural_df, behavior_params):
     result_df = pd.DataFrame()
     result_df['neuron_id'] = [f"neuron_{i + 1:03d}" for i in range(neural_activity.shape[1])]
 
+    # Debug shapes to help diagnose any issues
+    print("Shape debugging information:")
+    print(f"result_df shape: {result_df.shape}")
+    for param_name in param_names:
+        print(f"Parameter {param_name} shape: {posterior_samples[param_name].mean(axis=0).shape}")
+
     # Add mean and credible intervals for each parameter
     for clean_name, original_name in zip(param_names, behavior_params):
-        result_df[f'{clean_name}_mean'] = posterior_samples[clean_name].mean(axis=0)[0]
-        result_df[f'{clean_name}_lower'] = np.percentile(posterior_samples[clean_name].values, 2.5, axis=0)[0]
-        result_df[f'{clean_name}_upper'] = np.percentile(posterior_samples[clean_name].values, 97.5, axis=0)[0]
+        # Fix: Use [0, :] to get array for all neurons
+        result_df[f'{clean_name}_mean'] = posterior_samples[clean_name].mean(axis=0)[0, :]
+        result_df[f'{clean_name}_lower'] = np.percentile(posterior_samples[clean_name].values, 2.5, axis=0)[0, :]
+        result_df[f'{clean_name}_upper'] = np.percentile(posterior_samples[clean_name].values, 97.5, axis=0)[0, :]
 
     # Add results for persistence parameter (s)
-    result_df['s_mean'] = posterior_samples['s'].mean(axis=0)[0]
-    result_df['s_lower'] = np.percentile(posterior_samples['s'].values, 2.5, axis=0)[0]
-    result_df['s_upper'] = np.percentile(posterior_samples['s'].values, 97.5, axis=0)[0]
+    result_df['s_mean'] = posterior_samples['s'].mean(axis=0)[0, :]
+    result_df['s_lower'] = np.percentile(posterior_samples['s'].values, 2.5, axis=0)[0, :]
+    result_df['s_upper'] = np.percentile(posterior_samples['s'].values, 97.5, axis=0)[0, :]
 
     # Add results for baseline parameter (b)
-    result_df['b_mean'] = posterior_samples['b'].mean(axis=0)[0]
-    result_df['b_lower'] = np.percentile(posterior_samples['b'].values, 2.5, axis=0)[0]
-    result_df['b_upper'] = np.percentile(posterior_samples['b'].values, 97.5, axis=0)[0]
+    result_df['b_mean'] = posterior_samples['b'].mean(axis=0)[0, :]
+    result_df['b_lower'] = np.percentile(posterior_samples['b'].values, 2.5, axis=0)[0, :]
+    result_df['b_upper'] = np.percentile(posterior_samples['b'].values, 97.5, axis=0)[0, :]
 
     # Calculate correlations between parameters for each neuron
     neuron_correlations = {}
@@ -247,7 +257,17 @@ def main(arg_list=None):
     parser.add_argument('--output', default='bayesian_modeling', help='Subfolder for output results')
     parser.add_argument('--behavior_params', type=ast.literal_eval, required=True,
                         help='List of behavior parameters (e.g., \'["param1", "param2"]\')')
-    args = parser.parse_args()
+    parser.add_argument('--draws', type=int, default=1000,
+                        help='Number of posterior samples to draw (default: 1000)')
+    parser.add_argument('--tune', type=int, default=1000,
+                        help='Number of tuning steps (default: 1000)')
+    parser.add_argument('--max_timepoints', type=int, default=None,
+                        help='Maximum number of timepoints to use (for testing)')
+
+    if arg_list is None:
+        args = parser.parse_args()
+    else:
+        args = parser.parse_args(arg_list)
 
     # Load behavior data (chemotaxis parameters)
     # Header=[0,1] suggests a multi-index header with two rows
@@ -257,6 +277,12 @@ def main(arg_list=None):
     # Load neural traces from HDF5 file
     traces = pd.read_hdf(args.traces_file, key='df_with_missing')
 
+    # Optionally limit the number of timepoints (for testing)
+    if args.max_timepoints is not None:
+        print(f"Using only {args.max_timepoints} timepoints (testing mode)")
+        behavior = behavior.iloc[:args.max_timepoints]
+        traces = traces.iloc[:args.max_timepoints]
+
     # Ensure behavior and neural data have the same number of time points
     behavior, traces = equalize_dataframes(behavior, traces, method='linear')
 
@@ -264,9 +290,9 @@ def main(arg_list=None):
     output_dir = os.path.join(os.path.dirname(args.chemotaxis_file), args.output)
     os.makedirs(output_dir, exist_ok=True)
 
-    # Run the Bayesian model
+    # Run the Bayesian model with the specified sampling parameters
     idata, result_df, predicted_df, neuron_correlations, all_neurons_corr = run_bayesian_model(
-        behavior, traces, args.behavior_params)
+        behavior, traces, args.behavior_params, n_draws=args.draws, n_tune=args.tune)
 
     # Save results to files
 
@@ -297,6 +323,8 @@ def main(arg_list=None):
         'date': pd.Timestamp.now().strftime('%Y-%m-%d %H:%M:%S'),
         'behavior_parameters': args.behavior_params,
         'fps': args.fps,
+        'draws': args.draws,
+        'tune': args.tune,
         'chemotaxis_file': os.path.basename(args.chemotaxis_file),
         'traces_file': os.path.basename(args.traces_file),
         'num_neurons': traces.shape[1],
@@ -312,5 +340,6 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"Error occurred: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
