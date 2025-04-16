@@ -81,9 +81,6 @@ def run_bayesian_model(behavior_df, neural_df, behavior_params, n_draws=1000, n_
     """
     Run a Bayesian model to analyze the relationship between behavior parameters and neural activity.
 
-    This function creates a hierarchical Bayesian model that relates behavioral parameters
-    to neural activity time series, incorporating temporal dynamics.
-
     Args:
         behavior_df: DataFrame containing behavior measurements
         neural_df: DataFrame containing neural activity recordings
@@ -92,156 +89,113 @@ def run_bayesian_model(behavior_df, neural_df, behavior_params, n_draws=1000, n_
         n_tune: Number of tuning steps (default: 1000)
 
     Returns:
-        Tuple containing:
-        - idata: InferenceData object with the posterior samples
-        - result_df: DataFrame with summary statistics of parameter estimates
-        - predicted_df: DataFrame with predicted neural activity
-        - neuron_correlations: Dict of correlation matrices for each neuron
-        - all_neurons_corr: Average correlation matrix across all neurons
+        idata: InferenceData object
+        summary_df: DataFrame with parameter summaries per neuron
+        predicted_df: DataFrame with predicted neural activity
+        neuron_correlations: Dict of correlation matrices per neuron
+        all_neurons_corr: Averaged correlation matrix across neurons
     """
-    # Extract behavior features and fill missing values with zeros
     odor_features_raw = behavior_df[behavior_params]
     odor_features = odor_features_raw.fillna(0).values
-
-    # Get neural activity as a numpy array
     neural_activity = neural_df.values
-
     n_behavior_params = len(behavior_params)
 
-    # Define the Bayesian model
     with pm.Model() as model:
-        # Create variables for each behavior parameter
         param_vars = []
         param_names = []
+
         for param_name in behavior_params:
-            # Clean parameter names by replacing dots and dashes with underscores
             clean_name = f"c_{param_name.replace('.', '_').replace('-', '_')}"
-            # Create a normal prior for each parameter-neuron pair
-            # Shape is (1, n_neurons)
             param = pm.Normal(clean_name, mu=0, sigma=0.5, shape=(1, neural_activity.shape[1]))
             param_vars.append(param)
             param_names.append(clean_name)
 
-        # Create priors for persistence (s) and baseline (b) parameters
-        # s controls how much the previous neural state influences the current state
         s = pm.HalfNormal('s', sigma=0.5, shape=(1, neural_activity.shape[1]))
-        # b is a baseline activity level
         b = pm.Normal('b', mu=0, sigma=0.5, shape=(1, neural_activity.shape[1]))
 
-        # Calculate the impact of odor features on neural activity
         odor_encoding = 0
         for i, param in enumerate(param_vars):
-            odor_encoding = odor_encoding + param * odor_features[:, i:i + 1]
+            odor_encoding += param * odor_features[:, i:i + 1]
 
-        # We expect odor_features and neural_activity to have the same shape[0] due to interpolation
-        # If they don't, this indicates a failure in the interpolation step
         if odor_features.shape[0] != neural_activity.shape[0]:
-            raise ValueError(
-                f"Interpolation failed: odor_features shape {odor_features.shape} does not match neural_activity shape {neural_activity.shape}")
+            raise ValueError("Mismatch in timepoints between odor features and neural activity")
 
-        # Use full size minus 1 for time lagging (t vs t-1)
         trimmed_size = odor_features.shape[0] - 1
 
-        # Model neural activity as a function of:
-        # 1. Current sensory input (odor_encoding) with weight 1/(s+1)
-        # 2. Previous neural state with weight s/(s+1)
-        # 3. Baseline activity (b)
-        neural_activity_model = ((1 / (s + 1)) * odor_encoding[:trimmed_size] +
-                                 (s / (s + 1)) * neural_activity[:trimmed_size, :] +
-                                 b)
+        neural_activity_model = (
+            (1 / (s + 1)) * odor_encoding[:trimmed_size] +
+            (s / (s + 1)) * neural_activity[:trimmed_size, :] +
+            b
+        )
 
-        # Define the likelihood function - comparing model predictions to actual observations
-        # Note that we're predicting neural_activity[1:] based on neural_activity[:-1]
-        # This implements a first-order autoregressive model
-        likelihood = pm.Normal('neural_activity', mu=neural_activity_model, sigma=1.0,
-                               observed=neural_activity[1:trimmed_size + 1, :])
+        pm.Normal('neural_activity',
+                  mu=neural_activity_model,
+                  sigma=1.0,
+                  observed=neural_activity[1:trimmed_size + 1, :])
 
-        # Sample from the posterior distribution
         print(f"Sampling with {n_draws} draws and {n_tune} tuning steps...")
-        idata = pm.sample(draws=n_draws,  # Number of samples to draw
-                          tune=n_tune,  # Number of tuning steps (discarded)
-                          return_inferencedata=True,  # Return arviz InferenceData object
+        idata = pm.sample(draws=n_draws,
+                          tune=n_tune,
+                          return_inferencedata=True,
                           progressbar=True,
-                          init='adapt_diag',  # Initialization method
-                          target_accept=0.9)  # Target acceptance rate
+                          init='adapt_diag',
+                          target_accept=0.9)
 
-    # Extract posterior samples for analysis
     posterior_samples = az.extract(idata, group="posterior")
 
-    # Create a results dataframe with parameter estimates for each neuron
-    result_df = pd.DataFrame()
-    result_df['neuron_id'] = [f"neuron_{i + 1:03d}" for i in range(neural_activity.shape[1])]
-
-    # Debug shapes to help diagnose any issues
-    print("Shape debugging information:")
-    print(f"result_df shape: {result_df.shape}")
-    for param_name in param_names:
-        print(f"Parameter {param_name} shape: {posterior_samples[param_name].mean(axis=0).shape}")
-
-    # Add mean and credible intervals for each parameter
-    for clean_name, original_name in zip(param_names, behavior_params):
-        # Fix: Use [0, :] to get array for all neurons
-        result_df[f'{clean_name}_mean'] = posterior_samples[clean_name].mean(axis=0)[0, :]
-        result_df[f'{clean_name}_lower'] = np.percentile(posterior_samples[clean_name].values, 2.5, axis=0)[0, :]
-        result_df[f'{clean_name}_upper'] = np.percentile(posterior_samples[clean_name].values, 97.5, axis=0)[0, :]
-
-    # Add results for persistence parameter (s)
-    result_df['s_mean'] = posterior_samples['s'].mean(axis=0)[0, :]
-    result_df['s_lower'] = np.percentile(posterior_samples['s'].values, 2.5, axis=0)[0, :]
-    result_df['s_upper'] = np.percentile(posterior_samples['s'].values, 97.5, axis=0)[0, :]
-
-    # Add results for baseline parameter (b)
-    result_df['b_mean'] = posterior_samples['b'].mean(axis=0)[0, :]
-    result_df['b_lower'] = np.percentile(posterior_samples['b'].values, 2.5, axis=0)[0, :]
-    result_df['b_upper'] = np.percentile(posterior_samples['b'].values, 97.5, axis=0)[0, :]
-
-    # Calculate correlations between parameters for each neuron
-    neuron_correlations = {}
-    params = param_names + ['s', 'b']
-    for neuron_idx in range(neural_activity.shape[1]):
-        # Extract parameter values for this neuron
-        neuron_params = {param: posterior_samples[param].values[:, 0, neuron_idx] for param in params}
-        param_df = pd.DataFrame(neuron_params)
-        # Calculate correlation matrix
-        neuron_correlations[f"neuron_{neuron_idx + 1:03d}"] = param_df.corr()
-
-    # Calculate average correlation matrix across all neurons
-    all_neurons_corr = pd.DataFrame(0, index=params, columns=params)
-    for corr_matrix in neuron_correlations.values():
-        all_neurons_corr += corr_matrix
-    all_neurons_corr /= len(neuron_correlations)
-
-    # Generate predicted neural activity using the estimated parameters
+    # === PREDICTION ===
     predicted_df = pd.DataFrame(index=neural_df.index)
     for neuron_idx in range(neural_activity.shape[1]):
         neuron_id = f"neuron_{neuron_idx + 1:03d}"
-        # Get mean parameter values for this neuron
-        param_values = [posterior_samples[param_name].mean(axis=0)[0, neuron_idx] for param_name in param_names]
+        param_values = [posterior_samples[p].mean(axis=0)[0, neuron_idx] for p in param_names]
         s_neuron = posterior_samples['s'].mean(axis=0)[0, neuron_idx]
         b_neuron = posterior_samples['b'].mean(axis=0)[0, neuron_idx]
 
-        # Initialize predicted activity array
-        predicted_activity = np.zeros(neural_activity.shape[0])
-        # Use actual first value as starting point
-        predicted_activity[0] = neural_activity[0, neuron_idx]
+        pred = np.zeros(neural_activity.shape[0])
+        pred[0] = neural_activity[0, neuron_idx]
 
-        # Generate predictions for each time point based on the model
         for t in range(1, neural_activity.shape[0]):
-            sensory_input = 0
-            # Calculate total sensory input at time t-1
-            for i, param_value in enumerate(param_values):
-                sensory_input += param_value * odor_features[t - 1, i]
+            sensory_input = sum(param_values[i] * odor_features[t - 1, i] for i in range(n_behavior_params))
+            pred[t] = (1 / (s_neuron + 1)) * sensory_input + (s_neuron / (s_neuron + 1)) * pred[t - 1] + b_neuron
 
-            # Apply the autoregressive model:
-            # new_state = sensory_component + history_component + baseline
-            predicted_activity[t] = ((1 / (s_neuron + 1)) * sensory_input +
-                                     (s_neuron / (s_neuron + 1)) * predicted_activity[t - 1] +
-                                     b_neuron)
+        predicted_df[neuron_id] = pred
 
-        # Store predictions in the dataframe
-        predicted_df[neuron_id] = predicted_activity
+    # === EXPORT SUMMARY STATISTICS ===
+    summary_df = pd.DataFrame(index=[f"neuron_{i+1:03d}" for i in range(neural_activity.shape[1])])
 
-    return idata, result_df, predicted_df, neuron_correlations, all_neurons_corr
+    for clean_name in param_names:
+        samples = posterior_samples[clean_name].values[:, 0, :]  # (n_samples, n_neurons)
+        summary_df[f'{clean_name}_mean'] = samples.mean(axis=0)
+        summary_df[f'{clean_name}_lower'] = np.percentile(samples, 2.5, axis=0)
+        summary_df[f'{clean_name}_upper'] = np.percentile(samples, 97.5, axis=0)
+
+    for name in ['s', 'b']:
+        samples = posterior_samples[name].values[:, 0, :]
+        summary_df[f'{name}_mean'] = samples.mean(axis=0)
+        summary_df[f'{name}_lower'] = np.percentile(samples, 2.5, axis=0)
+        summary_df[f'{name}_upper'] = np.percentile(samples, 97.5, axis=0)
+
+    # === SAVE FULL POSTERIOR SAMPLES TO DISK ===
+    output_dir = os.path.dirname(predicted_df.columns.name or "bayesian_modeling")
+    samples_dir = os.path.join(output_dir, "posterior_samples")
+    os.makedirs(samples_dir, exist_ok=True)
+
+    for param in param_names + ['s', 'b']:
+        samples = posterior_samples[param].values[:, 0, :]  # shape: (n_samples, n_neurons)
+        save_path = os.path.join(samples_dir, f"{param}_posterior_samples.npy")
+        np.save(save_path, samples)
+
+    # === CORRELATIONS ===
+    neuron_correlations = {}
+    all_param_names = param_names + ['s', 'b']
+    for neuron_idx in range(neural_activity.shape[1]):
+        vals = {p: posterior_samples[p].values[:, 0, neuron_idx] for p in all_param_names}
+        neuron_correlations[f"neuron_{neuron_idx + 1:03d}"] = pd.DataFrame(vals).corr()
+
+    all_neurons_corr = sum(neuron_correlations.values()) / len(neuron_correlations)
+
+    return idata, summary_df, predicted_df, neuron_correlations, all_neurons_corr
+
 
 
 def main(arg_list=None):
