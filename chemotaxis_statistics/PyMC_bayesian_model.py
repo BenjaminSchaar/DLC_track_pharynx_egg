@@ -80,25 +80,16 @@ def equalize_dataframes(behavior_df, neuron_df, method='linear'):
 def run_bayesian_model(behavior_df, neural_df, behavior_params, n_draws=1000, n_tune=1000):
     """
     Run a Bayesian model to analyze the relationship between behavior parameters and neural activity.
-
-    Args:
-        behavior_df: DataFrame containing behavior measurements
-        neural_df: DataFrame containing neural activity recordings
-        behavior_params: List of behavior parameters to include in the model
-        n_draws: Number of posterior samples to draw (default: 1000)
-        n_tune: Number of tuning steps (default: 1000)
-
-    Returns:
-        idata: InferenceData object
-        summary_df: DataFrame with parameter summaries per neuron
-        predicted_df: DataFrame with predicted neural activity
-        neuron_correlations: Dict of correlation matrices per neuron
-        all_neurons_corr: Averaged correlation matrix across neurons
     """
     odor_features_raw = behavior_df[behavior_params]
     odor_features = odor_features_raw.fillna(0).values
     neural_activity = neural_df.values
     n_behavior_params = len(behavior_params)
+
+    print("🧠 Starting model setup")
+    print(f"- Behavior matrix shape: {odor_features.shape}")
+    print(f"- Neural activity shape: {neural_activity.shape}")
+    print(f"- Parameters to model: {behavior_params}")
 
     with pm.Model() as model:
         param_vars = []
@@ -113,9 +104,7 @@ def run_bayesian_model(behavior_df, neural_df, behavior_params, n_draws=1000, n_
         s = pm.HalfNormal('s', sigma=0.5, shape=(1, neural_activity.shape[1]))
         b = pm.Normal('b', mu=0, sigma=0.5, shape=(1, neural_activity.shape[1]))
 
-        odor_encoding = 0
-        for i, param in enumerate(param_vars):
-            odor_encoding += param * odor_features[:, i:i + 1]
+        odor_encoding = sum(param * odor_features[:, i:i + 1] for i, param in enumerate(param_vars))
 
         if odor_features.shape[0] != neural_activity.shape[0]:
             raise ValueError("Mismatch in timepoints between odor features and neural activity")
@@ -133,7 +122,7 @@ def run_bayesian_model(behavior_df, neural_df, behavior_params, n_draws=1000, n_
                   sigma=1.0,
                   observed=neural_activity[1:trimmed_size + 1, :])
 
-        print(f"Sampling with {n_draws} draws and {n_tune} tuning steps...")
+        print(f"📦 Sampling with {n_draws} draws and {n_tune} tuning steps...")
         idata = pm.sample(draws=n_draws,
                           tune=n_tune,
                           return_inferencedata=True,
@@ -141,17 +130,24 @@ def run_bayesian_model(behavior_df, neural_df, behavior_params, n_draws=1000, n_
                           init='adapt_diag',
                           target_accept=0.9)
 
+    print("📊 Sampling complete. Extracting posterior...")
     posterior_samples = az.extract(idata, group="posterior")
+
+    print("📐 Posterior sample shapes and dims:")
+    for param in param_names + ['s', 'b']:
+        arr = posterior_samples[param]
+        print(f"  {param}: shape = {arr.shape}, dims = {arr.dims}")
 
     # === PREDICTION  ===
     predicted_df = pd.DataFrame(index=neural_df.index)
+    print(f"🔁 Predicting neural activity for {neural_activity.shape[1]} neurons...")
+
     for neuron_idx in range(neural_activity.shape[1]):
         neuron_id = f"neuron_{neuron_idx + 1:03d}"
 
-        # FIXED: use xarray-aware mean(dim="draw") and index cleanly
-        param_values = [posterior_samples[p].mean(dim="draw").values[neuron_idx] for p in param_names]
-        s_neuron = posterior_samples['s'].mean(dim="draw").values[neuron_idx]
-        b_neuron = posterior_samples['b'].mean(dim="draw").values[neuron_idx]
+        param_values = [posterior_samples[p].values.mean(axis=0)[0, neuron_idx] for p in param_names]
+        s_neuron = posterior_samples['s'].values.mean(axis=0)[0, neuron_idx]
+        b_neuron = posterior_samples['b'].values.mean(axis=0)[0, neuron_idx]
 
         pred = np.zeros(neural_activity.shape[0])
         pred[0] = neural_activity[0, neuron_idx]
@@ -162,7 +158,10 @@ def run_bayesian_model(behavior_df, neural_df, behavior_params, n_draws=1000, n_
 
         predicted_df[neuron_id] = pred
 
+    print("📈 Prediction complete.")
+
     # === EXPORT SUMMARY STATISTICS ===
+    print("📦 Computing parameter summaries...")
     summary_df = pd.DataFrame(index=[f"neuron_{i+1:03d}" for i in range(neural_activity.shape[1])])
 
     for clean_name in param_names:
@@ -182,12 +181,14 @@ def run_bayesian_model(behavior_df, neural_df, behavior_params, n_draws=1000, n_
     samples_dir = os.path.join(output_dir, "posterior_samples")
     os.makedirs(samples_dir, exist_ok=True)
 
+    print("💾 Saving full posterior samples...")
     for param in param_names + ['s', 'b']:
         samples = posterior_samples[param].values[:, 0, :]  # shape: (n_samples, n_neurons)
         save_path = os.path.join(samples_dir, f"{param}_posterior_samples.npy")
         np.save(save_path, samples)
 
     # === CORRELATIONS ===
+    print("🔗 Computing correlations...")
     neuron_correlations = {}
     all_param_names = param_names + ['s', 'b']
     for neuron_idx in range(neural_activity.shape[1]):
@@ -196,8 +197,8 @@ def run_bayesian_model(behavior_df, neural_df, behavior_params, n_draws=1000, n_
 
     all_neurons_corr = sum(neuron_correlations.values()) / len(neuron_correlations)
 
+    print("✅ Bayesian modeling complete.")
     return idata, summary_df, predicted_df, neuron_correlations, all_neurons_corr
-
 
 
 def main(arg_list=None):
