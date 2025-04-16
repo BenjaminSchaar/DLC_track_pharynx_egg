@@ -143,13 +143,15 @@ def run_bayesian_model(behavior_df, neural_df, behavior_params, n_draws=1000, n_
 
     posterior_samples = az.extract(idata, group="posterior")
 
-    # === PREDICTION ===
+    # === PREDICTION  ===
     predicted_df = pd.DataFrame(index=neural_df.index)
     for neuron_idx in range(neural_activity.shape[1]):
         neuron_id = f"neuron_{neuron_idx + 1:03d}"
-        param_values = [posterior_samples[p].mean(axis=0)[0, neuron_idx] for p in param_names]
-        s_neuron = posterior_samples['s'].mean(axis=0)[0, neuron_idx]
-        b_neuron = posterior_samples['b'].mean(axis=0)[0, neuron_idx]
+
+        # FIXED: use xarray-aware mean(dim="draw") and index cleanly
+        param_values = [posterior_samples[p].mean(dim="draw").values[neuron_idx] for p in param_names]
+        s_neuron = posterior_samples['s'].mean(dim="draw").values[neuron_idx]
+        b_neuron = posterior_samples['b'].mean(dim="draw").values[neuron_idx]
 
         pred = np.zeros(neural_activity.shape[0])
         pred[0] = neural_activity[0, neuron_idx]
