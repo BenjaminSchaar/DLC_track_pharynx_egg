@@ -230,8 +230,7 @@ def run_bayesian_model(behavior_df, neural_df, behavior_params, n_draws=1000, n_
             sensory_input = 0
             # Calculate total sensory input at time t-1
             for i, param_value in enumerate(param_values):
-                if t - 1 < odor_features.shape[0]:
-                    sensory_input += param_value * odor_features[t - 1, i]
+                sensory_input += param_value * odor_features[t - 1, i]
 
             # Apply the autoregressive model:
             # new_state = sensory_component + history_component + baseline
@@ -261,8 +260,6 @@ def main(arg_list=None):
                         help='Number of posterior samples to draw (default: 1000)')
     parser.add_argument('--tune', type=int, default=1000,
                         help='Number of tuning steps (default: 1000)')
-    parser.add_argument('--max_timepoints', type=int, default=None,
-                        help='Maximum number of timepoints to use (for testing)')
 
     if arg_list is None:
         args = parser.parse_args()
@@ -276,12 +273,6 @@ def main(arg_list=None):
 
     # Load neural traces from HDF5 file
     traces = pd.read_hdf(args.traces_file, key='df_with_missing')
-
-    # Optionally limit the number of timepoints (for testing)
-    if args.max_timepoints is not None:
-        print(f"Using only {args.max_timepoints} timepoints (testing mode)")
-        behavior = behavior.iloc[:args.max_timepoints]
-        traces = traces.iloc[:args.max_timepoints]
 
     # Ensure behavior and neural data have the same number of time points
     behavior, traces = equalize_dataframes(behavior, traces, method='linear')
