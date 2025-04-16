@@ -76,10 +76,23 @@ def equalize_dataframes(behavior_df, neuron_df, method='linear'):
         print("DataFrames already have the same length. No interpolation needed.")
         return behavior_df, neuron_df
 
-
 def run_bayesian_model(behavior_df, neural_df, behavior_params, n_draws=1000, n_tune=1000):
     """
     Run a Bayesian model to analyze the relationship between behavior parameters and neural activity.
+
+    Args:
+        behavior_df: DataFrame containing behavior measurements
+        neural_df: DataFrame containing neural activity recordings
+        behavior_params: List of behavior parameters to include in the model
+        n_draws: Number of posterior samples to draw (default: 1000)
+        n_tune: Number of tuning steps (default: 1000)
+
+    Returns:
+        idata: InferenceData object
+        summary_df: DataFrame with parameter summaries per neuron
+        predicted_df: DataFrame with predicted neural activity
+        neuron_correlations: Dict of correlation matrices per neuron
+        all_neurons_corr: Averaged correlation matrix across neurons
     """
     odor_features_raw = behavior_df[behavior_params]
     odor_features = odor_features_raw.fillna(0).values
@@ -145,9 +158,9 @@ def run_bayesian_model(behavior_df, neural_df, behavior_params, n_draws=1000, n_
     for neuron_idx in range(neural_activity.shape[1]):
         neuron_id = f"neuron_{neuron_idx + 1:03d}"
 
-        param_values = [posterior_samples[p].values.mean(axis=0)[0, neuron_idx] for p in param_names]
-        s_neuron = posterior_samples['s'].values.mean(axis=0)[0, neuron_idx]
-        b_neuron = posterior_samples['b'].values.mean(axis=0)[0, neuron_idx]
+        param_values = [posterior_samples[p].values.mean(axis=2)[0, neuron_idx] for p in param_names]
+        s_neuron = posterior_samples['s'].values.mean(axis=2)[0, neuron_idx]
+        b_neuron = posterior_samples['b'].values.mean(axis=2)[0, neuron_idx]
 
         pred = np.zeros(neural_activity.shape[0])
         pred[0] = neural_activity[0, neuron_idx]
