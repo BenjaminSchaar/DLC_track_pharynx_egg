@@ -80,13 +80,6 @@ def run_bayesian_model(behavior_df, neural_df, behavior_params, n_draws=1000, n_
     """
     Run a Bayesian model to analyze the relationship between behavior parameters and neural activity.
 
-    Args:
-        behavior_df: DataFrame containing behavior measurements
-        neural_df: DataFrame containing neural activity recordings
-        behavior_params: List of behavior parameters to include in the model
-        n_draws: Number of posterior samples to draw (default: 1000)
-        n_tune: Number of tuning steps (default: 1000)
-
     Returns:
         idata: InferenceData object
         summary_df: DataFrame with parameter summaries per neuron
@@ -147,20 +140,18 @@ def run_bayesian_model(behavior_df, neural_df, behavior_params, n_draws=1000, n_
     posterior_samples = az.extract(idata, group="posterior")
 
     print("📐 Posterior sample shapes and dims:")
-    for param in param_names + ['s', 'b']:
-        arr = posterior_samples[param]
-        print(f"  {param}: shape = {arr.shape}, dims = {arr.dims}")
+    for p in param_names + ["s", "b"]:
+        arr = posterior_samples[p]
+        print(f"  {p}: shape = {arr.shape}, dims = {arr.dims}")
 
-    # === PREDICTION  ===
+    # === PREDICTION ===
     predicted_df = pd.DataFrame(index=neural_df.index)
     print(f"🔁 Predicting neural activity for {neural_activity.shape[1]} neurons...")
-
     for neuron_idx in range(neural_activity.shape[1]):
         neuron_id = f"neuron_{neuron_idx + 1:03d}"
-
-        param_values = [posterior_samples[p].values.mean(axis=2)[0, neuron_idx] for p in param_names]
-        s_neuron = posterior_samples['s'].values.mean(axis=2)[0, neuron_idx]
-        b_neuron = posterior_samples['b'].values.mean(axis=2)[0, neuron_idx]
+        param_values = [posterior_samples[p].values[0, neuron_idx, :].mean() for p in param_names]
+        s_neuron = posterior_samples["s"].values[0, neuron_idx, :].mean()
+        b_neuron = posterior_samples["b"].values[0, neuron_idx, :].mean()
 
         pred = np.zeros(neural_activity.shape[0])
         pred[0] = neural_activity[0, neuron_idx]
@@ -172,46 +163,43 @@ def run_bayesian_model(behavior_df, neural_df, behavior_params, n_draws=1000, n_
         predicted_df[neuron_id] = pred
 
     print("📈 Prediction complete.")
-
-    # === EXPORT SUMMARY STATISTICS ===
     print("📦 Computing parameter summaries...")
+
     summary_df = pd.DataFrame(index=[f"neuron_{i+1:03d}" for i in range(neural_activity.shape[1])])
 
     for clean_name in param_names:
-        samples = posterior_samples[clean_name].values[:, 0, :]  # (n_samples, n_neurons)
-        summary_df[f'{clean_name}_mean'] = samples.mean(axis=0)
-        summary_df[f'{clean_name}_lower'] = np.percentile(samples, 2.5, axis=0)
-        summary_df[f'{clean_name}_upper'] = np.percentile(samples, 97.5, axis=0)
+        samples = posterior_samples[clean_name].values[0, :, :]  # (neurons, samples)
+        summary_df[f'{clean_name}_mean'] = samples.mean(axis=1)
+        summary_df[f'{clean_name}_lower'] = np.percentile(samples, 2.5, axis=1)
+        summary_df[f'{clean_name}_upper'] = np.percentile(samples, 97.5, axis=1)
 
     for name in ['s', 'b']:
-        samples = posterior_samples[name].values[:, 0, :]
-        summary_df[f'{name}_mean'] = samples.mean(axis=0)
-        summary_df[f'{name}_lower'] = np.percentile(samples, 2.5, axis=0)
-        summary_df[f'{name}_upper'] = np.percentile(samples, 97.5, axis=0)
+        samples = posterior_samples[name].values[0, :, :]
+        summary_df[f'{name}_mean'] = samples.mean(axis=1)
+        summary_df[f'{name}_lower'] = np.percentile(samples, 2.5, axis=1)
+        summary_df[f'{name}_upper'] = np.percentile(samples, 97.5, axis=1)
 
     # === SAVE FULL POSTERIOR SAMPLES TO DISK ===
     output_dir = os.path.dirname(predicted_df.columns.name or "bayesian_modeling")
     samples_dir = os.path.join(output_dir, "posterior_samples")
     os.makedirs(samples_dir, exist_ok=True)
 
-    print("💾 Saving full posterior samples...")
     for param in param_names + ['s', 'b']:
-        samples = posterior_samples[param].values[:, 0, :]  # shape: (n_samples, n_neurons)
+        samples = posterior_samples[param].values[0, :, :]  # (neurons, samples)
         save_path = os.path.join(samples_dir, f"{param}_posterior_samples.npy")
         np.save(save_path, samples)
 
     # === CORRELATIONS ===
-    print("🔗 Computing correlations...")
     neuron_correlations = {}
     all_param_names = param_names + ['s', 'b']
     for neuron_idx in range(neural_activity.shape[1]):
-        vals = {p: posterior_samples[p].values[:, 0, neuron_idx] for p in all_param_names}
+        vals = {p: posterior_samples[p].values[0, neuron_idx, :] for p in all_param_names}
         neuron_correlations[f"neuron_{neuron_idx + 1:03d}"] = pd.DataFrame(vals).corr()
 
     all_neurons_corr = sum(neuron_correlations.values()) / len(neuron_correlations)
 
-    print("✅ Bayesian modeling complete.")
     return idata, summary_df, predicted_df, neuron_correlations, all_neurons_corr
+
 
 
 def main(arg_list=None):
