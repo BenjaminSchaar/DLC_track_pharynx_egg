@@ -12,6 +12,7 @@ import pymc as pm  # For Bayesian statistical modeling
 import arviz as az  # For analyzing and visualizing Bayesian models
 import ast  # For parsing Python literals from strings (used for command line arguments)
 import pickle  # For serializing and deserializing Python objects
+import matplotlib.pyplot as plt
 
 
 def equalize_dataframes(behavior_df, neuron_df, method='linear'):
@@ -200,6 +201,121 @@ def run_bayesian_model(behavior_df, neural_df, behavior_params, n_draws=1000, n_
 
     return idata, summary_df, predicted_df, neuron_correlations, all_neurons_corr
 
+import matplotlib.pyplot as plt
+
+def plot_behavior_encoding(summary_df, output_dir=".", figsize=(10, 8)):
+    """
+    Create a dot heatmap showing how strongly each neuron encodes each behavior parameter.
+    Dot size reflects gain control parameter `s`.
+
+    Args:
+        summary_df: DataFrame containing parameter summaries per neuron
+        output_dir: Directory to save the plot
+        figsize: Size of the figure
+    """
+    # Extract columns
+    param_cols = [col for col in summary_df.columns if col.endswith("_mean") and col.startswith("c_")]
+    encoding_matrix = summary_df[param_cols].copy()
+    s_vals = summary_df["s_mean"].values
+
+    # Sort neurons by encoding strength
+    encoding_strength = encoding_matrix.abs().sum(axis=1)
+    sorted_idx = np.argsort(-encoding_strength)
+    encoding_matrix = encoding_matrix.iloc[sorted_idx]
+    s_vals_sorted = s_vals[sorted_idx]
+
+    # Normalize `s` for dot size scaling
+    s_norm = (s_vals_sorted - s_vals_sorted.min()) / (s_vals_sorted.max() - s_vals_sorted.min() + 1e-6)
+    s_scaled = 20 + 180 * s_norm  # dot size from 20 to 200
+
+    # Plot
+    fig, ax = plt.subplots(figsize=figsize)
+    x, y, sizes, colors = [], [], [], []
+
+    for i, param in enumerate(encoding_matrix.columns):
+        for j, neuron in enumerate(encoding_matrix.index):
+            x.append(i)
+            y.append(j)
+            sizes.append(s_scaled[j])
+            colors.append(encoding_matrix.iloc[j, i])
+
+    scatter = ax.scatter(x, y, s=sizes, c=colors, cmap="YlGnBu", edgecolor="k")
+
+    # Axis labels
+    ax.set_xticks(range(len(param_cols)))
+    ax.set_xticklabels([p.replace("c_", "") for p in param_cols], rotation=45, ha="right")
+    ax.set_yticks(range(len(encoding_matrix)))
+    ax.set_yticklabels(encoding_matrix.index)
+
+    ax.set_xlabel("Behavior Parameters")
+    ax.set_ylabel("Neurons (sorted by encoding strength)")
+    ax.set_title("Behavior Encoding Strength per Neuron")
+
+    cbar = plt.colorbar(scatter, ax=ax)
+    cbar.set_label("Encoding Strength (mean)")
+
+    plt.tight_layout()
+    plot_path = os.path.join(output_dir, "encoding_heatmap.png")
+    plt.savefig(plot_path, dpi=300)
+    print(f"✅ Saved encoding heatmap to {plot_path}")
+    plt.close()
+
+def plot_neuron_predictions(traces_df, predicted_df, summary_df, output_dir, behavior_params):
+    """
+    Generate a PDF with per-neuron plots showing:
+    - Original vs predicted activity
+    - R2 score
+    - Mini matrix of behavior encoding strengths (heatmap-style)
+    - Title per neuron, sorted by prediction strength (R²)
+    """
+    import matplotlib.pyplot as plt
+    from matplotlib.backends.backend_pdf import PdfPages
+    from sklearn.metrics import r2_score
+    import numpy as np
+
+    pdf_path = os.path.join(output_dir, "neuron_prediction_plots.pdf")
+
+    # Compute R^2 scores for sorting
+    r2_scores = []
+    for i, neuron in enumerate(traces_df.columns):
+        y_true = traces_df[neuron].values
+        y_pred = predicted_df[f"neuron_{i+1:03d}"].values
+        r2_scores.append((neuron, i, r2_score(y_true, y_pred)))
+
+    # Sort neurons by descending R^2
+    r2_scores.sort(key=lambda x: -x[2])
+
+    with PdfPages(pdf_path) as pdf:
+        for neuron, i, r2 in r2_scores:
+            fig, ax = plt.subplots(2, 1, figsize=(10, 5), gridspec_kw={'height_ratios': [3, 1]})
+
+            y_true = traces_df[neuron].values
+            y_pred = predicted_df[f"neuron_{i+1:03d}"].values
+            time = predicted_df['time_sec'].values
+
+            # === Top Plot: Traces ===
+            ax[0].plot(time, y_true, label="Observed", alpha=0.7)
+            ax[0].plot(time, y_pred, label="Predicted", alpha=0.7)
+            ax[0].set_title(f"{neuron} | $R^2$ = {r2:.3f}")
+            ax[0].set_ylabel("Activity")
+            ax[0].legend()
+
+            # === Bottom Plot: Mini encoding matrix (1-row heatmap) ===
+            weights = np.array([summary_df.loc[f"neuron_{i+1:03d}", f"c_{param}_mean"] for param in behavior_params])
+            im = ax[1].imshow(weights[np.newaxis, :], cmap="YlGnBu", aspect="auto", vmin=-1, vmax=1)
+
+            ax[1].set_yticks([])
+            ax[1].set_xticks(range(len(behavior_params)))
+            ax[1].set_xticklabels(behavior_params, rotation=45, ha="right")
+            ax[1].set_title("Behavior Encoding Strength")
+
+            plt.colorbar(im, ax=ax[1], orientation='horizontal', pad=0.2)
+            fig.suptitle(f"Prediction Summary: {neuron}", fontsize=14, y=1.02)
+            plt.tight_layout()
+            pdf.savefig(fig)
+            plt.close(fig)
+
+    print(f"✅ Saved per-neuron prediction plots to {pdf_path}")
 
 
 def main(arg_list=None):
@@ -280,6 +396,12 @@ def main(arg_list=None):
         'num_timepoints': traces.shape[0]
     }
     pd.DataFrame([metadata]).to_csv(os.path.join(output_dir, "metadata.csv"), index=False)
+
+    #plotting part----------------
+
+    plot_behavior_encoding(result_df, output_dir)
+
+    plot_neuron_predictions(traces, predicted_df, result_df, output_dir, args.behavior_params)
 
 
 if __name__ == "__main__":
