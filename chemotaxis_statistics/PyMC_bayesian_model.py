@@ -88,13 +88,13 @@ def run_bayesian_model(behavior_df, neural_df, behavior_params, n_draws=1000, n_
         neuron_correlations: Dict of correlation matrices per neuron
         all_neurons_corr: Averaged correlation matrix across neurons
     """
-    odor_features_raw = behavior_df[behavior_params]
-    odor_features = odor_features_raw.fillna(0).values
+    behavior_features_raw = behavior_df[behavior_params]
+    behavior_features = behavior_features_raw.fillna(0).values
     neural_activity = neural_df.values
     n_behavior_params = len(behavior_params)
 
     print("🧠 Starting model setup")
-    print(f"- Behavior matrix shape: {odor_features.shape}")
+    print(f"- Behavior matrix shape: {behavior_features.shape}")
     print(f"- Neural activity shape: {neural_activity.shape}")
     print(f"- Parameters to model: {behavior_params}")
 
@@ -111,15 +111,15 @@ def run_bayesian_model(behavior_df, neural_df, behavior_params, n_draws=1000, n_
         s = pm.HalfNormal('s', sigma=0.5, shape=(1, neural_activity.shape[1]))
         b = pm.Normal('b', mu=0, sigma=0.5, shape=(1, neural_activity.shape[1]))
 
-        odor_encoding = sum(param * odor_features[:, i:i + 1] for i, param in enumerate(param_vars))
+        feature_encoding = sum(param * behavior_features[:, i:i + 1] for i, param in enumerate(param_vars))
 
-        if odor_features.shape[0] != neural_activity.shape[0]:
+        if behavior_features.shape[0] != neural_activity.shape[0]:
             raise ValueError("Mismatch in timepoints between odor features and neural activity")
 
-        trimmed_size = odor_features.shape[0] - 1
+        trimmed_size = behavior_features.shape[0] - 1
 
         neural_activity_model = (
-            (1 / (s + 1)) * odor_encoding[:trimmed_size] +
+            (1 / (s + 1)) * feature_encoding[:trimmed_size] +
             (s / (s + 1)) * neural_activity[:trimmed_size, :] +
             b
         )
@@ -158,8 +158,8 @@ def run_bayesian_model(behavior_df, neural_df, behavior_params, n_draws=1000, n_
         pred[0] = neural_activity[0, neuron_idx]
 
         for t in range(1, neural_activity.shape[0]):
-            sensory_input = sum(param_values[i] * odor_features[t - 1, i] for i in range(n_behavior_params))
-            pred[t] = (1 / (s_neuron + 1)) * sensory_input + (s_neuron / (s_neuron + 1)) * pred[t - 1] + b_neuron
+            feature_input = sum(param_values[i] * behavior_features[t - 1, i] for i in range(n_behavior_params))
+            pred[t] = (1 / (s_neuron + 1)) * feature_input + (s_neuron / (s_neuron + 1)) * pred[t - 1] + b_neuron
 
         predicted_df[neuron_id] = pred
 
@@ -203,7 +203,7 @@ def run_bayesian_model(behavior_df, neural_df, behavior_params, n_draws=1000, n_
 
 import matplotlib.pyplot as plt
 
-def plot_behavior_encoding(summary_df, output_dir=".", figsize=(10, 8)):
+def plot_behavior_encoding(summary_df, output_dir=".", figsize=(10, 80)):
     """
     Create a dot heatmap showing how strongly each neuron encodes each behavior parameter.
     Dot size reflects gain control parameter `s`.
