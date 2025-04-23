@@ -642,16 +642,22 @@ def main(arg_list=None):
 
     # Create worm animation
     create_improved_worm_animation(
-        df_skel_all,  # Use df_skel_all consistently
-        df_worm_parameter,
-        output_path,
-        x_odor, y_odor,  # May be None if odor data is not available
-        fps,
-        arena_min_x, arena_max_x,
-        arena_min_y, arena_max_y,
-        int(fps / 4),
-        5,
-        "worm_movie.avi"
+        df1=df_skel_all,
+        df2=df_worm_parameter,
+        output_path=output_path,
+        x_odor=x_odor,
+        y_odor=y_odor,
+        fps=fps,
+        arena_min_x=arena_min_x,
+        arena_max_x=arena_max_x,
+        arena_min_y=arena_min_y,
+        arena_max_y=arena_max_y,
+        nth_frame=int(fps / 4),
+        nth_point=5,
+        file_name="worm_movie.avi",
+        conc_array=conc_array,
+        distance_array=distance_array,
+        diffusion_time_offset=diffusion_time_offset
     )
 
     # If you want to check if the function executed successfully
