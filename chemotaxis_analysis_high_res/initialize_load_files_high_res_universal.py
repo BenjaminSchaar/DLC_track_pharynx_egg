@@ -655,7 +655,7 @@ def main(arg_list=None):
         nth_frame=int(fps / 4),
         nth_point=5,
         file_name="worm_movie.avi",
-        conc_array=conc_array,
+        conc_array=conc_gradient_array,
         distance_array=distance_array,
         diffusion_time_offset=diffusion_time_offset
     )
