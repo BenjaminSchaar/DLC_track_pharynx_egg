@@ -1135,7 +1135,7 @@ def create_improved_worm_animation(df1, df2, output_path, x_odor=None, y_odor=No
             ax_detail.set_title('Detailed Worm View')
             ax_detail.set_xlabel('Distance (mm)')
             ax_detail.grid(True)
-            ax_detail.invert_xaxis()
+            #ax_detail.invert_xaxis() - invertes axis of rightside plot
 
             # Add angle information to detailed plot (with error checking)
             # Only add bearing angle if it exists (typically only exists with odor position)
