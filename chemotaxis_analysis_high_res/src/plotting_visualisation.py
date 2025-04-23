@@ -1058,7 +1058,7 @@ def create_improved_worm_animation(df1, df2, output_path, x_odor=None, y_odor=No
             ax_overview.set_ylabel('Distance (mm)')
             ax_overview.grid(True)
 
-            ax_overview.add_patch(plt.Circle((center_x, center_y), 0.5, fill=False, color='red', linestyle='--'))
+            ax_overview.add_patch(plt.Circle((center_x, center_y), 0.8, fill=False, color='red', linestyle='--'))
 
             ax_detail.set_xlim(center_x - 0.7, center_x + 0.7)
             ax_detail.set_ylim(center_y - 0.7, center_y + 0.7)
