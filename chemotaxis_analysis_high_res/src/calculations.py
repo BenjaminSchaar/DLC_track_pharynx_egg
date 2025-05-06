@@ -86,6 +86,75 @@ def correct_stage_pos_with_skeleton(
 
     return worm_pos
 
+def correct_dlc_coordinates(
+        dlc_nose_coords: pd.DataFrame,
+        dlc_tail_coords: pd.DataFrame,
+        video_resolution_x: int,
+        video_resolution_y: int,
+        factor_px_to_mm: float,
+        video_origin: str
+) -> tuple:
+    """
+    Convert DLC coordinates from pixels to millimeters and correct based on video origin.
+
+    Parameters:
+    dlc_nose_coords (pd.DataFrame): DataFrame with nose x,y coordinates
+    dlc_tail_coords (pd.DataFrame): DataFrame with tail x,y coordinates
+    video_resolution_x (int): Width of the video in pixels
+    video_resolution_y (int): Height of the video in pixels
+    factor_px_to_mm (float): Conversion factor from pixels to millimeters
+    video_origin (str): Origin of the video. "zim01", "zim06", or "crop"
+
+    Returns:
+    tuple: Corrected nose and tail coordinates DataFrames
+    """
+    video_resolution_x = int(video_resolution_x)
+    video_resolution_y = int(video_resolution_y)
+    factor_px_to_mm = float(factor_px_to_mm)
+
+    center_x = video_resolution_x / 2
+    center_y = video_resolution_y / 2
+
+    # Copy to avoid modifying originals
+    nose_coords = dlc_nose_coords.copy()
+    tail_coords = dlc_tail_coords.copy()
+
+    # Convert from pixel coordinates to mm relative to center
+    nose_diff_x_px = nose_coords['x'] - center_x
+    nose_diff_y_px = nose_coords['y'] - center_y
+    tail_diff_x_px = tail_coords['x'] - center_x
+    tail_diff_y_px = tail_coords['y'] - center_y
+
+    # Apply conversion factor
+    nose_x_mm = nose_diff_x_px * factor_px_to_mm
+    nose_y_mm = nose_diff_y_px * factor_px_to_mm
+    tail_x_mm = tail_diff_x_px * factor_px_to_mm
+    tail_y_mm = tail_diff_y_px * factor_px_to_mm
+
+    # Apply video origin corrections similar to the skeleton correction logic
+    if video_origin == "zim01":
+        # Invert Y for zim01
+        nose_coords['X_rel_DLC_nose'] = nose_x_mm
+        nose_coords['Y_rel_DLC_nose'] = -nose_y_mm
+        tail_coords['X_rel_DLC_tail'] = tail_x_mm
+        tail_coords['Y_rel_DLC_tail'] = -tail_y_mm
+
+    elif video_origin == "zim06":
+        # Invert Y for zim06
+        nose_coords['X_rel_DLC_nose'] = nose_x_mm
+        nose_coords['Y_rel_DLC_nose'] = -nose_y_mm
+        tail_coords['X_rel_DLC_tail'] = tail_x_mm
+        tail_coords['Y_rel_DLC_tail'] = -tail_y_mm
+
+    elif video_origin == "crop":
+        # No Y inversion for crop
+        nose_coords['X_rel_DLC_nose'] = nose_x_mm
+        nose_coords['Y_rel_DLC_nose'] = nose_y_mm
+        tail_coords['X_rel_DLC_tail'] = tail_x_mm
+        tail_coords['Y_rel_DLC_tail'] = tail_y_mm
+
+    return nose_coords, tail_coords
+
 
 # Define a function to calculate distance while handling NaN
 def calculate_distance(row: pd.Series, x_col: str, y_col: str, x_odor: float, y_odor: float) -> float:
