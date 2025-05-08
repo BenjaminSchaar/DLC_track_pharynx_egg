@@ -85,6 +85,7 @@ def correct_stage_pos_with_skeleton(
             worm_pos[f'Y_rel_skel_pos_{skel_pos}'] = worm_pos['Y_rel'] + difference_center_y_mm
 
     return worm_pos
+
 def correct_dlc_coordinates(
         worm_pos: pd.DataFrame,
         dlc_nose_coords: pd.DataFrame,
@@ -164,8 +165,6 @@ def correct_dlc_coordinates(
         raise ValueError(f"Unknown video_origin: {video_origin}")
 
     return nose, tail
-
-
 
 # Define a function to calculate distance while handling NaN
 def calculate_distance(row: pd.Series, x_col: str, y_col: str, x_odor: float, y_odor: float) -> float:
