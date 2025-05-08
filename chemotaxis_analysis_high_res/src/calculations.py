@@ -85,8 +85,8 @@ def correct_stage_pos_with_skeleton(
             worm_pos[f'Y_rel_skel_pos_{skel_pos}'] = worm_pos['Y_rel'] + difference_center_y_mm
 
     return worm_pos
-
 def correct_dlc_coordinates(
+        worm_pos: pd.DataFrame,
         dlc_nose_coords: pd.DataFrame,
         dlc_tail_coords: pd.DataFrame,
         video_resolution_x: int,
@@ -95,65 +95,76 @@ def correct_dlc_coordinates(
         video_origin: str
 ) -> tuple:
     """
-    Convert DLC coordinates from pixels to millimeters and correct based on video origin.
+    Convert DLC coordinates from pixels to absolute millimeter positions inside the arena,
+    correcting for the stage-encoded worm position and video origin.
 
     Parameters:
-    dlc_nose_coords (pd.DataFrame): DataFrame with nose x,y coordinates
-    dlc_tail_coords (pd.DataFrame): DataFrame with tail x,y coordinates
-    video_resolution_x (int): Width of the video in pixels
-    video_resolution_y (int): Height of the video in pixels
-    factor_px_to_mm (float): Conversion factor from pixels to millimeters
-    video_origin (str): Origin of the video. "zim01", "zim06", or "crop"
+    worm_pos (pd.DataFrame): DataFrame containing the stage-based worm positions:
+                             must have columns 'X_rel' and 'Y_rel' (in mm).
+    dlc_nose_coords (pd.DataFrame): DataFrame with nose 'x','y' pixel coordinates.
+    dlc_tail_coords (pd.DataFrame): DataFrame with tail 'x','y' pixel coordinates.
+    video_resolution_x (int): Width of the video in pixels.
+    video_resolution_y (int): Height of the video in pixels.
+    factor_px_to_mm (float): Conversion factor from pixels to millimeters.
+    video_origin (str): Origin of the video. One of 'zim01', 'zim06', or 'crop'.
 
     Returns:
-    tuple: Corrected nose and tail coordinates DataFrames
+    tuple: Two DataFrames (nose, tail) each with new columns:
+           'X_rel_DLC_nose', 'Y_rel_DLC_nose' or
+           'X_rel_DLC_tail', 'Y_rel_DLC_tail' giving absolute arena positions.
     """
+    # Ensure numeric types
     video_resolution_x = int(video_resolution_x)
     video_resolution_y = int(video_resolution_y)
     factor_px_to_mm = float(factor_px_to_mm)
 
-    center_x = video_resolution_x / 2
-    center_y = video_resolution_y / 2
+    # Center of frame in pixels
+    center_x = video_resolution_x / 2.0
+    center_y = video_resolution_y / 2.0
 
     # Copy to avoid modifying originals
-    nose_coords = dlc_nose_coords.copy()
-    tail_coords = dlc_tail_coords.copy()
+    nose = dlc_nose_coords.copy()
+    tail = dlc_tail_coords.copy()
 
-    # Convert from pixel coordinates to mm relative to center
-    nose_diff_x_px = nose_coords['x'] - center_x
-    nose_diff_y_px = nose_coords['y'] - center_y
-    tail_diff_x_px = tail_coords['x'] - center_x
-    tail_diff_y_px = tail_coords['y'] - center_y
+    # Pixel offsets from center
+    dx_n = nose['x'] - center_x
+    dy_n = nose['y'] - center_y
+    dx_t = tail['x'] - center_x
+    dy_t = tail['y'] - center_y
 
-    # Apply conversion factor
-    nose_x_mm = nose_diff_x_px * factor_px_to_mm
-    nose_y_mm = nose_diff_y_px * factor_px_to_mm
-    tail_x_mm = tail_diff_x_px * factor_px_to_mm
-    tail_y_mm = tail_diff_y_px * factor_px_to_mm
+    # Convert pixel offsets to mm
+    mx_n = dx_n * factor_px_to_mm
+    my_n = dy_n * factor_px_to_mm
+    mx_t = dx_t * factor_px_to_mm
+    my_t = dy_t * factor_px_to_mm
 
-    # Apply video origin corrections similar to the skeleton correction logic
-    if video_origin == "zim01":
-        # Invert Y for zim01
-        nose_coords['X_rel_DLC_nose'] = nose_x_mm
-        nose_coords['Y_rel_DLC_nose'] = -nose_y_mm
-        tail_coords['X_rel_DLC_tail'] = tail_x_mm
-        tail_coords['Y_rel_DLC_tail'] = -tail_y_mm
+    # Apply origin-specific sign and add stage pos
+    if video_origin == 'zim01':
+        # X shifts subtract, Y shifts add
+        nose['X_rel_DLC_nose'] = worm_pos['X_rel'] - mx_n
+        nose['Y_rel_DLC_nose'] = worm_pos['Y_rel'] + my_n
+        tail['X_rel_DLC_tail'] = worm_pos['X_rel'] - mx_t
+        tail['Y_rel_DLC_tail'] = worm_pos['Y_rel'] + my_t
 
-    elif video_origin == "zim06":
-        # Invert Y for zim06
-        nose_coords['X_rel_DLC_nose'] = nose_x_mm
-        nose_coords['Y_rel_DLC_nose'] = -nose_y_mm
-        tail_coords['X_rel_DLC_tail'] = tail_x_mm
-        tail_coords['Y_rel_DLC_tail'] = -tail_y_mm
+    elif video_origin == 'zim06':
+        # X shifts add, Y shifts subtract
+        nose['X_rel_DLC_nose'] = worm_pos['X_rel'] + mx_n
+        nose['Y_rel_DLC_nose'] = worm_pos['Y_rel'] - my_n
+        tail['X_rel_DLC_tail'] = worm_pos['X_rel'] + mx_t
+        tail['Y_rel_DLC_tail'] = worm_pos['Y_rel'] - my_t
 
-    elif video_origin == "crop":
-        # No Y inversion for crop
-        nose_coords['X_rel_DLC_nose'] = nose_x_mm
-        nose_coords['Y_rel_DLC_nose'] = nose_y_mm
-        tail_coords['X_rel_DLC_tail'] = tail_x_mm
-        tail_coords['Y_rel_DLC_tail'] = tail_y_mm
+    elif video_origin == 'crop':
+        # No inversion: both X and Y add
+        nose['X_rel_DLC_nose'] = worm_pos['X_rel'] + mx_n
+        nose['Y_rel_DLC_nose'] = worm_pos['Y_rel'] + my_n
+        tail['X_rel_DLC_tail'] = worm_pos['X_rel'] + mx_t
+        tail['Y_rel_DLC_tail'] = worm_pos['Y_rel'] + my_t
 
-    return nose_coords, tail_coords
+    else:
+        raise ValueError(f"Unknown video_origin: {video_origin}")
+
+    return nose, tail
+
 
 
 # Define a function to calculate distance while handling NaN
