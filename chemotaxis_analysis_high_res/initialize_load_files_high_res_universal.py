@@ -522,6 +522,7 @@ def main(arg_list=None):
         if nose_coords is not None and tail_coords is not None:
             # Convert DLC coordinates to mm and correct based on video origin
             nose_mm, tail_mm = correct_dlc_coordinates(
+                df_worm_parameter,
                 nose_coords,
                 tail_coords,
                 args.video_resolution_x,
