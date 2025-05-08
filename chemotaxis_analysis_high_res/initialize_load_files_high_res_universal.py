@@ -20,6 +20,7 @@ from chemotaxis_analysis_high_res.src.calculations import (
     calculate_curving_angle,
     calculate_bearing_angle,
     calculate_min_border_distance,
+    correct_dlc_coordinates,
 )
 
 from chemotaxis_analysis_high_res.src.plotting_visualisation import (
@@ -44,6 +45,43 @@ from chemotaxis_analysis_high_res.src.data_smothing import (
     smooth_trajectory_savitzky_golay_filter,
 )
 
+
+def load_dlc_coordinates(dlc_file_path, nose_label, tail_label):
+    """
+    Load DLC h5 file and extract nose and tail coordinates.
+
+    Parameters:
+    dlc_file_path (str): Path to the DLC h5 file
+    nose_label (str): Label for the nose in the DLC file
+    tail_label (str): Label for the tail in the DLC file
+
+    Returns:
+    tuple: Two DataFrames containing (nose_coordinates, tail_coordinates)
+    """
+    try:
+        # Load the h5 file
+        df = pd.read_hdf(dlc_file_path)
+
+        # Get the scorer (first level of multi-index)
+        scorer = df.columns.get_level_values(0)[0]
+
+        # Extract nose coordinates
+        nose_coords = pd.DataFrame({
+            'x': df[scorer][nose_label]['x'].values,
+            'y': df[scorer][nose_label]['y'].values
+        })
+
+        # Extract tail coordinates
+        tail_coords = pd.DataFrame({
+            'x': df[scorer][tail_label]['x'].values,
+            'y': df[scorer][tail_label]['y'].values
+        })
+
+        return nose_coords, tail_coords
+
+    except Exception as e:
+        print(f"Error loading DLC file: {e}")
+        return None, None
 
 def read_csv_files(beh_annotation_path:str, skeleton_spline_path:str, worm_pos_path:str, spline_X_path:str, spline_Y_path:str, turn_annotation_path:str):
     # Check if the file paths exist
@@ -212,6 +250,9 @@ def main(arg_list=None):
                         required=False)
     parser.add_argument('--arena_x', help='arena X dimension (default: 38mm in wbfm)', required=False, default='38')
     parser.add_argument('--arena_y', help='arena Y dimension (default: 40.5mm in wbfm)', required=False, default='40.5')
+    parser.add_argument('--DLC_coords', help='Full path to the DLC CSV file', required=False, default=None)
+    parser.add_argument('--DLC_nose', help='Column name for nose coordinates in the DLC file', required=False, default=None)
+    parser.add_argument('--DLC_tail', help='Column name for tail coordinates in the DLC file', required=False, default=None)
 
     args = parser.parse_args(arg_list)
 
@@ -463,6 +504,111 @@ def main(arg_list=None):
 
     print("\nWorm DataFrame with Distance:")
     print(df_worm_parameter.head())
+
+    # --------------------------------------------------
+    # DLC PROCESSING
+    # --------------------------------------------------
+    # Check if DLC file is provided
+    if args.DLC_coords is not None:
+        print(f"Processing DLC file: {args.DLC_coords}")
+
+        # Load nose and tail coordinates from DLC file
+        nose_coords, tail_coords = load_dlc_coordinates(
+            args.DLC_coords,
+            args.DLC_nose,
+            args.DLC_tail
+        )
+
+        if nose_coords is not None and tail_coords is not None:
+            # Convert DLC coordinates to mm and correct based on video origin
+            nose_mm, tail_mm = correct_dlc_coordinates(
+                nose_coords,
+                tail_coords,
+                args.video_resolution_x,
+                args.video_resolution_y,
+                args.factor_px_to_mm,
+                args.img_type
+            )
+
+            # Check if lengths match (they should)
+            if len(df_worm_parameter) != len(nose_mm):
+                print(
+                    f"Warning: DLC data length ({len(nose_mm)}) doesn't match main data length ({len(df_worm_parameter)})")
+                print("This is unexpected since both should come from the same video frames.")
+                # Consider adding error handling here if needed
+
+            # Add DLC coordinates to the main DataFrame
+            # Use the min length to avoid index errors in case the lengths differ slightly
+            min_length = min(len(df_worm_parameter), len(nose_mm))
+
+            df_worm_parameter['X_rel_DLC_nose'] = nose_mm['X_rel_DLC_nose'].values[:min_length]
+            df_worm_parameter['Y_rel_DLC_nose'] = nose_mm['Y_rel_DLC_nose'].values[:min_length]
+            df_worm_parameter['X_rel_DLC_tail'] = tail_mm['X_rel_DLC_tail'].values[:min_length]
+            df_worm_parameter['Y_rel_DLC_tail'] = tail_mm['Y_rel_DLC_tail'].values[:min_length]
+
+            print(f"Added DLC tracking data to main DataFrame")
+
+            # Add distance calculations for DLC coordinates
+            if has_odor_data and x_odor is not None and y_odor is not None:
+                # Distance to odor calculations
+                df_worm_parameter['distance_to_odor_DLC_nose'] = df_worm_parameter.apply(
+                    lambda row: calculate_distance(row, 'X_rel_DLC_nose', 'Y_rel_DLC_nose', x_odor, y_odor), axis=1)
+                df_worm_parameter['distance_to_odor_DLC_nose'] = df_worm_parameter['distance_to_odor_DLC_nose'].astype(
+                    float)
+
+                df_worm_parameter['distance_to_odor_DLC_tail'] = df_worm_parameter.apply(
+                    lambda row: calculate_distance(row, 'X_rel_DLC_tail', 'Y_rel_DLC_tail', x_odor, y_odor), axis=1)
+                df_worm_parameter['distance_to_odor_DLC_tail'] = df_worm_parameter['distance_to_odor_DLC_tail'].astype(
+                    float)
+
+            # Distance to border calculations (always performed)
+            df_worm_parameter['distance_to_border_DLC_nose'] = calculate_min_border_distance(
+                df_worm_parameter,
+                arena_max_x,
+                arena_max_y,
+                'X_rel_DLC_nose',
+                'Y_rel_DLC_nose'
+            )
+
+            df_worm_parameter['distance_to_border_DLC_tail'] = calculate_min_border_distance(
+                df_worm_parameter,
+                arena_max_x,
+                arena_max_y,
+                'X_rel_DLC_tail',
+                'Y_rel_DLC_tail'
+            )
+
+            print(f"Calculated distances for DLC tracking points")
+
+            # Calculate concentration at DLC points (if odor and concentration data available)
+            if has_odor_data and conc_gradient_array is not None and distance_array is not None:
+                # Calculate concentration at DLC nose
+                df_worm_parameter['conc_at_DLC_nose'] = pd.to_numeric(df_worm_parameter.apply(
+                    lambda row: calculate_preceived_conc(
+                        row['distance_to_odor_DLC_nose'], row['time_seconds'], conc_gradient_array, distance_array,
+                        diffusion_time_offset), axis=1), errors='coerce'
+                )
+
+                # Calculate concentration at DLC tail
+                df_worm_parameter['conc_at_DLC_tail'] = pd.to_numeric(df_worm_parameter.apply(
+                    lambda row: calculate_preceived_conc(
+                        row['distance_to_odor_DLC_tail'], row['time_seconds'], conc_gradient_array, distance_array,
+                        diffusion_time_offset), axis=1), errors='coerce'
+                )
+
+                # Calculate frame-by-frame concentration difference (dC) for DLC nose
+                df_worm_parameter['dC_DLC_nose'] = df_worm_parameter['conc_at_DLC_nose'].diff(periods=1).astype(float)
+
+                # Calculate frame-by-frame concentration difference (dC) for DLC tail
+                df_worm_parameter['dC_DLC_tail'] = df_worm_parameter['conc_at_DLC_tail'].diff(periods=1).astype(float)
+
+                # Calculate concentration difference between nose and tail
+                # Positive when nose is at higher concentration than tail
+                df_worm_parameter['d_DLC_nose_tail_C'] = (
+                        df_worm_parameter['conc_at_DLC_nose'] - df_worm_parameter['conc_at_DLC_tail']
+                ).astype(float)
+
+                print(f"Calculated concentration values and gradients for DLC tracking points")
 
     # --------------------------------------------------
     # 9. ANGLE CALCULATIONS
