@@ -466,6 +466,25 @@ def calculate_min_border_distance(df, arena_max_x, arena_max_y, x_col='X_rel_ske
 
     return min_distances
 
+def calc_signed_speed(df_worm_parameter: pd.DataFrame, ethogram_df: pd.DataFrame, center_point: int) -> pd.DataFrame:
+    """
+    Adds signed speed columns to df_worm_parameter based on ethogram behavior.
+
+    Parameters:
+    - df_worm_parameter (pd.DataFrame): Main dataframe containing speed columns.
+    - ethogram_df (pd.DataFrame): DataFrame with a single column: -1 (fwd), 1 (rev), 0 (pause).
+    - center_point (int): Index of the center spline point for speed_center_{center_point} column.
+
+    Returns:
+    - df_worm_parameter with added signed speed columns.
+    """
+
+    df_worm_parameter['speed_centroid_signed'] = df_worm_parameter['speed_centroid'] * motion_sign
+    df_worm_parameter[f'speed_center_{center_point}_signed'] = df_worm_parameter[f'speed_center_{center_point}'] * motion_sign
+
+    return df_worm_parameter
+
+
 
 
 

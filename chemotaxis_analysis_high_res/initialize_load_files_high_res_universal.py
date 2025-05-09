@@ -21,6 +21,7 @@ from chemotaxis_analysis_high_res.src.calculations import (
     calculate_bearing_angle,
     calculate_min_border_distance,
     correct_dlc_coordinates,
+    calc_signed_speed,
 )
 
 from chemotaxis_analysis_high_res.src.plotting_visualisation import (
@@ -659,6 +660,8 @@ def main(arg_list=None):
     # Calculate different speed metrics
     df_worm_parameter = calculate_centroid_speed(df_worm_parameter, fps)  # adds column centroid speed to df
     df_worm_parameter = calculate_center_speed(df_worm_parameter, fps, center_point)  # adds column center speed to df
+
+    df_worm_parameter = calc_signed_speed(df_worm_parameter, reversal_annotation, center_point)
 
     # Calculate radial speed only if odor position is available
     if has_odor_data and x_odor is not None and y_odor is not None:
