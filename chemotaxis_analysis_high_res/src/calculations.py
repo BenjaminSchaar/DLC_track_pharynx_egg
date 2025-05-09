@@ -478,6 +478,8 @@ def calc_signed_speed(df_worm_parameter: pd.DataFrame, ethogram_df: pd.DataFrame
     Returns:
     - df_worm_parameter with added signed speed columns.
     """
+    
+    motion_sign = ethogram_df.iloc[:, 0]
 
     df_worm_parameter['speed_centroid_signed'] = df_worm_parameter['speed_centroid'] * motion_sign
     df_worm_parameter[f'speed_center_{center_point}_signed'] = df_worm_parameter[f'speed_center_{center_point}'] * motion_sign
