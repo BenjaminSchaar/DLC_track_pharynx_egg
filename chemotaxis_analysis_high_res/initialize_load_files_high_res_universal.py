@@ -790,29 +790,6 @@ def main(arg_list=None):
     print(f"Number of columns in df_skel_all: {len(df_skel_all.columns)}")
     print(f"Available columns: {df_skel_all.columns.tolist()}")
 
-    # Create worm animation
-    create_improved_worm_animation(
-        df1=df_skel_all,
-        df2=df_worm_parameter,
-        output_path=output_path,
-        x_odor=x_odor,
-        y_odor=y_odor,
-        fps=fps,
-        arena_min_x=arena_min_x,
-        arena_max_x=arena_max_x,
-        arena_min_y=arena_min_y,
-        arena_max_y=arena_max_y,
-        nth_frame=int(fps / 4),
-        nth_point=5,
-        file_name="worm_movie.avi",
-        conc_array=conc_gradient_array,
-        distance_array=distance_array,
-        diffusion_time_offset=diffusion_time_offset
-    )
-
-    # If you want to check if the function executed successfully
-    print("Animation creation complete.")
-
     # Clean up intermediate columns - only drop columns that exist
     columns_to_drop = ['frame', 'X', 'Y', 'time_imputed_seconds']
     # Add odor-related columns to drop list if they exist
@@ -839,6 +816,29 @@ def main(arg_list=None):
 
     # Save final DataFrame to CSV
     df_combined.to_csv(os.path.join(output_path, 'chemotaxis_params.csv'), index=True)
+
+    # Create worm animation
+    create_improved_worm_animation(
+        df1=df_skel_all,
+        df2=df_worm_parameter,
+        output_path=output_path,
+        x_odor=x_odor,
+        y_odor=y_odor,
+        fps=fps,
+        arena_min_x=arena_min_x,
+        arena_max_x=arena_max_x,
+        arena_min_y=arena_min_y,
+        arena_max_y=arena_max_y,
+        nth_frame=int(fps / 4),
+        nth_point=5,
+        file_name="worm_movie.avi",
+        conc_array=conc_gradient_array,
+        distance_array=distance_array,
+        diffusion_time_offset=diffusion_time_offset
+    )
+
+    # If you want to check if the function executed successfully
+    print("Animation creation complete.")
 
 if __name__ == "__main__":
     try:
