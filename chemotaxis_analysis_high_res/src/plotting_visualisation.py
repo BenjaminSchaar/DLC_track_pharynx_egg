@@ -1110,3 +1110,228 @@ def create_improved_worm_animation(df1, df2, output_path, x_odor=None, y_odor=No
     return None
 
 
+def save_chemotaxis_analysis_h5(
+        output_path: str,
+        df_worm_parameter: pd.DataFrame,
+        df_combined: pd.DataFrame,
+        center_point: int,
+        bootstrap_results: Optional[Dict] = None,
+        x_odor: Optional[float] = None,
+        y_odor: Optional[float] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+        filename: str = "chemotaxis_analysis_complete.h5"
+):
+    """
+    Save comprehensive chemotaxis analysis data to HDF5 file following the specified structure.
+
+    Parameters:
+    -----------
+    output_path : str
+        Directory path where the HDF5 file will be saved
+    df_worm_parameter : pd.DataFrame
+        Main analysis DataFrame with chemotaxis parameters
+    center_point : int
+        Dynamic center point of skeleton (calculated as len(spline_X.columns) / 2)
+    bootstrap_results : dict, optional
+        Bootstrap analysis results containing random odor analyses
+    x_odor : float, optional
+        Real odor X position
+    y_odor : float, optional
+        Real odor Y position
+    metadata : dict, optional
+        Experimental metadata (fps, arena bounds, etc.)
+    filename : str
+        Name of the HDF5 file to create
+
+    Returns:
+    --------
+    str
+        Full path to the created HDF5 file
+    """
+
+    full_path = os.path.join(output_path, filename)
+
+    with h5py.File(full_path, 'w') as f:
+
+        # ======================
+        # 1. WORM POSITIONS GROUP
+        # ======================
+        pos_group = f.create_group('worm_positions')
+
+        # Position-related columns from chemotaxis_parameter
+        position_columns = [
+            'X', 'Y', 'frame', 'X_rel', 'Y_rel',
+            'X_rel_skel_pos_centroid', 'Y_rel_skel_pos_centroid',
+            'X_rel_skel_pos_0', 'Y_rel_skel_pos_0',
+            'X_rel_skel_pos_49', 'Y_rel_skel_pos_49',
+            'X_rel_skel_pos_centroid_raw', 'Y_rel_skel_pos_centroid_raw',
+            'X_rel_DLC_nose', 'Y_rel_DLC_nose',
+            'X_rel_DLC_tail', 'Y_rel_DLC_tail'
+        ]
+
+        for col in position_columns:
+            if col in df_worm_parameter.columns:
+                pos_group.create_dataset(col, data=df_worm_parameter[col].values)
+
+        # ======================
+        # 2. ODOR INDEPENDENT PARAMETERS GROUP
+        # ======================
+        odor_indep_group = f.create_group('odor_independent_parameters')
+
+        # Parameters that don't depend on odor position
+        odor_independent_columns = [
+            'time_seconds', 'time_minutes',
+            'speed_centroid', f'speed_center_{center_point}', 'speed_centroid_signed',
+            f'speed_center_{center_point}_signed',
+            'curving_angle', 'curving_angle_smoothed',
+            'distance_to_border_centroid', 'distance_to_border_nose',
+            'distance_to_border_centroid_smoothed', 'distance_to_border_nose_smoothed',
+            'distance_to_border_DLC_nose', 'distance_to_border_DLC_tail',
+            'behaviour_state', 'turns', 'reversal_onset', 'reversal_end',
+            'reversal_frequency', 'reversal_frequency_smoothed',
+            'speed_centroid_smoothed', f'speed_center_{center_point}_smoothed',
+            'centroid_dx_dt', 'centroid_dy_dt', 'centroid_displacement_vector_degrees',
+            'centroid_displacement_magnitude',
+            f'{center_point}_dx_dt', f'{center_point}_dy_dt', f'{center_point}_displacement_vector_degrees',
+            f'{center_point}_displacement_magnitude'
+        ]
+
+        for col in odor_independent_columns:
+            if col in df_worm_parameter.columns:
+                odor_indep_group.create_dataset(col, data=df_worm_parameter[col].values)
+
+        # ======================
+        # 3. REAL ODOR ANALYSIS GROUP
+        # ======================
+        if x_odor is not None and y_odor is not None:
+            real_odor_group = f.create_group('real_odor_analysis')
+
+            # Odor position subgroup
+            odor_pos_group = real_odor_group.create_group('odor_position')
+            odor_pos_group.create_dataset('odor_x', data=[x_odor])
+            odor_pos_group.create_dataset('odor_y', data=[y_odor])
+
+            # Distances subgroup
+            distances_group = real_odor_group.create_group('distances')
+            distance_columns = [
+                'distance_to_odor_stage', 'distance_to_odor_centroid', 'distance_to_odor_0',
+                'distance_to_odor_DLC_nose', 'distance_to_odor_DLC_tail',
+                'distance_to_odor_centroid_smoothed', 'distance_to_odor_0_smoothed'
+            ]
+
+            for col in distance_columns:
+                if col in df_worm_parameter.columns:
+                    distances_group.create_dataset(col, data=df_worm_parameter[col].values)
+
+            # Concentrations subgroup
+            concentrations_group = real_odor_group.create_group('concentrations')
+            concentration_columns = [
+                'conc_at_centroid', 'conc_at_0', 'conc_at_DLC_nose', 'conc_at_DLC_tail',
+                'dC_centroid', 'dC_0', 'dC_DLC_nose', 'dC_DLC_tail', 'd_DLC_nose_tail_C',
+                'conc_at_centroid_smoothed', 'conc_at_0_smoothed', 'dC_centroid_smoothed', 'dC_0_smoothed'
+            ]
+
+            for col in concentration_columns:
+                if col in df_worm_parameter.columns:
+                    concentrations_group.create_dataset(col, data=df_worm_parameter[col].values)
+
+            # Navigation subgroup
+            navigation_group = real_odor_group.create_group('navigation')
+            navigation_columns = [
+                'radial_speed', 'NI', 'bearing_angle',
+                'radial_speed_smoothed', 'NI_smoothed', 'bearing_angle_smoothed'
+            ]
+
+            for col in navigation_columns:
+                if col in df_worm_parameter.columns:
+                    navigation_group.create_dataset(col, data=df_worm_parameter[col].values)
+
+        # ======================
+        # 4. SKELETON DATA GROUP
+        # ======================
+        skeleton_group = f.create_group('skeleton_data')
+
+        # Curvature subgroup (Spline_K data)
+        curvature_group = skeleton_group.create_group('curvature')
+        if hasattr(df_combined, 'columns') and hasattr(df_combined.columns, 'levels'):
+            spline_k_columns = [col for col in df_combined.columns if col[0] == 'Spline_K']
+            for i, col in enumerate(spline_k_columns):
+                point_name = f"point_{col[1]}"  # col[1] is the second level (point number)
+                curvature_group.create_dataset(point_name, data=df_combined[col].values)
+
+        # Absolute positions subgroup (skel_pos_abs data)
+        abs_positions_group = skeleton_group.create_group('absolute_positions')
+        if hasattr(df_combined, 'columns') and hasattr(df_combined.columns, 'levels'):
+            skel_pos_columns = [col for col in df_combined.columns if col[0] == 'skel_pos_abs']
+            for col in skel_pos_columns:
+                column_name = col[1]  # e.g., 'X_rel_skel_pos_0'
+                abs_positions_group.create_dataset(column_name, data=df_combined[col].values)
+
+        # ======================
+        # 5. BOOTSTRAP ANALYSIS GROUP
+        # ======================
+        if bootstrap_results is not None:
+            bootstrap_group = f.create_group('bootstrap_analysis')
+
+            # Save each random odor iteration
+            if 'iterations' in bootstrap_results:
+                for i, iteration_data in enumerate(bootstrap_results['iterations']):
+                    iter_group = bootstrap_group.create_group(f'random_odor_{i:03d}')
+
+                    # Odor position for this iteration
+                    iter_odor_pos = iter_group.create_group('odor_position')
+                    iter_odor_pos.create_dataset('odor_x', data=[iteration_data['odor_x']])
+                    iter_odor_pos.create_dataset('odor_y', data=[iteration_data['odor_y']])
+
+                    # Distances for this iteration
+                    iter_distances = iter_group.create_group('distances')
+                    for col in distance_columns:
+                        if col in iteration_data:
+                            iter_distances.create_dataset(col, data=iteration_data[col])
+
+                    # Concentrations for this iteration
+                    iter_concentrations = iter_group.create_group('concentrations')
+                    for col in concentration_columns:
+                        if col in iteration_data:
+                            iter_concentrations.create_dataset(col, data=iteration_data[col])
+
+                    # Navigation for this iteration
+                    iter_navigation = iter_group.create_group('navigation')
+                    for col in navigation_columns:
+                        if col in iteration_data:
+                            iter_navigation.create_dataset(col, data=iteration_data[col])
+
+            # Save summary statistics if available
+            if 'summary' in bootstrap_results:
+                summary_group = bootstrap_group.create_group('summary_statistics')
+                for key, values in bootstrap_results['summary'].items():
+                    summary_group.create_dataset(key, data=values)
+
+        # ======================
+        # 6. METADATA
+        # ======================
+        if metadata:
+            meta_group = f.create_group('metadata')
+            for key, value in metadata.items():
+                if isinstance(value, (str, int, float, bool)):
+                    meta_group.attrs[key] = value
+                elif isinstance(value, dict):
+                    # Handle nested dictionaries
+                    sub_group = meta_group.create_group(key)
+                    for sub_key, sub_value in value.items():
+                        if isinstance(sub_value, (str, int, float, bool)):
+                            sub_group.attrs[sub_key] = sub_value
+                        else:
+                            sub_group.create_dataset(sub_key, data=sub_value)
+                elif isinstance(value, (list, tuple, np.ndarray)):
+                    meta_group.create_dataset(key, data=value)
+
+        # Global attributes
+        f.attrs['creation_date'] = pd.Timestamp.now().isoformat()
+        f.attrs['data_structure_version'] = 'chemotaxis_analysis_v1.0'
+        f.attrs['n_frames'] = len(df_worm_parameter)
+        if bootstrap_results and 'iterations' in bootstrap_results:
+            f.attrs['n_bootstrap_iterations'] = len(bootstrap_results['iterations'])
+
+    print(f"Comprehensive HDF5 file saved: {full_path}")
+    return full_path
