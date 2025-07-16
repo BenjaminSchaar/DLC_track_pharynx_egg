@@ -634,6 +634,7 @@ def main(arg_list=None):
             n_iterations=bootstrap_iterations,
             random_seed=bootstrap_seed,
             skel_pos_0=skel_pos_0,
+            dC_lookback_frames=dC_lookback_frames
         )
 
         print("Bootstrap analysis complete.")
@@ -796,14 +797,14 @@ def main(arg_list=None):
     }
 
     h5_file_path = save_chemotaxis_analysis_h5(
+        output_path=output_path,
         df_worm_parameter=df_worm_parameter,
         df_combined=df_combined,
         center_point=center_point,
-        output_path=output_path,
+        bootstrap_results=bootstrap_results,
         x_odor=x_odor,
         y_odor=y_odor,
-        bootstrap_results=bootstrap_results,  # Now properly passing bootstrap results
-        **analysis_metadata
+        metadata=analysis_metadata
     )
 
     print(f"All analysis complete!")
