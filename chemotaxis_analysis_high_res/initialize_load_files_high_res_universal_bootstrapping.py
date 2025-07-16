@@ -630,11 +630,6 @@ def main(arg_list=None):
             conc_gradient_array=conc_gradient_array,
             distance_array=distance_array,
             diffusion_time_offset=diffusion_time_offset,
-            calculate_distance_func=calculate_distance,
-            calculate_preceived_conc_func=calculate_preceived_conc,
-            calculate_radial_speed_func=calculate_radial_speed,
-            calculate_bearing_angle_func=calculate_bearing_angle,
-            calculate_all_odor_parameters_func=calculate_all_odor_parameters,
             fps=fps,
             n_iterations=bootstrap_iterations,
             random_seed=bootstrap_seed,
@@ -646,7 +641,7 @@ def main(arg_list=None):
     else:
         if bootstrap_iterations > 0:
             print("Bootstrap analysis skipped: no odor data available")
-
+            
     # --------------------------------------------------
     # 13. VISUALIZATION & PLOTTING
     # --------------------------------------------------
