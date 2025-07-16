@@ -501,32 +501,6 @@ def main(arg_list=None):
         # Calculate border distances for DLC positions
         df_worm_parameter = calculate_border_distances(df_worm_parameter, arena_max_x, arena_max_y, skel_pos_0)
 
-    # --------------------------------------------------
-    # 9. UNIFIED ODOR PARAMETER CALCULATIONS
-    # --------------------------------------------------
-    if has_odor_data and x_odor is not None and y_odor is not None:
-        print("Calculating all odor-dependent parameters using unified function...")
-
-        df_worm_parameter = calculate_all_odor_parameters(
-            df=df_worm_parameter,
-            x_odor=x_odor,
-            y_odor=y_odor,
-            conc_gradient_array=conc_gradient_array,
-            distance_array=distance_array,
-            diffusion_time_offset=diffusion_time_offset,
-            fps=fps,
-            skel_pos_0=skel_pos_0,
-            dC_lookback_frames=dC_lookback_frames,
-            calculate_distance_func=calculate_distance,
-            calculate_preceived_conc_func=calculate_preceived_conc,
-            calculate_radial_speed_func=calculate_radial_speed,
-            calculate_bearing_angle_func=calculate_bearing_angle,
-            inplace=True
-        )
-
-        print("Unified odor parameter calculations complete.")
-        print("\nWorm DataFrame with all odor parameters:")
-        print(df_worm_parameter.head())
 
     # --------------------------------------------------
     # 10. BEHAVIORAL STATE INTEGRATION
@@ -573,6 +547,34 @@ def main(arg_list=None):
 
     print("Speed and displacement calculations complete.")
     print(df_worm_parameter.head())
+
+
+    # --------------------------------------------------
+    # 9. UNIFIED ODOR PARAMETER CALCULATIONS
+    # --------------------------------------------------
+    if has_odor_data and x_odor is not None and y_odor is not None:
+        print("Calculating all odor-dependent parameters using unified function...")
+
+        df_worm_parameter = calculate_all_odor_parameters(
+            df=df_worm_parameter,
+            x_odor=x_odor,
+            y_odor=y_odor,
+            conc_gradient_array=conc_gradient_array,
+            distance_array=distance_array,
+            diffusion_time_offset=diffusion_time_offset,
+            fps=fps,
+            skel_pos_0=skel_pos_0,
+            dC_lookback_frames=dC_lookback_frames,
+            calculate_distance_func=calculate_distance,
+            calculate_preceived_conc_func=calculate_preceived_conc,
+            calculate_radial_speed_func=calculate_radial_speed,
+            calculate_bearing_angle_func=calculate_bearing_angle,
+            inplace=True
+        )
+
+        print("Unified odor parameter calculations complete.")
+        print("\nWorm DataFrame with all odor parameters:")
+        print(df_worm_parameter.head())
 
     # --------------------------------------------------
     # 12. DATA CLEANING & SMOOTHING
