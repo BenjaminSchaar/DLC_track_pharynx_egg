@@ -39,7 +39,7 @@ from chemotaxis_analysis_high_res.src.plotting_visualisation import (
     plot_time_series,
     create_improved_worm_animation,
     create_combined_visualization,
-    integrate_h5_save_with_pipeline
+    save_chemotaxis_analysis_h5
 )
 
 from chemotaxis_analysis_high_res.src.data_smothing import (
@@ -799,7 +799,7 @@ def main(arg_list=None):
         'bootstrap_seed': bootstrap_seed if bootstrap_results else None
     }
 
-    h5_file_path = integrate_h5_save_with_pipeline(
+    h5_file_path = save_chemotaxis_analysis_h5(
         df_worm_parameter=df_worm_parameter,
         df_combined=df_combined,
         center_point=center_point,
