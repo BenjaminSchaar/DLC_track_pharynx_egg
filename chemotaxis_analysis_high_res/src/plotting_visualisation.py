@@ -16,6 +16,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 import math
+from typing import Optional, Dict, Any
 
 def create_combined_visualization(df, beh_annotation=None, skeleton_spline=None, output_path=None,
                                   x_odor=None, y_odor=None, arena_min_x=None, arena_max_x=None,
