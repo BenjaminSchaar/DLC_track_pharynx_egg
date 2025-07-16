@@ -634,14 +634,13 @@ def main(arg_list=None):
             n_iterations=bootstrap_iterations,
             random_seed=bootstrap_seed,
             skel_pos_0=skel_pos_0,
-            dC_lookback_frames=dC_lookback_frames
         )
 
         print("Bootstrap analysis complete.")
     else:
         if bootstrap_iterations > 0:
             print("Bootstrap analysis skipped: no odor data available")
-            
+
     # --------------------------------------------------
     # 13. VISUALIZATION & PLOTTING
     # --------------------------------------------------
