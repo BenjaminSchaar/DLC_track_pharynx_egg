@@ -493,206 +493,184 @@ from typing import Optional, Tuple
 
 
 def calculate_all_odor_parameters(
-        df: pd.DataFrame,
-        x_odor: float,
-        y_odor: float,
-        conc_gradient_array: Optional[np.ndarray] = None,
-        distance_array: Optional[np.ndarray] = None,
-        diffusion_time_offset: int = 3600,
-        fps: float = 30.0,
-        skel_pos_0: int = 0,
-        dC_lookback_frames: int = 1,
-        dC_centroid_lookback_frames: Optional[int] = None,
-        calculate_distance_func=None,
-        calculate_preceived_conc_func=None,
-        calculate_radial_speed_func=None,
-        calculate_bearing_angle_func=None,
-        inplace: bool = True
+       df: pd.DataFrame,
+       x_odor: float,
+       y_odor: float,
+       conc_gradient_array: Optional[np.ndarray] = None,
+       distance_array: Optional[np.ndarray] = None,
+       diffusion_time_offset: int = 3600,
+       fps: float = 30.0,
+       skel_pos_0: int = 0,
+       dC_lookback_frames: int = 1,
+       dC_centroid_lookback_frames: Optional[int] = None,
+       inplace: bool = True
 ) -> pd.DataFrame:
-    """
-    Unified function to calculate ALL odor-dependent parameters.
+   """
+   Unified function to calculate ALL odor-dependent parameters.
 
-    This centralizes all odor-related calculations to ensure consistency between
-    main analysis and bootstrap iterations.
+   Parameters:
+   -----------
+   df : pd.DataFrame
+       DataFrame containing worm position and behavioral data
+   x_odor, y_odor : float
+       Odor source coordinates
+   conc_gradient_array : np.ndarray, optional
+       Concentration gradient array for odor calculations
+   distance_array : np.ndarray, optional
+       Distance array for concentration calculations
+   diffusion_time_offset : int
+       Time offset for diffusion simulation (default: 3600 seconds)
+   fps : float
+       Frames per second
+   skel_pos_0 : int
+       Skeleton position index for nose (default: 0)
+   dC_lookback_frames : int
+       Number of frames to look back for dC calculations (default: 1)
+   dC_centroid_lookback_frames : int, optional
+       Separate lookback for centroid dC (default: fps if None)
+   inplace : bool
+       Whether to modify the input DataFrame or return a copy
 
-    Parameters:
-    -----------
-    df : pd.DataFrame
-        DataFrame containing worm position and behavioral data
-    x_odor, y_odor : float
-        Odor source coordinates
-    conc_gradient_array : np.ndarray, optional
-        Concentration gradient array for odor calculations
-    distance_array : np.ndarray, optional
-        Distance array for concentration calculations
-    diffusion_time_offset : int
-        Time offset for diffusion simulation (default: 3600 seconds)
-    fps : float
-        Frames per second
-    skel_pos_0 : int
-        Skeleton position index for nose (default: 0)
-    dC_lookback_frames : int
-        Number of frames to look back for dC calculations (default: 1)
-    dC_centroid_lookback_frames : int, optional
-        Separate lookback for centroid dC (default: fps if None)
-    calculate_distance_func : function
-        Distance calculation function from your existing codebase
-    calculate_preceived_conc_func : function
-        Concentration calculation function from your existing codebase
-    calculate_radial_speed_func : function
-        Radial speed calculation function from your existing codebase
-    calculate_bearing_angle_func : function
-        Bearing angle calculation function from your existing codebase
-    inplace : bool
-        Whether to modify the input DataFrame or return a copy
+   Returns:
+   --------
+   pd.DataFrame
+       DataFrame with all odor-dependent parameters calculated/updated
+   """
 
-    Returns:
-    --------
-    pd.DataFrame
-        DataFrame with all odor-dependent parameters calculated/updated
-    """
+   # Work on copy if not inplace
+   if not inplace:
+       df = df.copy()
 
-    # Work on copy if not inplace
-    if not inplace:
-        df = df.copy()
+   # Set default centroid dC lookback to fps if not specified
+   if dC_centroid_lookback_frames is None:
+       dC_centroid_lookback_frames = int(fps)
 
-    # Set default centroid dC lookback to fps if not specified
-    if dC_centroid_lookback_frames is None:
-        dC_centroid_lookback_frames = int(fps)
+   # Store odor position in DataFrame
+   df['odor_x'] = x_odor
+   df['odor_y'] = y_odor
 
-    # Store odor position in DataFrame
-    df['odor_x'] = x_odor
-    df['odor_y'] = y_odor
+   print(f"Calculating odor parameters for position: ({x_odor:.2f}, {y_odor:.2f})")
 
-    print(f"Calculating odor parameters for position: ({x_odor:.2f}, {y_odor:.2f})")
+   # ======================
+   # 1. DISTANCE CALCULATIONS
+   # ======================
 
-    # ======================
-    # 1. DISTANCE CALCULATIONS
-    # ======================
+   # Distance from stage position
+   if 'X_rel' in df.columns and 'Y_rel' in df.columns:
+       df['distance_to_odor_stage'] = df.apply(
+           lambda row: calculate_distance(row, 'X_rel', 'Y_rel', x_odor, y_odor), axis=1
+       ).astype(float)
 
-    # Distance from stage position
-    if 'X_rel' in df.columns and 'Y_rel' in df.columns:
-        df['distance_to_odor_stage'] = df.apply(
-            lambda row: calculate_distance_func(row, 'X_rel', 'Y_rel', x_odor, y_odor), axis=1
-        ).astype(float)
+   # Distance from centroid
+   if 'X_rel_skel_pos_centroid' in df.columns and 'Y_rel_skel_pos_centroid' in df.columns:
+       df['distance_to_odor_centroid'] = df.apply(
+           lambda row: calculate_distance(row, 'X_rel_skel_pos_centroid', 'Y_rel_skel_pos_centroid', x_odor, y_odor), axis=1
+       ).astype(float)
 
-    # Distance from centroid
-    if 'X_rel_skel_pos_centroid' in df.columns and 'Y_rel_skel_pos_centroid' in df.columns:
-        df['distance_to_odor_centroid'] = df.apply(
-            lambda row: calculate_distance_func(row, 'X_rel_skel_pos_centroid', 'Y_rel_skel_pos_centroid', x_odor,
-                                                y_odor), axis=1
-        ).astype(float)
+   # Distance from nose (skeleton position 0)
+   nose_x_col = f'X_rel_skel_pos_{skel_pos_0}'
+   nose_y_col = f'Y_rel_skel_pos_{skel_pos_0}'
+   if nose_x_col in df.columns and nose_y_col in df.columns:
+       df[f'distance_to_odor_{skel_pos_0}'] = df.apply(
+           lambda row: calculate_distance(row, nose_x_col, nose_y_col, x_odor, y_odor), axis=1
+       ).astype(float)
 
-    # Distance from nose (skeleton position 0)
-    nose_x_col = f'X_rel_skel_pos_{skel_pos_0}'
-    nose_y_col = f'Y_rel_skel_pos_{skel_pos_0}'
-    if nose_x_col in df.columns and nose_y_col in df.columns:
-        df[f'distance_to_odor_{skel_pos_0}'] = df.apply(
-            lambda row: calculate_distance_func(row, nose_x_col, nose_y_col, x_odor, y_odor), axis=1
-        ).astype(float)
+   # Distance from DLC nose
+   if 'X_rel_DLC_nose' in df.columns and 'Y_rel_DLC_nose' in df.columns:
+       df['distance_to_odor_DLC_nose'] = df.apply(
+           lambda row: calculate_distance(row, 'X_rel_DLC_nose', 'Y_rel_DLC_nose', x_odor, y_odor), axis=1
+       ).astype(float)
 
-    # Distance from DLC nose
-    if 'X_rel_DLC_nose' in df.columns and 'Y_rel_DLC_nose' in df.columns:
-        df['distance_to_odor_DLC_nose'] = df.apply(
-            lambda row: calculate_distance_func(row, 'X_rel_DLC_nose', 'Y_rel_DLC_nose', x_odor, y_odor), axis=1
-        ).astype(float)
+   # Distance from DLC tail
+   if 'X_rel_DLC_tail' in df.columns and 'Y_rel_DLC_tail' in df.columns:
+       df['distance_to_odor_DLC_tail'] = df.apply(
+           lambda row: calculate_distance(row, 'X_rel_DLC_tail', 'Y_rel_DLC_tail', x_odor, y_odor), axis=1
+       ).astype(float)
 
-    # Distance from DLC tail
-    if 'X_rel_DLC_tail' in df.columns and 'Y_rel_DLC_tail' in df.columns:
-        df['distance_to_odor_DLC_tail'] = df.apply(
-            lambda row: calculate_distance_func(row, 'X_rel_DLC_tail', 'Y_rel_DLC_tail', x_odor, y_odor), axis=1
-        ).astype(float)
+   # ======================
+   # 2. CONCENTRATION CALCULATIONS
+   # ======================
 
-    # ======================
-    # 2. CONCENTRATION CALCULATIONS
-    # ======================
+   if conc_gradient_array is not None and distance_array is not None and 'time_seconds' in df.columns:
 
-    if conc_gradient_array is not None and distance_array is not None and 'time_seconds' in df.columns:
+       # Concentration at centroid
+       if 'distance_to_odor_centroid' in df.columns:
+           df['conc_at_centroid'] = pd.to_numeric(df.apply(
+               lambda row: calculate_preceived_conc(
+                   row['distance_to_odor_centroid'], row['time_seconds'],
+                   conc_gradient_array, distance_array, diffusion_time_offset
+               ), axis=1
+           ), errors='coerce')
 
-        # Concentration at centroid
-        if 'distance_to_odor_centroid' in df.columns:
-            df['conc_at_centroid'] = pd.to_numeric(df.apply(
-                lambda row: calculate_preceived_conc_func(
-                    row['distance_to_odor_centroid'], row['time_seconds'],
-                    conc_gradient_array, distance_array, diffusion_time_offset
-                ), axis=1
-            ), errors='coerce')
+       # Concentration at nose
+       if f'distance_to_odor_{skel_pos_0}' in df.columns:
+           df[f'conc_at_{skel_pos_0}'] = pd.to_numeric(df.apply(
+               lambda row: calculate_preceived_conc(
+                   row[f'distance_to_odor_{skel_pos_0}'], row['time_seconds'],
+                   conc_gradient_array, distance_array, diffusion_time_offset
+               ), axis=1
+           ), errors='coerce')
 
-        # Concentration at nose
-        if f'distance_to_odor_{skel_pos_0}' in df.columns:
-            df[f'conc_at_{skel_pos_0}'] = pd.to_numeric(df.apply(
-                lambda row: calculate_preceived_conc_func(
-                    row[f'distance_to_odor_{skel_pos_0}'], row['time_seconds'],
-                    conc_gradient_array, distance_array, diffusion_time_offset
-                ), axis=1
-            ), errors='coerce')
+       # Concentration at DLC nose
+       if 'distance_to_odor_DLC_nose' in df.columns:
+           df['conc_at_DLC_nose'] = pd.to_numeric(df.apply(
+               lambda row: calculate_preceived_conc(
+                   row['distance_to_odor_DLC_nose'], row['time_seconds'],
+                   conc_gradient_array, distance_array, diffusion_time_offset
+               ), axis=1
+           ), errors='coerce')
 
-        # Concentration at DLC nose
-        if 'distance_to_odor_DLC_nose' in df.columns:
-            df['conc_at_DLC_nose'] = pd.to_numeric(df.apply(
-                lambda row: calculate_preceived_conc_func(
-                    row['distance_to_odor_DLC_nose'], row['time_seconds'],
-                    conc_gradient_array, distance_array, diffusion_time_offset
-                ), axis=1
-            ), errors='coerce')
+       # Concentration at DLC tail
+       if 'distance_to_odor_DLC_tail' in df.columns:
+           df['conc_at_DLC_tail'] = pd.to_numeric(df.apply(
+               lambda row: calculate_preceived_conc(
+                   row['distance_to_odor_DLC_tail'], row['time_seconds'],
+                   conc_gradient_array, distance_array, diffusion_time_offset
+               ), axis=1
+           ), errors='coerce')
 
-        # Concentration at DLC tail
-        if 'distance_to_odor_DLC_tail' in df.columns:
-            df['conc_at_DLC_tail'] = pd.to_numeric(df.apply(
-                lambda row: calculate_preceived_conc_func(
-                    row['distance_to_odor_DLC_tail'], row['time_seconds'],
-                    conc_gradient_array, distance_array, diffusion_time_offset
-                ), axis=1
-            ), errors='coerce')
+   # ======================
+   # 3. CONCENTRATION DERIVATIVES (dC/dt)
+   # ======================
 
-    # ======================
-    # 3. CONCENTRATION DERIVATIVES (dC/dt)
-    # ======================
+   # dC at centroid (with configurable lookback)
+   if 'conc_at_centroid' in df.columns:
+       df['dC_centroid'] = df['conc_at_centroid'].diff(periods=dC_centroid_lookback_frames).astype(float)
 
-    # dC at centroid (with configurable lookback)
-    if 'conc_at_centroid' in df.columns:
-        df['dC_centroid'] = df['conc_at_centroid'].diff(periods=dC_centroid_lookback_frames).astype(float)
+   # dC at nose (with configurable lookback)
+   if f'conc_at_{skel_pos_0}' in df.columns:
+       df[f'dC_{skel_pos_0}'] = df[f'conc_at_{skel_pos_0}'].diff(periods=dC_lookback_frames).astype(float)
 
-    # dC at nose (with configurable lookback)
-    if f'conc_at_{skel_pos_0}' in df.columns:
-        df[f'dC_{skel_pos_0}'] = df[f'conc_at_{skel_pos_0}'].diff(periods=dC_lookback_frames).astype(float)
+   # dC at DLC nose
+   if 'conc_at_DLC_nose' in df.columns:
+       df['dC_DLC_nose'] = df['conc_at_DLC_nose'].diff(periods=dC_lookback_frames).astype(float)
 
-    # dC at DLC nose
-    if 'conc_at_DLC_nose' in df.columns:
-        df['dC_DLC_nose'] = df['conc_at_DLC_nose'].diff(periods=dC_lookback_frames).astype(float)
+   # dC at DLC tail
+   if 'conc_at_DLC_tail' in df.columns:
+       df['dC_DLC_tail'] = df['conc_at_DLC_tail'].diff(periods=dC_lookback_frames).astype(float)
 
-    # dC at DLC tail
-    if 'conc_at_DLC_tail' in df.columns:
-        df['dC_DLC_tail'] = df['conc_at_DLC_tail'].diff(periods=dC_lookback_frames).astype(float)
+   # Concentration difference between nose and tail (spatial gradient)
+   if 'conc_at_DLC_nose' in df.columns and 'conc_at_DLC_tail' in df.columns:
+       df['d_DLC_nose_tail_C'] = (
+               df['conc_at_DLC_nose'] - df['conc_at_DLC_tail']
+       ).astype(float)
 
-    # Concentration difference between nose and tail (spatial gradient)
-    if 'conc_at_DLC_nose' in df.columns and 'conc_at_DLC_tail' in df.columns:
-        df['d_DLC_nose_tail_C'] = (
-                df['conc_at_DLC_nose'] - df['conc_at_DLC_tail']
-        ).astype(float)
+   # ======================
+   # 4. NAVIGATION PARAMETERS
+   # ======================
 
-    # ======================
-    # 4. NAVIGATION PARAMETERS
-    # ======================
+   # Radial speed (requires existing speed calculations)
+   df = calculate_radial_speed(df, fps)
 
-    # Radial speed (requires existing speed calculations)
-    if calculate_radial_speed_func is not None:
-        df = calculate_radial_speed_func(df, fps)
+   # Bearing angle
+   df = calculate_bearing_angle(df)
 
-    # Bearing angle
-    if calculate_bearing_angle_func is not None:
-        df = calculate_bearing_angle_func(df)
+   # Navigation Index (NI)
+   if 'radial_speed' in df.columns and 'speed_centroid' in df.columns:
+       # Avoid division by zero
+       speed_centroid_safe = df['speed_centroid'].replace(0, np.nan)
+       df['NI'] = (df['radial_speed'] / speed_centroid_safe).astype(float)
 
-    # Navigation Index (NI)
-    if 'radial_speed' in df.columns and 'speed_centroid' in df.columns:
-        # Avoid division by zero
-        speed_centroid_safe = df['speed_centroid'].replace(0, np.nan)
-        df['NI'] = (df['radial_speed'] / speed_centroid_safe).astype(float)
+   print("Odor parameter calculations complete.")
 
-    print("Odor parameter calculations complete.")
-
-    return df
-
-
-
-
+   return df

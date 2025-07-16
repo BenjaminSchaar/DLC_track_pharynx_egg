@@ -565,10 +565,6 @@ def main(arg_list=None):
             fps=fps,
             skel_pos_0=skel_pos_0,
             dC_lookback_frames=dC_lookback_frames,
-            calculate_distance_func=calculate_distance,
-            calculate_preceived_conc_func=calculate_preceived_conc,
-            calculate_radial_speed_func=calculate_radial_speed,
-            calculate_bearing_angle_func=calculate_bearing_angle,
             inplace=True
         )
 
