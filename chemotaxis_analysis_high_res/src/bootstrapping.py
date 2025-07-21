@@ -7,7 +7,6 @@ from chemotaxis_analysis_high_res.src.calculations import (
     calculate_all_odor_parameters,
 )
 
-
 def generate_random_odor_position(
         df_worm: pd.DataFrame,
         arena_min_x: float,
@@ -43,11 +42,11 @@ def generate_random_odor_position(
     x_variation = arena_width * variation_percent
     y_variation = arena_height * variation_percent
 
-    # Randomly select a point from the worm's trajectory
-    valid_indices = df_worm.dropna(subset=['centroid_x', 'centroid_y']).index
+    # Randomly select a point from the worm's trajectory - FIXED COLUMN NAMES
+    valid_indices = df_worm.dropna(subset=['X_rel_skel_pos_centroid', 'Y_rel_skel_pos_centroid']).index
     random_idx = random.choice(valid_indices)
-    base_x = df_worm.loc[random_idx, 'centroid_x']
-    base_y = df_worm.loc[random_idx, 'centroid_y']
+    base_x = df_worm.loc[random_idx, 'X_rel_skel_pos_centroid']
+    base_y = df_worm.loc[random_idx, 'Y_rel_skel_pos_centroid']
 
     # Add random variation
     x_offset = random.uniform(-x_variation, x_variation)
