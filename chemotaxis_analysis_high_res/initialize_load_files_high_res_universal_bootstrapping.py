@@ -135,12 +135,12 @@ def read_csv_files(beh_annotation_path: str, skeleton_spline_path: str, worm_pos
     print("\nSpline Y DataFrame:")
     print(spline_Y_df.head())
 
-    # Convert all columns to numeric, if possible
-    dataframes = [beh_annotation_df, turn_annotation_df, skeleton_spline_df,
-                  worm_pos_df, spline_X_df, spline_Y_df]
-
-    for df in dataframes:
-        df = df.apply(pd.to_numeric, errors='coerce')
+    beh_annotation_df = beh_annotation_df.apply(pd.to_numeric, errors='coerce')
+    turn_annotation_df = turn_annotation_df.apply(pd.to_numeric, errors='coerce')
+    skeleton_spline_df = skeleton_spline_df.apply(pd.to_numeric, errors='coerce')
+    worm_pos_df = worm_pos_df.apply(pd.to_numeric, errors='coerce')
+    spline_X_df = spline_X_df.apply(pd.to_numeric, errors='coerce')
+    spline_Y_df = spline_Y_df.apply(pd.to_numeric, errors='coerce')
 
     print("Number of rows in each dataframe:")
     print(f"beh_annotation_df: {len(beh_annotation_df)}")
