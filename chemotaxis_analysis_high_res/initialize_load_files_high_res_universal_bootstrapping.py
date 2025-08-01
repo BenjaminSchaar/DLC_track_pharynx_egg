@@ -270,15 +270,11 @@ def extract_coords(pos_string):
     if pos_string is None:
         return None
 
-    # Handle cases with or without spaces around the equals sign
-    pos_string = pos_string.replace('x =', '').replace('x=', '')
-    pos_string = pos_string.replace('y =', '').replace('y=', '')
+    # Extract all numbers (including decimals) from the string
+    numbers = re.findall(r'-?\d+\.?\d*', pos_string)
 
-    # Split the string by comma
-    x_str, y_str = pos_string.split(',')
-
-    # Convert to float and return as tuple
-    return float(x_str.strip()), float(y_str.strip())
+    # Return first two numbers as x, y
+    return float(numbers[0]), float(numbers[1])
 
 
 def main(arg_list=None):
