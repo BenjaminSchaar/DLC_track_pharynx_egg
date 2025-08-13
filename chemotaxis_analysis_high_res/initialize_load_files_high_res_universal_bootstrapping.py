@@ -318,6 +318,8 @@ def main(arg_list=None):
     parser.add_argument('--bootstrap_seed', type=int, default=42, help='Random seed for reproducible bootstrapping')
     parser.add_argument('--dC_lookback_frames', type=int, default=1,
                         help='Number of frames to look back for dC calculations')
+    parser.add_argument('--generate_video', action='store_true', default=False,
+                        help='Generate worm animation video (default: False)')
 
     args = parser.parse_args(arg_list)
 
@@ -344,6 +346,7 @@ def main(arg_list=None):
     bootstrap_iterations = int(args.bootstrap_iterations)
     bootstrap_seed = int(args.bootstrap_seed)
     dC_lookback_frames = int(args.dC_lookback_frames)
+    generate_video = args.generate_video
 
     # Check if odor-related parameters are provided
     has_odor_data = (args.odor_pos is not None and
@@ -723,27 +726,32 @@ def main(arg_list=None):
     print("Skeleton positions calculated.")
     print(f"Number of columns in df_skel_all: {len(df_skel_all.columns)}")
 
-    # Create worm animation
-    create_improved_worm_animation(
-        df1=df_skel_all,
-        df2=df_worm_parameter,
-        output_path=output_path,
-        x_odor=x_odor,
-        y_odor=y_odor,
-        fps=fps,
-        arena_min_x=arena_min_x,
-        arena_max_x=arena_max_x,
-        arena_min_y=arena_min_y,
-        arena_max_y=arena_max_y,
-        nth_frame=int(fps / 4),
-        nth_point=5,
-        file_name="worm_movie.avi",
-        conc_array=conc_gradient_array,
-        distance_array=distance_array,
-        diffusion_time_offset=diffusion_time_offset
-    )
-
-    print("Animation creation complete.")
+    # Create worm animation (only if requested)
+    video_generated = False
+    if generate_video:
+        print("Generating worm animation video...")
+        create_improved_worm_animation(
+            df1=df_skel_all,
+            df2=df_worm_parameter,
+            output_path=output_path,
+            x_odor=x_odor,
+            y_odor=y_odor,
+            fps=fps,
+            arena_min_x=arena_min_x,
+            arena_max_x=arena_max_x,
+            arena_min_y=arena_min_y,
+            arena_max_y=arena_max_y,
+            nth_frame=int(fps / 4),
+            nth_point=5,
+            file_name="worm_movie.avi",
+            conc_array=conc_gradient_array,
+            distance_array=distance_array,
+            diffusion_time_offset=diffusion_time_offset
+        )
+        video_generated = True
+        print("Animation creation complete.")
+    else:
+        print("Skipping video generation (use --generate_video to enable).")
 
     # Clean up intermediate columns - only drop columns that exist
     columns_to_drop = ['frame', 'X', 'Y', 'time_imputed_seconds']
@@ -806,6 +814,8 @@ def main(arg_list=None):
     print(f"CSV file saved: {os.path.join(output_path, 'chemotaxis_params.csv')}")
     print(f"HDF5 file saved: {h5_file_path}")
     print(f"Visualization saved: {os.path.join(output_path, 'chemotaxis_analysis.pdf')}")
+    if video_generated:
+        print(f"Animation video saved: {os.path.join(output_path, 'worm_movie.avi')}")
     if bootstrap_results:
         print(f"Bootstrap analysis completed with {bootstrap_iterations} iterations")
 
