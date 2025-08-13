@@ -627,12 +627,12 @@ def main(arg_list=None):
             distance_array=distance_array,
             diffusion_time_offset=diffusion_time_offset,
             fps=fps,
+            center_point=center_point,
+            columns_to_smooth=columns_to_smooth,
             n_iterations=bootstrap_iterations,
             random_seed=bootstrap_seed,
             skel_pos_0=skel_pos_0,
-            dC_lookback_frames=dC_lookback_frames,
-            center_point=center_point,
-            columns_to_smooth=columns_to_smooth
+            dC_lookback_frames=dC_lookback_frames
         )
 
         print("Bootstrap analysis complete.")

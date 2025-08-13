@@ -128,12 +128,12 @@ def perform_bootstrap_analysis(
         distance_array: np.ndarray,
         diffusion_time_offset: int,
         fps: float,
+        center_point: int,
+        columns_to_smooth: list,
         n_iterations: int = 1000,
         random_seed: int = 42,
         skel_pos_0: int = 0,
-        dC_lookback_frames: int = 1,
-        center_point: int,
-        columns_to_smooth: list
+        dC_lookback_frames: int = 1
 ) -> Dict:
     """
     Perform bootstrap analysis by generating random odor positions and recalculating parameters.
