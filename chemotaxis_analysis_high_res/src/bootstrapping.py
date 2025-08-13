@@ -71,10 +71,10 @@ def recalculate_odor_dependent_parameters(
         distance_array: np.ndarray,
         diffusion_time_offset: int,
         fps: float,
-        skel_pos_0: int = 0,
-        dC_lookback_frames: int = 1,
         center_point: int,
-        columns_to_smooth: list
+        columns_to_smooth: list,
+        skel_pos_0: int = 0,
+        dC_lookback_frames: int = 1
 ) -> Dict[str, np.ndarray]:
     # Import the smoothing function
     from chemotaxis_analysis_high_res.src.data_smothing import apply_smoothing
