@@ -7,6 +7,7 @@ from chemotaxis_analysis_high_res.src.calculations import (
     calculate_all_odor_parameters,
 )
 
+
 def generate_random_odor_position(
         df_worm: pd.DataFrame,
         arena_min_x: float,
@@ -71,9 +72,14 @@ def recalculate_odor_dependent_parameters(
         diffusion_time_offset: int,
         fps: float,
         skel_pos_0: int = 0,
-        dC_lookback_frames: int = 1
+        dC_lookback_frames: int = 1,
+        center_point: int,
+        columns_to_smooth: list
 ) -> Dict[str, np.ndarray]:
-    # Use the unified function
+    # Import the smoothing function
+    from chemotaxis_analysis_high_res.src.data_smothing import apply_smoothing
+
+    # Use the unified function to calculate odor parameters
     df_temp = calculate_all_odor_parameters(
         df=df_worm_parameter.copy(),
         x_odor=x_odor_new,
@@ -87,13 +93,24 @@ def recalculate_odor_dependent_parameters(
         inplace=False
     )
 
+    # Apply smoothing using the exact same columns from main wrapper
+    # Filter to only include odor-related columns that exist in this DataFrame
+    odor_columns_to_smooth = [col for col in columns_to_smooth
+                              if col in df_temp.columns and
+                              col.startswith(
+                                  ('radial_speed', 'bearing_angle', 'NI', 'distance_to_odor', 'conc_at', 'dC_'))]
+
+    # Apply smoothing if we have columns to smooth
+    if odor_columns_to_smooth:
+        df_temp = apply_smoothing(df_temp, odor_columns_to_smooth, fps, center_point)
+
     # Extract results into dictionary format
     result = {
         'odor_x': x_odor_new,
         'odor_y': y_odor_new
     }
 
-    # Add all the calculated columns to result
+    # Add all the calculated columns to result (both raw and smoothed)
     for col in df_temp.columns:
         if col.startswith(('distance_to_odor', 'conc_at', 'dC_', 'radial_speed', 'bearing_angle', 'NI')):
             result[col] = df_temp[col].values
@@ -114,10 +131,13 @@ def perform_bootstrap_analysis(
         n_iterations: int = 1000,
         random_seed: int = 42,
         skel_pos_0: int = 0,
-        dC_lookback_frames: int = 1
+        dC_lookback_frames: int = 1,
+        center_point: int,
+        columns_to_smooth: list
 ) -> Dict:
     """
     Perform bootstrap analysis by generating random odor positions and recalculating parameters.
+    Now includes smoothing of calculated parameters using the same column list as main analysis.
 
     Parameters:
     -----------
@@ -141,6 +161,10 @@ def perform_bootstrap_analysis(
         Skeleton position for nose
     dC_lookback_frames : int
         Number of frames to look back for dC calculations
+    center_point : int
+        Center point of skeleton for dynamic column naming
+    columns_to_smooth : list
+        List of columns to smooth (passed from main wrapper)
 
     Returns:
     --------
@@ -175,7 +199,7 @@ def perform_bootstrap_analysis(
             df_worm_parameter, arena_min_x, arena_max_x, arena_min_y, arena_max_y, 0.05
         )
 
-        # Recalculate all odor-dependent parameters
+        # Recalculate all odor-dependent parameters WITH smoothing using exact same column list
         iteration_results = recalculate_odor_dependent_parameters(
             df_worm_parameter=df_worm_parameter,
             x_odor_new=x_odor_rand,
@@ -185,7 +209,9 @@ def perform_bootstrap_analysis(
             diffusion_time_offset=diffusion_time_offset,
             fps=fps,
             skel_pos_0=skel_pos_0,
-            dC_lookback_frames=dC_lookback_frames
+            dC_lookback_frames=dC_lookback_frames,
+            center_point=center_point,
+            columns_to_smooth=columns_to_smooth
         )
 
         # Store iteration results
@@ -196,31 +222,16 @@ def perform_bootstrap_analysis(
         summary_stats['odor_x'].append(x_odor_rand)
         summary_stats['odor_y'].append(y_odor_rand)
 
-        # Calculate means (handling NaN values)
-        if 'NI' in iteration_results:
-            summary_stats['mean_NI'].append(np.nanmean(iteration_results['NI']))
-        else:
-            summary_stats['mean_NI'].append(np.nan)
-
-        if 'radial_speed' in iteration_results:
-            summary_stats['mean_radial_speed'].append(np.nanmean(iteration_results['radial_speed']))
-        else:
-            summary_stats['mean_radial_speed'].append(np.nan)
-
-        if 'bearing_angle' in iteration_results:
-            summary_stats['mean_bearing_angle'].append(np.nanmean(iteration_results['bearing_angle']))
-        else:
-            summary_stats['mean_bearing_angle'].append(np.nan)
-
-        if 'distance_to_odor_centroid' in iteration_results:
-            summary_stats['mean_distance_to_odor'].append(np.nanmean(iteration_results['distance_to_odor_centroid']))
-        else:
-            summary_stats['mean_distance_to_odor'].append(np.nan)
-
-        if 'conc_at_centroid' in iteration_results:
-            summary_stats['mean_conc_at_centroid'].append(np.nanmean(iteration_results['conc_at_centroid']))
-        else:
-            summary_stats['mean_conc_at_centroid'].append(np.nan)
+        # Calculate means using raw (unsmoothed) values for summary stats
+        summary_stats['mean_NI'].append(np.nanmean(iteration_results['NI']) if 'NI' in iteration_results else np.nan)
+        summary_stats['mean_radial_speed'].append(
+            np.nanmean(iteration_results['radial_speed']) if 'radial_speed' in iteration_results else np.nan)
+        summary_stats['mean_bearing_angle'].append(
+            np.nanmean(iteration_results['bearing_angle']) if 'bearing_angle' in iteration_results else np.nan)
+        summary_stats['mean_distance_to_odor'].append(np.nanmean(iteration_results[
+                                                                     'distance_to_odor_centroid']) if 'distance_to_odor_centroid' in iteration_results else np.nan)
+        summary_stats['mean_conc_at_centroid'].append(
+            np.nanmean(iteration_results['conc_at_centroid']) if 'conc_at_centroid' in iteration_results else np.nan)
 
         # Progress update
         if (i + 1) % 100 == 0:

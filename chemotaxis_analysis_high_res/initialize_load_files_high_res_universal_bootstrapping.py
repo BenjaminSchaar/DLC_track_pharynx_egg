@@ -603,7 +603,7 @@ def main(arg_list=None):
 
     # Apply outlier replacement and smoothing
     df_worm_parameter = replace_outliers_with_nan(df_worm_parameter, columns_to_smooth, threshold=2.576)
-    df_worm_parameter = apply_smoothing(df_worm_parameter, columns_to_smooth, fps)
+    df_worm_parameter = apply_smoothing(df_worm_parameter, columns_to_smooth, fps, center_point)
 
     print("Data cleaning and smoothing complete.")
 
@@ -627,7 +627,9 @@ def main(arg_list=None):
             n_iterations=bootstrap_iterations,
             random_seed=bootstrap_seed,
             skel_pos_0=skel_pos_0,
-            dC_lookback_frames=dC_lookback_frames
+            dC_lookback_frames=dC_lookback_frames,
+            center_point=center_point,
+            columns_to_smooth=columns_to_smooth
         )
 
         print("Bootstrap analysis complete.")

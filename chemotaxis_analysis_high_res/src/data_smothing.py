@@ -36,7 +36,7 @@ def replace_outliers_with_nan(dataframe, columns, threshold):
     return dataframe
 
 
-def apply_smoothing(df, columns, fps):
+def apply_smoothing(df, columns, fps, center_point):
     """
     Smooths specified columns in the DataFrame using a rolling window average.
     Window sizes are scaled by the frame rate (fps).
@@ -45,14 +45,15 @@ def apply_smoothing(df, columns, fps):
         df (pd.DataFrame): Input DataFrame.
         columns (str or list): The column(s) to smooth.
         fps (float): Frames per second, used to scale window sizes.
+        center_point (int): The center point index for dynamic column naming.
 
     Returns:
         pd.DataFrame: DataFrame with smoothed columns added as new columns.
     """
-    # Default smoothing parameters (in seconds, will be multiplied by fps)
+    # Build smoothing parameters dynamically with center_point
     smoothing_params = {
         'speed_centroid': 1,
-        'speed_center_0': 1,  # Assuming this is the format for the center point column
+        f'speed_center_{center_point}': 1,
         'radial_speed': 1,
         'reversal_frequency': 1,
         'bearing_angle': 1,
@@ -89,7 +90,6 @@ def apply_smoothing(df, columns, fps):
         ).mean()
 
     return df
-
 
 def smooth_trajectory_savitzky_golay_filter(df_column, window_length=11, poly_order=3):
     """
