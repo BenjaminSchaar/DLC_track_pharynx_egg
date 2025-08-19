@@ -695,6 +695,14 @@ def main(arg_list=None):
             f'dC_{skel_pos_0}',
             f'distance_to_odor_{skel_pos_0}'
         ]
+        # Add DLC odor columns if they exist
+        dlc_odor_columns = [
+            'distance_to_odor_DLC_nose', 'distance_to_odor_DLC_tail',
+            'conc_at_DLC_nose', 'conc_at_DLC_tail',
+            'dC_DLC_nose', 'dC_DLC_tail', 'd_DLC_nose_tail_C'
+        ]
+        odor_columns.extend(dlc_odor_columns)
+        
         # Filter to include only columns that exist in the DataFrame
         odor_columns = [col for col in odor_columns if col in df_worm_parameter.columns]
         columns_to_smooth.extend(odor_columns)

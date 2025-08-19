@@ -76,8 +76,8 @@ def recalculate_odor_dependent_parameters(
         skel_pos_0: int = 0,
         dC_lookback_frames: int = 1
 ) -> Dict[str, np.ndarray]:
-    # Import the smoothing function
-    from chemotaxis_analysis_high_res.src.data_smothing import apply_smoothing
+    # Import the smoothing and outlier replacement functions
+    from chemotaxis_analysis_high_res.src.data_smothing import apply_smoothing, replace_outliers_with_nan
 
     # Use the unified function to calculate odor parameters
     df_temp = calculate_all_odor_parameters(
@@ -93,15 +93,16 @@ def recalculate_odor_dependent_parameters(
         inplace=False
     )
 
-    # Apply smoothing using the exact same columns from main wrapper
+    # Apply outlier replacement and smoothing using the exact same columns from main wrapper
     # Filter to only include odor-related columns that exist in this DataFrame
     odor_columns_to_smooth = [col for col in columns_to_smooth
                               if col in df_temp.columns and
                               col.startswith(
                                   ('radial_speed', 'bearing_angle', 'NI', 'distance_to_odor', 'conc_at', 'dC_'))]
 
-    # Apply smoothing if we have columns to smooth
+    # Apply outlier replacement and smoothing if we have columns to process
     if odor_columns_to_smooth:
+        df_temp = replace_outliers_with_nan(df_temp, odor_columns_to_smooth, threshold=2.576)
         df_temp = apply_smoothing(df_temp, odor_columns_to_smooth, fps, center_point)
 
     # Extract results into dictionary format
