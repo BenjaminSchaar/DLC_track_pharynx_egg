@@ -97,12 +97,49 @@ def read_csv_files(beh_annotation_path: str, skeleton_spline_path: str, worm_pos
     print("\nSpline Y DataFrame:")
     print(spline_Y_df.head())
 
+    # Debug: Show worm_pos_df before numeric conversion
+    print("\n=== DEBUGGING: worm_pos_df BEFORE numeric conversion ===")
+    print("Columns:", worm_pos_df.columns.tolist())
+    print("Data types:", worm_pos_df.dtypes)
+    if len(worm_pos_df) > 0:
+        print("First few rows:")
+        print(worm_pos_df.head())
+        # Show specific X,Y values if they exist
+        for col in ['X', 'Y']:
+            if col in worm_pos_df.columns:
+                print(f"Sample {col} values:", worm_pos_df[col].head(3).tolist())
+
     beh_annotation_df = beh_annotation_df.apply(pd.to_numeric, errors='coerce')
     turn_annotation_df = turn_annotation_df.apply(pd.to_numeric, errors='coerce')
     skeleton_spline_df = skeleton_spline_df.apply(pd.to_numeric, errors='coerce')
-    worm_pos_df = worm_pos_df.apply(pd.to_numeric, errors='coerce')
+    
+    # Fix: Apply numeric conversion to worm_pos_df but skip X,Y columns if they exist
+    coordinate_columns = ['X', 'Y']
+    worm_pos_numeric_columns = [col for col in worm_pos_df.columns if col not in coordinate_columns]
+    
+    if worm_pos_numeric_columns:
+        # Apply numeric conversion only to non-coordinate columns
+        worm_pos_df[worm_pos_numeric_columns] = worm_pos_df[worm_pos_numeric_columns].apply(pd.to_numeric, errors='coerce')
+    
+    # For X,Y columns, convert them properly handling leading zeros
+    for col in coordinate_columns:
+        if col in worm_pos_df.columns:
+            worm_pos_df[col] = pd.to_numeric(worm_pos_df[col], errors='coerce')
+    
     spline_X_df = spline_X_df.apply(pd.to_numeric, errors='coerce')
     spline_Y_df = spline_Y_df.apply(pd.to_numeric, errors='coerce')
+
+    # Debug: Show worm_pos_df after numeric conversion
+    print("\n=== DEBUGGING: worm_pos_df AFTER numeric conversion ===")
+    print("Data types:", worm_pos_df.dtypes)
+    if len(worm_pos_df) > 0:
+        print("First few rows:")
+        print(worm_pos_df.head())
+        # Show specific X,Y values after conversion
+        for col in ['X', 'Y']:
+            if col in worm_pos_df.columns:
+                print(f"Sample {col} values after conversion:", worm_pos_df[col].head(3).tolist())
+                print(f"{col} column NaN count:", worm_pos_df[col].isna().sum())
 
     print("Number of rows in each dataframe:")
     print(f"beh_annotation_df: {len(beh_annotation_df)}")
