@@ -4,7 +4,6 @@ import numpy as np
 import yaml
 import sys
 import pandas as pd
-import re
 
 from chemotaxis_analysis_high_res.src.coordinate_system import CoordinateSystem
 
@@ -24,6 +23,14 @@ from chemotaxis_analysis_high_res.src.calculations import (
     correct_dlc_coordinates,
     calc_signed_speed,
     calculate_all_odor_parameters,
+    calculate_border_distances,
+)
+
+from chemotaxis_analysis_high_res.src.data_loading import (
+    load_dlc_coordinates,
+    read_csv_files,
+    add_dlc_coordinates,
+    extract_coords,
 )
 
 from chemotaxis_analysis_high_res.src.plotting_visualisation import (
@@ -54,228 +61,6 @@ from chemotaxis_analysis_high_res.src.bootstrapping import (
     generate_random_odor_position,
     recalculate_odor_dependent_parameters
 )
-
-
-def load_dlc_coordinates(dlc_file_path, nose_label, tail_label):
-    """
-    Load DLC h5 file and extract nose and tail coordinates.
-
-    Parameters:
-    dlc_file_path (str): Path to the DLC h5 file
-    nose_label (str): Label for the nose in the DLC file
-    tail_label (str): Label for the tail in the DLC file
-
-    Returns:
-    tuple: Two DataFrames containing (nose_coordinates, tail_coordinates)
-    """
-    try:
-        # Load the h5 file
-        df = pd.read_hdf(dlc_file_path)
-
-        # Get the scorer (first level of multi-index)
-        scorer = df.columns.get_level_values(0)[0]
-
-        # Extract nose coordinates
-        nose_coords = pd.DataFrame({
-            'x': df[scorer][nose_label]['x'].values,
-            'y': df[scorer][nose_label]['y'].values
-        })
-
-        # Extract tail coordinates
-        tail_coords = pd.DataFrame({
-            'x': df[scorer][tail_label]['x'].values,
-            'y': df[scorer][tail_label]['y'].values
-        })
-
-        return nose_coords, tail_coords
-
-    except Exception as e:
-        print(f"Error loading DLC file: {e}")
-        return None, None
-
-
-def read_csv_files(beh_annotation_path: str, skeleton_spline_path: str, worm_pos_path: str,
-                   spline_X_path: str, spline_Y_path: str, turn_annotation_path: str):
-    # Check if the file paths exist
-    required_files = [
-        beh_annotation_path, skeleton_spline_path, worm_pos_path,
-        spline_X_path, spline_Y_path, turn_annotation_path
-    ]
-
-    for file_path in required_files:
-        if not os.path.exists(file_path):
-            raise FileNotFoundError(f"The file '{file_path}' does not exist.")
-
-    # Read CSV files into separate dataframes
-    beh_annotation_df = pd.read_csv(beh_annotation_path, header=None)
-    skeleton_spline_df = pd.read_csv(skeleton_spline_path, header=None)
-    turn_annotation_df = pd.read_csv(turn_annotation_path)
-
-    worm_pos_df = pd.read_csv(worm_pos_path)
-    worm_pos_df = worm_pos_df.drop(columns=['time'],
-                                   errors='ignore')  # deletes old time column before interpolation step
-
-    # Enforce integer type for 'frame' column if it exists
-    if 'frame' in worm_pos_df.columns:
-        worm_pos_df['frame'] = worm_pos_df['frame'].fillna(0).astype(int)
-
-    spline_X_df = pd.read_csv(spline_X_path, header=None)
-    spline_Y_df = pd.read_csv(spline_Y_path, header=None)
-
-    # Print the head of each dataframe
-    print("Behavior Annotation DataFrame:")
-    print(beh_annotation_df.head())
-    print("Turn Annotation DataFrame:")
-    print(turn_annotation_df.head())
-    print("\nSkeleton Spline DataFrame:")
-    print(skeleton_spline_df.head())
-    print("\nWorm Position DataFrame:")
-    print(worm_pos_df.head())
-    print("\nSpline X DataFrame:")
-    print(spline_X_df.head())
-    print("\nSpline Y DataFrame:")
-    print(spline_Y_df.head())
-
-    beh_annotation_df = beh_annotation_df.apply(pd.to_numeric, errors='coerce')
-    turn_annotation_df = turn_annotation_df.apply(pd.to_numeric, errors='coerce')
-    skeleton_spline_df = skeleton_spline_df.apply(pd.to_numeric, errors='coerce')
-    worm_pos_df = worm_pos_df.apply(pd.to_numeric, errors='coerce')
-    spline_X_df = spline_X_df.apply(pd.to_numeric, errors='coerce')
-    spline_Y_df = spline_Y_df.apply(pd.to_numeric, errors='coerce')
-
-    print("Number of rows in each dataframe:")
-    print(f"beh_annotation_df: {len(beh_annotation_df)}")
-    print(f"turn_annotation_df: {len(turn_annotation_df)}")
-    print(f"skeleton_spline_df: {len(skeleton_spline_df)}")
-    print(f"worm_pos_df: {len(worm_pos_df)}")
-    print(f"spline_X_df: {len(spline_X_df)}")
-    print(f"spline_Y_df: {len(spline_Y_df)}")
-
-    # Check if worm_pos has same length as frame dependent data -> stage pos is tracked separate and can have different FPS
-    # -> interpolate
-    print("Stage Position Dataframe length before interpolation:", len(worm_pos_df))
-
-    if len(worm_pos_df) != len(spline_X_df):
-        # Apply the interpolation for each column
-        worm_pos_df = worm_pos_df.apply(lambda x: interpolate_df(x, len(spline_X_df)), axis=0)
-        print("Stage Position Dataframe length after interpolation:", len(worm_pos_df))
-        print("Stage Position Dataframe head after interpolation:", worm_pos_df.head())
-        print("Frame length of recorded video:", len(spline_X_df))
-
-    return beh_annotation_df, skeleton_spline_df, worm_pos_df, spline_X_df, spline_Y_df, turn_annotation_df
-
-
-def calculate_border_distances(df: pd.DataFrame, arena_max_x: float, arena_max_y: float,
-                               skel_pos_0: int) -> pd.DataFrame:
-    """
-    Calculate distances to arena borders for all relevant positions.
-
-    Parameters:
-    -----------
-    df : pd.DataFrame
-        DataFrame containing position data
-    arena_max_x, arena_max_y : float
-        Arena boundaries
-    skel_pos_0 : int
-        Skeleton position for nose
-
-    Returns:
-    --------
-    pd.DataFrame
-        DataFrame with border distance columns added
-    """
-    # Distance to border from centroid
-    df['distance_to_border_centroid'] = calculate_min_border_distance(
-        df, arena_max_x, arena_max_y,
-        'X_rel_skel_pos_centroid', 'Y_rel_skel_pos_centroid'
-    )
-
-    # Distance to border from nose
-    df['distance_to_border_nose'] = calculate_min_border_distance(
-        df, arena_max_x, arena_max_y,
-        f'X_rel_skel_pos_{skel_pos_0}', f'Y_rel_skel_pos_{skel_pos_0}'
-    )
-
-    # Distance to border from DLC positions if available
-    if 'X_rel_DLC_nose' in df.columns and 'Y_rel_DLC_nose' in df.columns:
-        df['distance_to_border_DLC_nose'] = calculate_min_border_distance(
-            df, arena_max_x, arena_max_y, 'X_rel_DLC_nose', 'Y_rel_DLC_nose'
-        )
-
-    if 'X_rel_DLC_tail' in df.columns and 'Y_rel_DLC_tail' in df.columns:
-        df['distance_to_border_DLC_tail'] = calculate_min_border_distance(
-            df, arena_max_x, arena_max_y, 'X_rel_DLC_tail', 'Y_rel_DLC_tail'
-        )
-
-    return df
-
-
-def add_dlc_coordinates(df: pd.DataFrame, dlc_file_path: str, nose_label: str, tail_label: str,
-                        video_resolution_x: int, video_resolution_y: int,
-                        factor_px_to_mm: float, img_type: str) -> pd.DataFrame:
-    """
-    Add DLC coordinates to the main DataFrame.
-
-    Parameters:
-    -----------
-    df : pd.DataFrame
-        Main DataFrame
-    dlc_file_path : str
-        Path to DLC h5 file
-    nose_label, tail_label : str
-        DLC labels for nose and tail
-    video_resolution_x, video_resolution_y : int
-        Video resolution
-    factor_px_to_mm : float
-        Pixel to mm conversion factor
-    img_type : str
-        Image type
-
-    Returns:
-    --------
-    pd.DataFrame
-        DataFrame with DLC coordinates added
-    """
-    print(f"Processing DLC file: {dlc_file_path}")
-
-    # Load nose and tail coordinates from DLC file
-    nose_coords, tail_coords = load_dlc_coordinates(dlc_file_path, nose_label, tail_label)
-
-    if nose_coords is not None and tail_coords is not None:
-        # Convert DLC coordinates to mm and correct based on video origin
-        nose_mm, tail_mm = correct_dlc_coordinates(
-            df, nose_coords, tail_coords, video_resolution_x, video_resolution_y,
-            factor_px_to_mm, img_type
-        )
-
-        # Check if lengths match (they should)
-        if len(df) != len(nose_mm):
-            print(f"Warning: DLC data length ({len(nose_mm)}) doesn't match main data length ({len(df)})")
-            print("This is unexpected since both should come from the same video frames.")
-
-        # Add DLC coordinates to the main DataFrame
-        # Use the min length to avoid index errors in case the lengths differ slightly
-        min_length = min(len(df), len(nose_mm))
-
-        df['X_rel_DLC_nose'] = nose_mm['X_rel_DLC_nose'].values[:min_length]
-        df['Y_rel_DLC_nose'] = nose_mm['Y_rel_DLC_nose'].values[:min_length]
-        df['X_rel_DLC_tail'] = tail_mm['X_rel_DLC_tail'].values[:min_length]
-        df['Y_rel_DLC_tail'] = tail_mm['Y_rel_DLC_tail'].values[:min_length]
-
-        print(f"Added DLC tracking data to main DataFrame")
-
-    return df
-
-
-def extract_coords(pos_string):
-    if pos_string is None:
-        return None
-
-    # Extract all numbers (including decimals) from the string
-    numbers = re.findall(r'-?\d+\.?\d*', pos_string)
-
-    # Return first two numbers as x, y
-    return float(numbers[0]), float(numbers[1])
 
 
 def main(arg_list=None):

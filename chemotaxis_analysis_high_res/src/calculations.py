@@ -674,3 +674,48 @@ def calculate_all_odor_parameters(
    print("Odor parameter calculations complete.")
 
    return df
+
+
+def calculate_border_distances(df: pd.DataFrame, arena_max_x: float, arena_max_y: float,
+                               skel_pos_0: int) -> pd.DataFrame:
+    """
+    Calculate distances to arena borders for all relevant positions.
+
+    Parameters:
+    -----------
+    df : pd.DataFrame
+        DataFrame containing position data
+    arena_max_x, arena_max_y : float
+        Arena boundaries
+    skel_pos_0 : int
+        Skeleton position for nose
+
+    Returns:
+    --------
+    pd.DataFrame
+        DataFrame with border distance columns added
+    """
+    # Distance to border from centroid
+    df['distance_to_border_centroid'] = calculate_min_border_distance(
+        df, arena_max_x, arena_max_y,
+        'X_rel_skel_pos_centroid', 'Y_rel_skel_pos_centroid'
+    )
+
+    # Distance to border from nose
+    df['distance_to_border_nose'] = calculate_min_border_distance(
+        df, arena_max_x, arena_max_y,
+        f'X_rel_skel_pos_{skel_pos_0}', f'Y_rel_skel_pos_{skel_pos_0}'
+    )
+
+    # Distance to border from DLC positions if available
+    if 'X_rel_DLC_nose' in df.columns and 'Y_rel_DLC_nose' in df.columns:
+        df['distance_to_border_DLC_nose'] = calculate_min_border_distance(
+            df, arena_max_x, arena_max_y, 'X_rel_DLC_nose', 'Y_rel_DLC_nose'
+        )
+
+    if 'X_rel_DLC_tail' in df.columns and 'Y_rel_DLC_tail' in df.columns:
+        df['distance_to_border_DLC_tail'] = calculate_min_border_distance(
+            df, arena_max_x, arena_max_y, 'X_rel_DLC_tail', 'Y_rel_DLC_tail'
+        )
+
+    return df
