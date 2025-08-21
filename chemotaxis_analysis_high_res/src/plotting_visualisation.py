@@ -165,40 +165,11 @@ def create_combined_visualization(df, beh_annotation=None, skeleton_spline=None,
 
                     # Check if column exists in the dataframe
                     if col in df.columns:
-                        # Determine plot style based on column type
-                        plot_color = 'blue'  # Default color
-                        plot_style = '-'     # Default line style
-                        plot_alpha = 1.0     # Default transparency
-                        
-                        # Color coding for different data types
-                        if 'DLC' in col:
-                            plot_color = 'red'   # DLC data in red
-                        elif '_0' in col or 'centroid' in col:
-                            plot_color = 'blue'  # Skeleton/centroid data in blue
-                            
-                        # Style coding for smoothed vs raw data
-                        if '_smoothed' in col:
-                            plot_style = '-'     # Solid line for smoothed
-                            plot_alpha = 0.8
-                        else:
-                            plot_style = '--'    # Dashed line for raw data
-                            plot_alpha = 0.6
-                        
-                        # Create the plot with enhanced styling
-                        axes[i].plot(df['time_minutes'], df[col], 
-                                   color=plot_color, linestyle=plot_style, 
-                                   alpha=plot_alpha, linewidth=1.2)
+                        # Create the plot
+                        axes[i].plot(df['time_minutes'], df[col], color='blue')
 
-                        # Set labels and title with appropriate units
-                        ylabel = col
-                        if 'conc_at_' in col or 'conc_' in col:
-                            # Add mol/l units for concentration columns
-                            ylabel = f'{col} (mol/l)'
-                        elif 'dC_' in col:
-                            # Add mol/l/s units for concentration derivative columns  
-                            ylabel = f'{col} (mol/l/s)'
-                        
-                        axes[i].set_ylabel(ylabel, fontsize=8)
+                        # Set labels and title
+                        axes[i].set_ylabel(col, fontsize=8)
                         axes[i].set_title(f'{col} vs Time', fontsize=10)
 
                         # Add grid
@@ -225,20 +196,6 @@ def create_combined_visualization(df, beh_annotation=None, skeleton_spline=None,
                 # Add a page title
                 page_title = f'Time Series Data (Page {page_num + 1}/{num_pages})'
                 fig_ts.suptitle(page_title, fontsize=12)
-                
-                # Add a legend for data type color coding
-                legend_elements = [
-                    Line2D([0], [0], color='blue', linestyle='-', alpha=0.8, linewidth=1.2, 
-                           label='Skeleton/Centroid (smoothed)'),
-                    Line2D([0], [0], color='blue', linestyle='--', alpha=0.6, linewidth=1.2, 
-                           label='Skeleton/Centroid (raw)'),
-                    Line2D([0], [0], color='red', linestyle='-', alpha=0.8, linewidth=1.2, 
-                           label='DLC (smoothed)'),
-                    Line2D([0], [0], color='red', linestyle='--', alpha=0.6, linewidth=1.2, 
-                           label='DLC (raw)')
-                ]
-                fig_ts.legend(handles=legend_elements, loc='upper right', bbox_to_anchor=(0.98, 0.95), 
-                            fontsize=8, framealpha=0.9)
 
                 # Adjust layout
                 plt.tight_layout(rect=[0, 0, 1, 0.95])  # Make room for the title

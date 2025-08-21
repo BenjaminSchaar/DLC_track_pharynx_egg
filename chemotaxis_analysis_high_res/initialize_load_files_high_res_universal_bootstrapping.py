@@ -450,16 +450,6 @@ def main(arg_list=None):
             'dC_centroid_smoothed',
             f'dC_{skel_pos_0}_smoothed'
         ]
-        
-        # Add DLC smoothed columns to time series if they exist
-        dlc_time_series = [
-            'conc_at_DLC_nose_smoothed',
-            'conc_at_DLC_tail_smoothed', 
-            'dC_DLC_nose_smoothed',
-            'dC_DLC_tail_smoothed'
-        ]
-        odor_time_series.extend(dlc_time_series)
-        
         # Filter to include only columns that exist in the DataFrame
         odor_time_series = [col for col in odor_time_series if col in df_worm_parameter.columns]
         time_series_columns.extend(odor_time_series)
