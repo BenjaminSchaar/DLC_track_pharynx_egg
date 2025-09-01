@@ -113,7 +113,7 @@ def recalculate_odor_dependent_parameters(
 
     # Add all the calculated columns to result (both raw and smoothed)
     for col in df_temp.columns:
-        if col.startswith(('distance_to_odor', 'conc_at', 'dC_', 'radial_speed', 'bearing_angle', 'NI')):
+        if col.startswith(('distance_to_odor', 'conc_at', 'dC_', 'd_DLC', 'radial_speed', 'bearing_angle', 'NI')):
             result[col] = df_temp[col].values
 
     return result
