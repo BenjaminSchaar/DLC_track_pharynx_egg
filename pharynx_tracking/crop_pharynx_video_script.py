@@ -140,8 +140,8 @@ def load_downsample_factor_from_pickle(tiff_path):
         return downsample_factor
     else:
         # Handle the case where the cfactor.pickle file is not found
-        print("cfactor.pickle file not found in the directory.")
-        return None  # You can return a specific value or raise an exception if needed
+        print("cfactor.pickle file not found. Using default downsample factor of 1.0 (no downsampling).")
+        return 1.0  # Return 1.0 when no downsampling was applied
 
 def main(arg_list=None):
 
