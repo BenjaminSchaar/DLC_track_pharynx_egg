@@ -9,7 +9,7 @@ import glob
 import pickle
 import os
 
-def read_csv(csv_path):
+def read_csv(csv_path, keypoint_nose="nose", keypoint_pharynx="pharynx"):
     # reads DLC csv in and puts the resulting df in a reasonable format to plot data from!
 
     file_name = csv_path
@@ -38,8 +38,8 @@ def read_csv(csv_path):
     df = df.drop(df.columns[0], axis=1)
     df = df.reset_index(drop=True)
 
-    nose_df = df.xs(key='nose', level=0, axis=1)
-    pharynx_df = df.xs(key='pharynx', level=0, axis=1)
+    nose_df = df.xs(key=keypoint_nose, level=0, axis=1)
+    pharynx_df = df.xs(key=keypoint_pharynx, level=0, axis=1)
 
     # Make copies of the DataFrames
     nose_df_copy = nose_df.copy()
@@ -151,6 +151,8 @@ def main(arg_list=None):
     parser.add_argument("--output", required=True)
     parser.add_argument("--fps", required=True)
     parser.add_argument("--crop_size", required=True)
+    parser.add_argument("--keypoint_nose", required=False, default="nose")
+    parser.add_argument("--keypoint_pharynx", required=False, default="pharynx")
     args = parser.parse_args(arg_list)
 
     video_path = args.video
@@ -158,6 +160,8 @@ def main(arg_list=None):
     output = args.output
     frame_rate = int(args.fps)
     crop_size = int(args.crop_size)
+    keypoint_nose = args.keypoint_nose
+    keypoint_pharynx = args.keypoint_pharynx
 
     # Define the ROI coordinates (x, y, width, height) from the cropp
     roi_width, roi_height = crop_size, crop_size
@@ -171,7 +175,7 @@ def main(arg_list=None):
 
     #call functions that process data----------------------------
 
-    processed_df = read_csv(csv_path)
+    processed_df = read_csv(csv_path, keypoint_nose=keypoint_nose, keypoint_pharynx=keypoint_pharinkx)
     cropped_video_stack = crop_video(processed_df, video_path, roi_width, roi_height, downsample_factor)
     export_video(cropped_video_stack, output, frame_rate, roi_width, roi_height)
 
