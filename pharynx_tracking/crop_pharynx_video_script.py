@@ -175,7 +175,7 @@ def main(arg_list=None):
 
     #call functions that process data----------------------------
 
-    processed_df = read_csv(csv_path, keypoint_nose=keypoint_nose, keypoint_pharynx=keypoint_pharinkx)
+    processed_df = read_csv(csv_path, keypoint_nose=keypoint_nose, keypoint_pharynx=keypoint_pharynx)
     cropped_video_stack = crop_video(processed_df, video_path, roi_width, roi_height, downsample_factor)
     export_video(cropped_video_stack, output, frame_rate, roi_width, roi_height)
 
