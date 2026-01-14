@@ -1188,7 +1188,7 @@ def save_chemotaxis_analysis_h5(
             'distance_to_border_centroid', 'distance_to_border_nose',
             'distance_to_border_centroid_smoothed', 'distance_to_border_nose_smoothed',
             'distance_to_border_DLC_nose', 'distance_to_border_DLC_tail',
-            'behaviour_state', 'turns', 'reversal_onset', 'reversal_end',
+            'behaviour_state', 'turn', 'reversal_onset', 'reversal_end',
             'reversal_frequency', 'reversal_frequency_smoothed',
             'speed_centroid_smoothed', f'speed_center_{center_point}_smoothed',
             'centroid_dx_dt', 'centroid_dy_dt', 'centroid_displacement_vector_degrees',
